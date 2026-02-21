@@ -244,6 +244,7 @@ async def register(user_data: UserCreate):
         "daily_streak": 0,
         "is_admin": False,
         "is_master": False,
+        "is_verified": False,  # Trial user by default - needs admin verification for full access
         "avatar": get_avatar(user_data.first_name, user_data.last_name),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "last_login": datetime.now(timezone.utc).isoformat()
