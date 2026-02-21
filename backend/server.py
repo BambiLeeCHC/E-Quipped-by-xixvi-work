@@ -253,7 +253,7 @@ async def register(user_data: UserCreate):
     await db.users.insert_one(user)
     
     token = create_jwt_token(user_id)
-    user_response = {k: v for k, v in user.items() if k != "password_hash"}
+    user_response = {k: v for k, v in user.items() if k not in ["password_hash", "_id"]}
     
     return {"token": token, "user": user_response}
 
