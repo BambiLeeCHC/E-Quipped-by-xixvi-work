@@ -18,8 +18,14 @@ module.exports = {
                         sm: 'calc(var(--radius) - 4px)'
                 },
                 colors: {
-                        void: '#030014',
-                        surface: '#0F0F1A',
+                        // Light theme base colors
+                        void: '#F8FAFC',
+                        surface: '#FFFFFF',
+                        // Deep blues for contrast elements
+                        deep: {
+                                DEFAULT: '#0F172A',
+                                50: '#1E293B',
+                        },
                         fuchsia: {
                                 DEFAULT: '#D946EF',
                                 50: '#FDF4FF',
@@ -32,6 +38,17 @@ module.exports = {
                                 700: '#A21CAF',
                                 800: '#86198F',
                                 900: '#701A75',
+                        },
+                        // Sky blue spectrum for sunlight effects
+                        sky: {
+                                50: '#F0F9FF',
+                                100: '#E0F2FE',
+                                200: '#BAE6FD',
+                                300: '#7DD3FC',
+                                400: '#38BDF8',
+                                500: '#0EA5E9',
+                                600: '#0284C7',
+                                700: '#0369A1',
                         },
                         flesh: {
                                 DEFAULT: '#E7D5C9',
@@ -96,6 +113,25 @@ module.exports = {
                                 '0%, 100%': { transform: 'translateY(0)' },
                                 '50%': { transform: 'translateY(-10px)' }
                         },
+                        'shimmer': {
+                                '0%': { backgroundPosition: '-200% 0' },
+                                '100%': { backgroundPosition: '200% 0' }
+                        },
+                        'prism': {
+                                '0%, 100%': { 
+                                        backgroundPosition: '0% 50%',
+                                        filter: 'hue-rotate(0deg)'
+                                },
+                                '50%': { 
+                                        backgroundPosition: '100% 50%',
+                                        filter: 'hue-rotate(30deg)'
+                                }
+                        },
+                        'sunbeam': {
+                                '0%': { opacity: '0.3', transform: 'translateX(-100%)' },
+                                '50%': { opacity: '0.6' },
+                                '100%': { opacity: '0.3', transform: 'translateX(100%)' }
+                        },
                         'typing': {
                                 '0%, 60%, 100%': { transform: 'translateY(0)' },
                                 '30%': { transform: 'translateY(-8px)' }
@@ -110,6 +146,9 @@ module.exports = {
                         'accordion-up': 'accordion-up 0.2s ease-out',
                         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
                         'float': 'float 3s ease-in-out infinite',
+                        'shimmer': 'shimmer 3s linear infinite',
+                        'prism': 'prism 8s ease infinite',
+                        'sunbeam': 'sunbeam 4s ease-in-out infinite',
                         'typing': 'typing 1.4s infinite',
                         'flame': 'flame 1s ease-in-out infinite alternate'
                 }
