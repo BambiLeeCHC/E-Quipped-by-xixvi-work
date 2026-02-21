@@ -100,6 +100,25 @@ class ModuleUpdate(BaseModel):
     difficulty: Optional[str] = None
     estimated_hours: Optional[int] = None
 
+# Content Block Models for Rich Editor
+class ContentBlock(BaseModel):
+    id: str = ""
+    type: str  # text, heading, image, video, audio, code, callout, divider
+    content: Optional[str] = None  # For text, heading, code
+    url: Optional[str] = None  # For media (image, video, audio)
+    caption: Optional[str] = None  # Media caption
+    level: Optional[int] = 1  # For headings (1-6)
+    language: Optional[str] = "python"  # For code blocks
+    callout_type: Optional[str] = "info"  # info, warning, tip, note
+    alt_text: Optional[str] = None  # For images
+    order_index: int = 0
+
+class SectionCreate(BaseModel):
+    title: str
+    type: str = "custom"  # intro, content, challenge, quiz, custom
+    blocks: List[ContentBlock] = []
+    order_index: int = 0
+
 class LessonCreate(BaseModel):
     module_id: str
     title: str
@@ -107,6 +126,7 @@ class LessonCreate(BaseModel):
     description: str
     order_index: int
     content: str = ""
+    sections: List[Dict[str, Any]] = []  # Rich content sections
     difficulty_level: str = "beginner"
     estimated_minutes: int = 30
     xp_reward: int = 100
@@ -117,6 +137,7 @@ class LessonUpdate(BaseModel):
     slug: Optional[str] = None
     order_index: Optional[int] = None
     content: Optional[str] = None
+    sections: Optional[List[Dict[str, Any]]] = None  # Rich content sections
     difficulty_level: Optional[str] = None
     estimated_minutes: Optional[int] = None
     xp_reward: Optional[int] = None
