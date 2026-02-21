@@ -37,13 +37,13 @@
     "palette": {
       "background": "#030014",
       "surface": "#0F0F1A",
-      "primary": "#D946EF",
+      "primary": "#000000",
       "primary_hover": "#C026D3",
       "secondary": "#3B82F6",
       "accent_human": "#E7D5C9",
       "accent_human_dim": "#Cfb8a7",
-      "text_main": "#FFFFFF",
-      "text_muted": "#94A3B8",
+      "text_main": "#000000",
+      "text_muted": "#000000",
       "border_glass": "rgba(255, 255, 255, 0.08)"
     },
     "usage": {
@@ -115,7 +115,7 @@
   "universal_guidelines": [
     "Never use solid black (#000000) for backgrounds. Use #030014.",
     "Always use 'backdrop-blur-xl' for floating panels.",
-    "Text on glass must be White (Primary) or Slate-300 (Secondary). Never use Gray-500 on glass.",
+    "Text on glass must be Black (Primary) or Slate-300 (Secondary). Never use Gray-500 on glass.",
     "Input fields should be 'bg-white/5 border-white/10' with 'focus:border-fuchsia-500'.",
     "Use 'Flesh/Beige' colors for User Avatar borders and 'Success' states to add warmth.",
     "All interactive elements must have 'data-testid' attributes."
