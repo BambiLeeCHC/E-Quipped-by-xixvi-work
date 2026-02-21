@@ -1076,6 +1076,101 @@ async def seed_initial_data():
     
     return modules_data
 
+# ==================== FILE UPLOAD ROUTES ====================
+
+@api_router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    file_type: str = Form("image"),
+    user: dict = Depends(require_master)
+):
+    """Upload media files (images, videos, audio)"""
+    allowed_types = {
+        "image": ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+        "video": ["mp4", "webm", "mov", "avi"],
+        "audio": ["mp3", "wav", "ogg", "m4a"]
+    }
+    
+    ext = file.filename.split(".")[-1].lower()
+    if ext not in allowed_types.get(file_type, []):
+        raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed: {allowed_types.get(file_type)}")
+    
+    # Generate unique filename
+    file_id = f"{uuid.uuid4().hex[:12]}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    filename = f"{file_id}.{ext}"
+    
+    # Create type-specific subdirectory
+    type_dir = UPLOADS_DIR / file_type
+    type_dir.mkdir(exist_ok=True)
+    
+    file_path = type_dir / filename
+    
+    # Save file
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Store file metadata in DB
+    file_doc = {
+        "file_id": file_id,
+        "filename": filename,
+        "original_name": file.filename,
+        "file_type": file_type,
+        "url": f"/api/uploads/{file_type}/{filename}",
+        "size": file_path.stat().st_size,
+        "uploaded_by": user["user_id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.uploads.insert_one(file_doc)
+    
+    return {
+        "file_id": file_id,
+        "url": f"/api/uploads/{file_type}/{filename}",
+        "filename": filename,
+        "type": file_type
+    }
+
+@api_router.get("/uploads/{file_type}/{filename}")
+async def get_uploaded_file(file_type: str, filename: str):
+    """Serve uploaded files"""
+    from fastapi.responses import FileResponse
+    file_path = UPLOADS_DIR / file_type / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    media_types = {
+        "image": {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "gif": "image/gif", "webp": "image/webp", "svg": "image/svg+xml"},
+        "video": {"mp4": "video/mp4", "webm": "video/webm", "mov": "video/quicktime"},
+        "audio": {"mp3": "audio/mpeg", "wav": "audio/wav", "ogg": "audio/ogg", "m4a": "audio/mp4"}
+    }
+    ext = filename.split(".")[-1].lower()
+    media_type = media_types.get(file_type, {}).get(ext, "application/octet-stream")
+    
+    return FileResponse(file_path, media_type=media_type)
+
+@api_router.delete("/uploads/{file_id}")
+async def delete_upload(file_id: str, user: dict = Depends(require_master)):
+    """Delete an uploaded file"""
+    file_doc = await db.uploads.find_one({"file_id": file_id})
+    if not file_doc:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Delete physical file
+    file_path = UPLOADS_DIR / file_doc["file_type"] / file_doc["filename"]
+    if file_path.exists():
+        file_path.unlink()
+    
+    # Delete from DB
+    await db.uploads.delete_one({"file_id": file_id})
+    
+    return {"message": "File deleted"}
+
+@api_router.get("/uploads")
+async def list_uploads(file_type: Optional[str] = None, user: dict = Depends(require_master)):
+    """List all uploaded files"""
+    query = {} if not file_type else {"file_type": file_type}
+    files = await db.uploads.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return files
+
 # ==================== ROOT ROUTES ====================
 
 @api_router.get("/")
