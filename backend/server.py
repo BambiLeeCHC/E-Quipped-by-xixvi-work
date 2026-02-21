@@ -601,10 +601,11 @@ async def generate_content(request: AIContentRequest, user: dict = Depends(requi
         "module": """You are an expert curriculum designer for AI skills training. Generate detailed module content including title, description, learning outcomes, and suggested lessons. Format the response as JSON with keys: title, description, difficulty, estimated_hours, suggested_lessons (array).""",
         "lesson": """You are an expert educational content creator. Generate detailed lesson content including title, description, content body, learning objectives, and a practical challenge. Format as JSON with keys: title, description, content, learning_objectives (array), challenge_description, estimated_minutes, xp_reward.""",
         "objective": """You are an expert at writing clear, measurable learning objectives. Generate 3-5 learning objectives in the SMART format. Return as a JSON array of strings.""",
-        "challenge": """You are an expert at creating practical AI prompt engineering challenges. Generate a hands-on challenge description that tests the learner's skills. Return as JSON with keys: challenge_description, hints (array), success_criteria (array)."""
+        "challenge": """You are an expert at creating practical AI prompt engineering challenges. Generate a hands-on challenge description that tests the learner's skills. Return as JSON with keys: challenge_description, hints (array), success_criteria (array).""",
+        "content": """You are an expert educational content writer. Expand and enhance the given content to make it more comprehensive, engaging, and educational. Include examples and practical tips."""
     }
     
-    system_message = system_prompts.get(request.content_type, system_prompts["lesson"])
+    system_message = system_prompts.get(request.content_type, system_prompts["content"])
     
     try:
         chat = LlmChat(
