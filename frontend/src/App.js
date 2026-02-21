@@ -1302,7 +1302,7 @@ const AppRouter = () => {
       <Route path="/lesson/:lessonId" element={<ProtectedRoute><LessonView /></ProtectedRoute>} />
       <Route path="/sandbox" element={<ProtectedRoute><SandboxPage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-      <Route path="/editor" element={<ProtectedRoute masterOnly><CourseEditor /></ProtectedRoute>} />
+      <Route path="/editor" element={<ProtectedRoute masterOnly><CourseEditorEnhanced /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
