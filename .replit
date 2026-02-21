@@ -4,3 +4,37 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+REACT_APP_BACKEND_URL = ""
+DB_NAME = "equipped_ai"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /home/runner/workspace && PYTHONPATH=/home/runner/workspace/backend:$PYTHONPATH python3 -m uvicorn backend.server:app --host localhost --port 8001 & cd /home/runner/workspace/frontend && PORT=5000 HOST=0.0.0.0 npx craco start"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
