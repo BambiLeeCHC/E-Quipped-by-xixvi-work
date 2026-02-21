@@ -909,16 +909,202 @@ async def seed_initial_data():
         return await db.modules.find({}, {"_id": 0}).to_list(100)
     
     modules_data = [
-        {
-            "module_id": "mod_001",
-            "title": "AI Document Mastery",
-            "description": "Master professional document creation with AI assistance",
-            "slug": "ai-document-mastery",
-            "order_index": 1,
-            "is_published": True,
-            "difficulty": "Beginner",
-            "estimated_hours": 8,
-            "created_at": datetime.now(timezone.utc).isoformat()
+        {{
+    "module_id": "mod_001",
+    "title": "AI Writing Assistant",
+    "slug": "ai-writing-assistant",
+    "description": "Master AI-powered writing tools to draft professional emails, reports, and proposals in seconds with perfect tone matching",
+    "order_index": 1,
+    "difficulty_level": "beginner",
+    "estimated_minutes": 45,
+    "xp_reward": 150,
+    "content": """
+    <div class="lesson-container">
+        <section class="intro-section">
+            <h2>Welcome to Your AI Writing Journey</h2>
+            <p>AI writing assistants have revolutionized how professionals create content. In this lesson, you'll learn to leverage powerful AI tools to 10x your writing productivity while maintaining your unique voice.</p>
+        </section>
+
+        <section class="tools-overview">
+            <h3>🛠️ Essential AI Writing Tools</h3>
+            <div class="tool-grid">
+                <div class="tool-card" data-tool="chatgpt">
+                    <h4>ChatGPT</h4>
+                    <p>General-purpose AI assistant excellent for brainstorming, drafting, and refining content across all formats.</p>
+                    <span class="best-for">Best for: Creative writing, problem-solving, multi-turn conversations</span>
+                </div>
+                <div class="tool-card" data-tool="claude">
+                    <h4>Claude</h4>
+                    <p>Anthropic's AI with exceptional reasoning and longer context windows for complex documents.</p>
+                    <span class="best-for">Best for: Long-form content, analysis, nuanced tone adjustments</span>
+                </div>
+                <div class="tool-card" data-tool="grammarly">
+                    <h4>Grammarly</h4>
+                    <p>Real-time grammar, spelling, and style checker with AI-powered tone detection.</p>
+                    <span class="best-for">Best for: Polishing, error detection, instant improvements</span>
+                </div>
+                <div class="tool-card" data-tool="notion">
+                    <h4>Notion AI</h4>
+                    <p>Integrated workspace AI for drafting, summarizing, and organizing content within your docs.</p>
+                    <span class="best-for">Best for: Collaborative workspaces, database content, wikis</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="core-skills">
+            <h3>⚡ Core Capabilities You'll Master</h3>
+            <ul class="capability-list">
+                <li><strong>Rapid Drafting:</strong> Generate complete emails, reports, and proposals in seconds from simple prompts</li>
+                <li><strong>Tone Matching:</strong> Calibrate your writing for professional, casual, or persuasive contexts</li>
+                <li><strong>AI-Powered Editing:</strong> Transform rough ideas into polished, publication-ready content</li>
+                <li><strong>Prompt Engineering:</strong> Craft instructions that produce exactly the output you need</li>
+            </ul>
+        </section>
+
+        <section class="sandbox-integration">
+            <h3>🎮 Interactive Sandbox: Try It Live</h3>
+            <p>Use the AI LLM panel on this page to practice each technique as you learn. Every example can be tested in real-time.</p>
+            
+            <div class="interactive-exercise">
+                <h4>Quick Start Prompt Formula:</h4>
+                <code class="prompt-template">
+                "Act as a [ROLE]. Write a [FORMAT] about [TOPIC] for [AUDIENCE]. 
+                Tone: [TONE]. Key points to include: [POINTS]."
+                </code>
+                <button class="try-in-sandbox" data-prompt-template="role-format-topic">Try in Sandbox →</button>
+            </div>
+        </section>
+
+        <section class="technique-breakdown">
+            <h3>🎯 The 4-Step AI Writing Workflow</h3>
+            
+            <div class="workflow-step" data-step="1">
+                <h4>Step 1: Prime the AI</h4>
+                <p>Set context and constraints. Tell the AI who it is, who the audience is, and what format you need.</p>
+                <div class="example-box">
+                    <strong>Example:</strong> "You are a senior marketing manager. Draft a project update email to the executive team."
+                </div>
+            </div>
+
+            <div class="workflow-step" data-step="2">
+                <h4>Step 2: Generate First Draft</h4>
+                <p>Provide your key points and let the AI create the initial version. Don't aim for perfection—aim for structure.</p>
+                <div class="example-box">
+                    <strong>Sandbox Challenge:</strong> Generate a meeting request email using only 3 bullet points as input.
+                </div>
+            </div>
+
+            <div class="workflow-step" data-step="3">
+                <h4>Step 3: Refine & Redirect</h4>
+                <p>Use follow-up prompts to adjust tone, length, and emphasis. AI responds best to specific, iterative feedback.</p>
+                <div class="refinement-prompts">
+                    <span class="prompt-chip">"Make this more formal"</span>
+                    <span class="prompt-chip">"Shorten to 2 paragraphs"</span>
+                    <span class="prompt-chip">"Add a call-to-action"</span>
+                    <span class="prompt-chip">"Use bullet points for clarity"</span>
+                </div>
+            </div>
+
+            <div class="workflow-step" data-step="4">
+                <h4>Step 4: Human Polish</h4>
+                <p>AI accelerates creation, but your judgment ensures quality. Always review for accuracy, brand voice, and personal touches.</p>
+            </div>
+        </section>
+
+        <section class="tone-mastery">
+            <h3>🎭 Tone Matching Mastery</h3>
+            <p>Learn to shift the same content across different professional contexts:</p>
+            
+            <div class="tone-comparison">
+                <div class="tone-example" data-tone="professional">
+                    <h5>Professional</h5>
+                    <p>"I am writing to request a meeting to discuss the quarterly performance metrics and strategic initiatives for Q2."</p>
+                </div>
+                <div class="tone-example" data-tone="casual">
+                    <h5>Casual</h5>
+                    <p>"Hey! Can we grab 30 minutes this week to chat about how Q2 went and what's next?"</p>
+                </div>
+                <div class="tone-example" data-tone="persuasive">
+                    <h5>Persuasive</h5>
+                    <p>"This meeting will be pivotal in aligning our Q2 wins with explosive growth strategies for the remainder of the year."</p>
+                </div>
+            </div>
+            
+            <button class="try-in-sandbox" data-exercise="tone-matching">Practice Tone Shifting in Sandbox →</button>
+        </section>
+
+        <section class="pro-tips">
+            <h3>💡 Pro Tips for Beginners</h3>
+            <ul>
+                <li><strong>Start simple:</strong> Begin with clear, single-purpose prompts before building complex ones</li>
+                <li><strong>Iterate aggressively:</strong> The first output is rarely the best—keep refining</li>
+                <li><strong>Save winning prompts:</strong> Build a personal library of prompts that work for your specific needs</li>
+                <li><strong>Verify facts:</strong> AI can hallucinate—always double-check data, names, and dates</li>
+                <li><strong>Protect sensitive info:</strong> Never input confidential company data into public AI tools</li>
+            </ul>
+        </section>
+    </div>
+    """,
+    "learning_objectives": [
+        "Identify and select appropriate AI writing tools for different professional tasks",
+        "Execute rapid drafting techniques to generate emails, reports, and proposals in under 60 seconds",
+        "Apply tone calibration to match professional, casual, and persuasive communication contexts",
+        "Implement the 4-Step AI Writing Workflow for consistent, high-quality output",
+        "Utilize iterative prompting to refine AI-generated content to publication standards",
+        "Demonstrate AI-powered editing and proofreading techniques using integrated sandbox tools"
+    ],
+    "challenge_description": """
+    <div class="challenge-container">
+        <h3>🏆 Module Challenge: The 15-Minute Workday</h3>
+        <p>Complete all three tasks using the interactive sandbox AI LLM panel to demonstrate mastery of AI-assisted writing.</p>
+        
+        <div class="challenge-tasks">
+            <div class="task-card" data-task="1">
+                <h4>Task 1: The Instant Email (5 min)</h4>
+                <p><strong>Scenario:</strong> You need to request a deadline extension from a client.</p>
+                <p><strong>Sandbox Action:</strong> Use the AI panel to draft a professional, apologetic email. Then generate a second version with a confident, solution-oriented tone.</p>
+                <p><strong>Success Criteria:</strong> Both emails maintain professionalism while showing distinct tonal differences.</p>
+            </div>
+
+            <div class="task-card" data-task="2">
+                <h4>Task 2: Report Generation (5 min)</h4>
+                <p><strong>Scenario:</strong> Turn 5 bullet points of raw meeting notes into a structured project update report.</p>
+                <p><strong>Sandbox Action:</strong> Input your bullet points into the AI panel and prompt for a formatted report with executive summary, key decisions, and action items.</p>
+                <p><strong>Success Criteria:</strong> Report follows business format and expands bullets into coherent paragraphs.</p>
+            </div>
+
+            <div class="task-card" data-task="3">
+                <h4>Task 3: The Persuasive Proposal (5 min)</h4>
+                <p><strong>Scenario:</strong> Convince leadership to approve a new software tool purchase.</p>
+                <p><strong>Sandbox Action:</strong> Craft a prompt that generates a compelling 1-page proposal including problem statement, solution, ROI, and implementation timeline.</p>
+                <p><strong>Success Criteria:</strong> Proposal is persuasive, data-informed, and actionable.</p>
+            </div>
+        </div>
+
+        <div class="challenge-hints">
+            <h4>💡 Sandbox Hint System</h4>
+            <p>Stuck? Click the hint button in the AI panel for prompt templates:</p>
+            <ul>
+                <li><strong>Email Template:</strong> "Write a [TONE] email to [AUDIENCE] about [TOPIC]. Include: [ELEMENTS]. Length: [WORDS]."</li>
+                <li><strong>Report Template:</strong> "Convert these notes into a [TYPE] report: [PASTE NOTES]. Structure: [FORMAT]."</li>
+                <li><strong>Proposal Template:</strong> "Create a proposal for [INITIATIVE]. Sections: Problem, Solution, Benefits, Budget, Timeline. Tone: [TONE]."</li>
+            </ul>
+        </div>
+
+        <div class="completion-criteria">
+            <h4>✅ Completion Requirements</h4>
+            <ul>
+                <li>All three sandbox-generated documents submitted</li>
+                <li>Demonstrated use of at least 2 different tones</li>
+                <li>Evidence of iterative refinement (show your prompt evolution)</li>
+                <li>Final outputs ready for actual professional use</li>
+            </ul>
+        </div>
+    </div>
+    """,
+    "created_at": datetime.now(timezone.utc).isoformat()
+}
+
         },
         {
             "module_id": "mod_002",
