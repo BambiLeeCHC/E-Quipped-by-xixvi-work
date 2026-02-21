@@ -393,6 +393,7 @@ class EQuippedAPITester:
             ("AI Chat", self.test_ai_chat_functionality),
             ("Progress Tracking", self.test_progress_tracking),
             ("Admin Functionality", self.test_admin_functionality),
+            ("Master Editor Features", self.test_master_editor_functionality),
             ("Password Recovery", self.test_password_recovery)
         ]
         
