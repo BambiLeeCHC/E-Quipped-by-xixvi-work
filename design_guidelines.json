@@ -1,0 +1,131 @@
+{
+  "identity": {
+    "persona": "E1 - The Anti-AI Designer",
+    "mission": "Create a 'Cyber-Organic' interface that blends cold AI precision with warm human tactility.",
+    "principles": [
+      "Glass is Structure, not Decoration: Use blur for hierarchy, not just aesthetics.",
+      "The 'Human' Touch: Use Beige/Flesh tones for success states and user avatars to ground the tech.",
+      "Neon is Function: Fuchsia indicates 'AI Action', Blue indicates 'System Status'.",
+      "Deep Void: Backgrounds are never flat black; they are deep, infinite midnight (#030014)."
+    ]
+  },
+  "strategies": {
+    "theme": "dark",
+    "mode_logic": "Dark Mode First. Light mode exists only as a 'Day Mode' toggle for long reading, but the default is 'Night/Cyber'.",
+    "glassmorphism": {
+      "technique": "Layered Glass",
+      "base_layer": "bg-black/40 backdrop-blur-md",
+      "top_layer": "bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl",
+      "highlight": "box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.1)"
+    }
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Outfit, sans-serif",
+      "body": "DM Sans, sans-serif",
+      "code": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-7xl font-bold tracking-tight leading-none",
+      "h2": "text-4xl md:text-5xl font-semibold tracking-tight",
+      "h3": "text-2xl md:text-3xl font-medium",
+      "body": "text-base md:text-lg leading-relaxed text-slate-300",
+      "caption": "text-sm text-slate-500 uppercase tracking-widest"
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": "#030014",
+      "surface": "#0F0F1A",
+      "primary": "#D946EF",
+      "primary_hover": "#C026D3",
+      "secondary": "#3B82F6",
+      "accent_human": "#E7D5C9",
+      "accent_human_dim": "#Cfb8a7",
+      "text_main": "#FFFFFF",
+      "text_muted": "#94A3B8",
+      "border_glass": "rgba(255, 255, 255, 0.08)"
+    },
+    "usage": {
+      "fuchsia": "Primary Actions, AI Insights, Active States",
+      "blue": "Navigation, Information, Progress Bars",
+      "beige": "User Avatars, 'Success' Toasts, Human-generated content",
+      "void": "App Background"
+    },
+    "gradients": {
+      "hero_glow": "bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-fuchsia-900/40 via-slate-900/0 to-slate-900/0",
+      "glass_sheen": "bg-gradient-to-b from-white/10 to-transparent"
+    }
+  },
+  "components": {
+    "glass_card": {
+      "name": "GlassCard",
+      "structure": "div",
+      "classes": "relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl transition-all hover:bg-white/10 hover:border-white/20",
+      "best_practice": "Use for Lesson Modules, Dashboard Widgets. Always add a subtle inner glow."
+    },
+    "neon_button": {
+      "name": "NeonButton",
+      "structure": "button",
+      "classes": "group relative flex items-center justify-center gap-2 rounded-full bg-fuchsia-600 px-8 py-4 font-semibold text-white transition-all hover:bg-fuchsia-500 hover:shadow-[0_0_40px_-10px_rgba(217,70,239,0.5)] active:scale-95",
+      "best_practice": "Primary CTA. The shadow is crucial for the 'Neon' feel."
+    },
+    "split_view": {
+      "name": "SplitLayout",
+      "structure": "grid",
+      "classes": "grid h-screen grid-cols-1 overflow-hidden md:grid-cols-2 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_600px]",
+      "best_practice": "Left: Learning Content (Scrollable). Right: AI Sandbox (Fixed, Glass Panel)."
+    },
+    "progress_bar": {
+      "name": "CyberProgress",
+      "classes": "h-2 w-full overflow-hidden rounded-full bg-slate-800",
+      "indicator_classes": "h-full bg-gradient-to-r from-blue-500 to-fuchsia-500 transition-all duration-500 ease-out"
+    }
+  },
+  "layout_strategies": {
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6",
+    "bento_grid": "grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(180px,auto)]",
+    "lesson_layout": "flex h-screen flex-col md:flex-row overflow-hidden"
+  },
+  "motion": {
+    "library": "framer-motion",
+    "settings": {
+      "stiffness": 100,
+      "damping": 20
+    },
+    "page_transition": {
+      "initial": { "opacity": 0, "y": 20 },
+      "animate": { "opacity": 1, "y": 0 },
+      "exit": { "opacity": 0, "y": -20 }
+    }
+  },
+  "visual_enhancers": {
+    "noise_overlay": "pointer-events-none fixed inset-0 z-50 h-full w-full opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]",
+    "glow_blobs": "absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-fuchsia-600/20 blur-[100px]"
+  },
+  "image_urls": {
+    "abstract_backgrounds": [
+      "https://images.unsplash.com/photo-1725781762019-f7165f15282d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdsYXNzJTIwc2hhcGVzJTIwbmVvbiUyMGZ1Y2hzaWElMjBibHVlJTIwdGVjaG5vbG9neSUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzcxNjMzMDU5fDA&ixlib=rb-4.1.0&q=85",
+      "https://images.pexels.com/photos/28428591/pexels-photo-28428591.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+    ],
+    "tech_textures": [
+      "https://images.unsplash.com/photo-1646538646899-16bb487fed03?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGdsYXNzJTIwc2hhcGVzJTIwbmVvbiUyMGZ1Y2hzaWElMjBibHVlJTIwdGVjaG5vbG9neSUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzcxNjMzMDU5fDA&ixlib=rb-4.1.0&q=85"
+    ]
+  },
+  "universal_guidelines": [
+    "Never use solid black (#000000) for backgrounds. Use #030014.",
+    "Always use 'backdrop-blur-xl' for floating panels.",
+    "Text on glass must be White (Primary) or Slate-300 (Secondary). Never use Gray-500 on glass.",
+    "Input fields should be 'bg-white/5 border-white/10' with 'focus:border-fuchsia-500'.",
+    "Use 'Flesh/Beige' colors for User Avatar borders and 'Success' states to add warmth.",
+    "All interactive elements must have 'data-testid' attributes."
+  ],
+  "instructions_to_main_agent": [
+    "1. Setup Tailwind config with the custom colors (void, fuchsia, beige).",
+    "2. Install 'framer-motion' and 'lucide-react'.",
+    "3. Create a global 'Glass' utility class in index.css.",
+    "4. Build the 'Lesson View' first as it's the core USP (Split view).",
+    "5. Use the 'Noise Overlay' on the body to give texture.",
+    "6. Ensure the 'AI Sandbox' has a code-editor feel (JetBrains Mono)."
+  ]
+}
