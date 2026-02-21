@@ -316,6 +316,7 @@ async def google_oauth_session(request: Request, response: Response):
             "daily_streak": 0,
             "is_admin": False,
             "is_master": False,
+            "is_verified": False,  # Trial user by default
             "avatar": get_avatar(name_parts[0], name_parts[1] if len(name_parts) > 1 else ""),
             "created_at": datetime.now(timezone.utc).isoformat(),
             "last_login": datetime.now(timezone.utc).isoformat()
