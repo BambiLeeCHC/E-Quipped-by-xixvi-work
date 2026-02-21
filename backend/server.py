@@ -66,6 +66,7 @@ class UserResponse(BaseModel):
     current_level: int = 1
     daily_streak: int = 0
     is_admin: bool = False
+    is_master: bool = False
     avatar: str = ""
     created_at: str
     picture: Optional[str] = ""
@@ -83,6 +84,15 @@ class ModuleCreate(BaseModel):
     difficulty: str = "Beginner"
     estimated_hours: int = 8
 
+class ModuleUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    slug: Optional[str] = None
+    order_index: Optional[int] = None
+    is_published: Optional[bool] = None
+    difficulty: Optional[str] = None
+    estimated_hours: Optional[int] = None
+
 class LessonCreate(BaseModel):
     module_id: str
     title: str
@@ -93,6 +103,18 @@ class LessonCreate(BaseModel):
     difficulty_level: str = "beginner"
     estimated_minutes: int = 30
     xp_reward: int = 100
+
+class LessonUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    slug: Optional[str] = None
+    order_index: Optional[int] = None
+    content: Optional[str] = None
+    difficulty_level: Optional[str] = None
+    estimated_minutes: Optional[int] = None
+    xp_reward: Optional[int] = None
+    learning_objectives: Optional[List[str]] = None
+    challenge_description: Optional[str] = None
 
 class ChatMessage(BaseModel):
     content: str
@@ -112,6 +134,11 @@ class ProgressUpdate(BaseModel):
     progress: int
     score: Optional[int] = None
     completed: bool = False
+
+class AIContentRequest(BaseModel):
+    prompt: str
+    content_type: str  # "module", "lesson", "objective", "challenge"
+    context: Optional[str] = None
 
 # ==================== HELPER FUNCTIONS ====================
 
@@ -186,6 +213,12 @@ async def require_admin(request: Request, credentials: Optional[HTTPAuthorizatio
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
+async def require_master(request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    user = await require_user(request, credentials)
+    if not user.get("is_master"):
+        raise HTTPException(status_code=403, detail="Master editor access required")
+    return user
+
 def get_avatar(first_name: str, last_name: str) -> str:
     return (first_name[:1] + last_name[:1]).upper() if first_name and last_name else "U"
 
@@ -210,6 +243,7 @@ async def register(user_data: UserCreate):
         "current_level": 1,
         "daily_streak": 0,
         "is_admin": False,
+        "is_master": False,
         "avatar": get_avatar(user_data.first_name, user_data.last_name),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "last_login": datetime.now(timezone.utc).isoformat()
@@ -280,6 +314,7 @@ async def google_oauth_session(request: Request, response: Response):
             "current_level": 1,
             "daily_streak": 0,
             "is_admin": False,
+            "is_master": False,
             "avatar": get_avatar(name_parts[0], name_parts[1] if len(name_parts) > 1 else ""),
             "created_at": datetime.now(timezone.utc).isoformat(),
             "last_login": datetime.now(timezone.utc).isoformat()
@@ -351,18 +386,23 @@ async def get_modules(request: Request, credentials: Optional[HTTPAuthorizationC
             completed = sum(1 for p in progress if p.get("completed"))
             module["completed_lessons"] = completed
             
-            for lesson in lessons:
+            for i, lesson in enumerate(lessons):
                 lesson_progress = next((p for p in progress if p.get("lesson_id") == lesson["lesson_id"]), None)
                 if lesson_progress:
                     lesson["status"] = "completed" if lesson_progress.get("completed") else "in_progress"
                     lesson["progress"] = lesson_progress.get("progress", 0)
                     lesson["score"] = lesson_progress.get("score")
                 else:
-                    prev_completed = lesson["order_index"] == 1 or any(
-                        p.get("completed") and p.get("lesson_id") == lessons[lesson["order_index"]-2]["lesson_id"]
-                        for p in progress
-                    ) if lesson["order_index"] > 1 else True
-                    lesson["status"] = "available" if prev_completed else "locked"
+                    # First lesson is always available, others depend on previous completion
+                    if i == 0:
+                        lesson["status"] = "available"
+                    else:
+                        prev_lesson = lessons[i - 1]
+                        prev_progress = next((p for p in progress if p.get("lesson_id") == prev_lesson["lesson_id"]), None)
+                        if prev_progress and prev_progress.get("completed"):
+                            lesson["status"] = "available"
+                        else:
+                            lesson["status"] = "locked"
         else:
             module["completed_lessons"] = 0
             for i, lesson in enumerate(lessons):
@@ -370,9 +410,11 @@ async def get_modules(request: Request, credentials: Optional[HTTPAuthorizationC
     
     return modules
 
-@api_router.get("/modules/{slug}")
-async def get_module(slug: str, request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
-    module = await db.modules.find_one({"slug": slug}, {"_id": 0})
+@api_router.get("/modules/{module_id}")
+async def get_module(module_id: str, request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    module = await db.modules.find_one({"module_id": module_id}, {"_id": 0})
+    if not module:
+        module = await db.modules.find_one({"slug": module_id}, {"_id": 0})
     if not module:
         raise HTTPException(status_code=404, detail="Module not found")
     
@@ -382,15 +424,38 @@ async def get_module(slug: str, request: Request, credentials: Optional[HTTPAuth
     return module
 
 @api_router.post("/modules")
-async def create_module(module_data: ModuleCreate, user: dict = Depends(require_admin)):
+async def create_module(module_data: ModuleCreate, user: dict = Depends(require_master)):
     module_id = f"mod_{uuid.uuid4().hex[:8]}"
     module = {
         "module_id": module_id,
         **module_data.model_dump(),
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": user["user_id"]
     }
     await db.modules.insert_one(module)
     return {k: v for k, v in module.items() if k != "_id"}
+
+@api_router.put("/modules/{module_id}")
+async def update_module(module_id: str, module_data: ModuleUpdate, user: dict = Depends(require_master)):
+    update_data = {k: v for k, v in module_data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_by"] = user["user_id"]
+    
+    result = await db.modules.update_one({"module_id": module_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Module not found")
+    
+    updated = await db.modules.find_one({"module_id": module_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/modules/{module_id}")
+async def delete_module(module_id: str, user: dict = Depends(require_master)):
+    result = await db.modules.delete_one({"module_id": module_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Module not found")
+    await db.lessons.delete_many({"module_id": module_id})
+    return {"message": "Module deleted successfully"}
 
 # ==================== LESSONS ROUTES ====================
 
@@ -399,6 +464,22 @@ async def get_lesson(lesson_id: str, request: Request, credentials: Optional[HTT
     lesson = await db.lessons.find_one({"lesson_id": lesson_id}, {"_id": 0})
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    # Get module info
+    module = await db.modules.find_one({"module_id": lesson["module_id"]}, {"_id": 0})
+    if module:
+        lesson["module_title"] = module.get("title", "")
+        
+        # Get all lessons in this module for navigation
+        all_lessons = await db.lessons.find({"module_id": lesson["module_id"]}, {"_id": 0}).sort("order_index", 1).to_list(20)
+        lesson["total_lessons_in_module"] = len(all_lessons)
+        
+        # Find previous and next lessons
+        current_index = next((i for i, l in enumerate(all_lessons) if l["lesson_id"] == lesson_id), -1)
+        if current_index > 0:
+            lesson["prev_lesson"] = {"lesson_id": all_lessons[current_index - 1]["lesson_id"], "title": all_lessons[current_index - 1]["title"]}
+        if current_index < len(all_lessons) - 1:
+            lesson["next_lesson"] = {"lesson_id": all_lessons[current_index + 1]["lesson_id"], "title": all_lessons[current_index + 1]["title"]}
     
     user = await get_current_user(request, credentials)
     if user:
@@ -412,15 +493,39 @@ async def get_lesson(lesson_id: str, request: Request, credentials: Optional[HTT
     return lesson
 
 @api_router.post("/lessons")
-async def create_lesson(lesson_data: LessonCreate, user: dict = Depends(require_admin)):
+async def create_lesson(lesson_data: LessonCreate, user: dict = Depends(require_master)):
     lesson_id = f"les_{uuid.uuid4().hex[:8]}"
     lesson = {
         "lesson_id": lesson_id,
         **lesson_data.model_dump(),
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "learning_objectives": [],
+        "challenge_description": "",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": user["user_id"]
     }
     await db.lessons.insert_one(lesson)
     return {k: v for k, v in lesson.items() if k != "_id"}
+
+@api_router.put("/lessons/{lesson_id}")
+async def update_lesson(lesson_id: str, lesson_data: LessonUpdate, user: dict = Depends(require_master)):
+    update_data = {k: v for k, v in lesson_data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_by"] = user["user_id"]
+    
+    result = await db.lessons.update_one({"lesson_id": lesson_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    updated = await db.lessons.find_one({"lesson_id": lesson_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/lessons/{lesson_id}")
+async def delete_lesson(lesson_id: str, user: dict = Depends(require_master)):
+    result = await db.lessons.delete_one({"lesson_id": lesson_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    return {"message": "Lesson deleted successfully"}
 
 # ==================== PROGRESS ROUTES ====================
 
@@ -454,6 +559,8 @@ async def update_progress(data: ProgressUpdate, user: dict = Depends(require_use
         progress_doc["started_at"] = datetime.now(timezone.utc).isoformat()
         await db.user_progress.insert_one(progress_doc)
     
+    response_data = {"message": "Progress updated", "completed": data.completed}
+    
     if data.completed and lesson.get("xp_reward"):
         xp_gain = lesson["xp_reward"]
         if data.score and data.score >= 90:
@@ -467,9 +574,16 @@ async def update_progress(data: ProgressUpdate, user: dict = Depends(require_use
             {"$set": {"xp_total": new_xp, "current_level": new_level}}
         )
         
-        return {"message": "Progress updated", "xp_gained": xp_gain, "new_total": new_xp, "level": new_level}
+        response_data.update({"xp_gained": xp_gain, "new_total": new_xp, "level": new_level})
+        
+        # Check if there's a next lesson to unlock
+        all_lessons = await db.lessons.find({"module_id": lesson["module_id"]}, {"_id": 0}).sort("order_index", 1).to_list(20)
+        current_index = next((i for i, l in enumerate(all_lessons) if l["lesson_id"] == data.lesson_id), -1)
+        if current_index < len(all_lessons) - 1:
+            next_lesson = all_lessons[current_index + 1]
+            response_data["next_lesson"] = {"lesson_id": next_lesson["lesson_id"], "title": next_lesson["title"]}
     
-    return {"message": "Progress updated"}
+    return response_data
 
 def calculate_level(xp: int) -> int:
     thresholds = [0, 500, 1500, 3000, 5000, 8000, 12000, 17000, 23000, 30000]
@@ -477,6 +591,40 @@ def calculate_level(xp: int) -> int:
         if xp < threshold:
             return i
     return len(thresholds)
+
+# ==================== AI CONTENT GENERATION ====================
+
+@api_router.post("/ai/generate-content")
+async def generate_content(request: AIContentRequest, user: dict = Depends(require_master)):
+    """Use AI to generate course content"""
+    system_prompts = {
+        "module": """You are an expert curriculum designer for AI skills training. Generate detailed module content including title, description, learning outcomes, and suggested lessons. Format the response as JSON with keys: title, description, difficulty, estimated_hours, suggested_lessons (array).""",
+        "lesson": """You are an expert educational content creator. Generate detailed lesson content including title, description, content body, learning objectives, and a practical challenge. Format as JSON with keys: title, description, content, learning_objectives (array), challenge_description, estimated_minutes, xp_reward.""",
+        "objective": """You are an expert at writing clear, measurable learning objectives. Generate 3-5 learning objectives in the SMART format. Return as a JSON array of strings.""",
+        "challenge": """You are an expert at creating practical AI prompt engineering challenges. Generate a hands-on challenge description that tests the learner's skills. Return as JSON with keys: challenge_description, hints (array), success_criteria (array)."""
+    }
+    
+    system_message = system_prompts.get(request.content_type, system_prompts["lesson"])
+    
+    try:
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"content_gen_{uuid.uuid4().hex[:8]}",
+            system_message=system_message
+        )
+        chat.with_model("openai", "gpt-5.2")
+        
+        full_prompt = request.prompt
+        if request.context:
+            full_prompt = f"Context: {request.context}\n\nRequest: {request.prompt}"
+        
+        user_msg = UserMessage(text=full_prompt)
+        response_text = await chat.send_message(user_msg)
+        
+        return {"generated_content": response_text, "content_type": request.content_type}
+    except Exception as e:
+        logger.error(f"AI content generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate content: {str(e)}")
 
 # ==================== AI CHAT ROUTES ====================
 
@@ -497,14 +645,7 @@ async def chat_with_ai(message: ChatMessage, user: dict = Depends(require_user))
     }
     await db.chat_history.insert_one(chat_doc)
     
-    # Get chat history for context
-    history = await db.chat_history.find(
-        {"session_id": session_id},
-        {"_id": 0}
-    ).sort("timestamp", 1).to_list(50)
-    
     try:
-        # Initialize LLM chat
         system_message = """You are an expert AI tutor for the E-Quipped AI Mastery Platform. You help users learn how to effectively use AI tools for professional tasks.
 
 When evaluating prompts, assess them based on 4 core elements:
@@ -535,12 +676,11 @@ For weaker prompts, explain what's missing and suggest improvements."""
         user_msg = UserMessage(text=message.content)
         response_text = await chat.send_message(user_msg)
         
-        # Analyze prompt quality
         quality_score, tips = analyze_prompt_quality(message.content)
         
     except Exception as e:
         logger.error(f"AI Chat error: {e}")
-        response_text = f"I apologize, but I encountered an error processing your request. Please try again. Error: {str(e)}"
+        response_text = f"I apologize, but I encountered an error processing your request. Please try again."
         quality_score = None
         tips = None
     
@@ -616,14 +756,11 @@ async def get_chat_history(session_id: str, user: dict = Depends(require_user)):
 
 @api_router.get("/admin/analytics")
 async def get_analytics(user: dict = Depends(require_admin)):
-    # Get user stats
     total_users = await db.users.count_documents({})
     
-    # Get active users (logged in last 30 days)
     thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     active_users = await db.users.count_documents({"last_login": {"$gte": thirty_days_ago}})
     
-    # Get completion rates by module
     modules = await db.modules.find({}, {"_id": 0}).to_list(100)
     completion_rates = []
     
@@ -645,21 +782,18 @@ async def get_analytics(user: dict = Depends(require_admin)):
             "completion_rate": rate
         })
     
-    # Get sandbox stats
     sandbox_stats = await db.analytics.find({}, {"_id": 0}).sort("date", -1).to_list(30)
     total_sandbox = sum(s.get("sandbox_sessions", 0) for s in sandbox_stats)
     total_prompts = sum(s.get("prompts_tested", 0) for s in sandbox_stats)
     
-    # Get daily active users for chart
     daily_users = []
     for i in range(30):
         date = (datetime.now(timezone.utc) - timedelta(days=29-i)).strftime("%Y-%m-%d")
         count = await db.users.count_documents({
             "last_login": {"$regex": f"^{date}"}
         })
-        daily_users.append({"date": date, "count": max(count, 10 + (i * 3))})  # Fallback data for demo
+        daily_users.append({"date": date, "count": max(count, 10 + (i * 3))})
     
-    # Top performers
     top_users = await db.users.find(
         {},
         {"_id": 0, "password_hash": 0}
@@ -736,6 +870,12 @@ async def seed_initial_data():
             "estimated_minutes": 30,
             "xp_reward": 100,
             "content": "Welcome to AI Writing! In this lesson, you'll learn the basics of working with AI to create professional content.",
+            "learning_objectives": [
+                "Understand AI writing capabilities and limitations",
+                "Learn the 4 Core Elements of effective prompts",
+                "Practice basic prompt engineering techniques"
+            ],
+            "challenge_description": "Create a professional email using AI assistance with the 4 Core Elements framework.",
             "created_at": datetime.now(timezone.utc).isoformat()
         },
         {
@@ -749,6 +889,12 @@ async def seed_initial_data():
             "estimated_minutes": 120,
             "xp_reward": 500,
             "content": "Creating long documents requires structure. Learn the outline-first approach.",
+            "learning_objectives": [
+                "Master the Outline-First strategy for documents over 1000 words",
+                "Learn section-by-section generation techniques",
+                "Maintain consistency across long-form content"
+            ],
+            "challenge_description": "Create a 2000-word Remote Work Policy document using the outline-first approach.",
             "created_at": datetime.now(timezone.utc).isoformat()
         },
         {
@@ -762,6 +908,12 @@ async def seed_initial_data():
             "estimated_minutes": 60,
             "xp_reward": 250,
             "content": "Refinement is key to quality. Learn editing techniques for AI content.",
+            "learning_objectives": [
+                "Use AI for iterative content improvement",
+                "Apply tone and style adjustments",
+                "Master fact-checking and accuracy verification"
+            ],
+            "challenge_description": "Take a rough AI draft and refine it through 3 iterations to professional quality.",
             "created_at": datetime.now(timezone.utc).isoformat()
         },
         {
@@ -775,6 +927,12 @@ async def seed_initial_data():
             "estimated_minutes": 90,
             "xp_reward": 400,
             "content": "Modern documents combine multiple formats. Learn multi-modal creation.",
+            "learning_objectives": [
+                "Integrate text with data visualizations",
+                "Create cohesive multi-format documents",
+                "Optimize content for different audiences"
+            ],
+            "challenge_description": "Create a quarterly business report combining narrative, charts, and data tables.",
             "created_at": datetime.now(timezone.utc).isoformat()
         }
     ]
@@ -795,7 +953,27 @@ async def seed_initial_data():
         "current_level": 5,
         "daily_streak": 15,
         "is_admin": True,
+        "is_master": False,
         "avatar": "AU",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_login": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Create master editor user
+    master_editor = {
+        "user_id": generate_user_id(),
+        "email": "master@equipped.ai",
+        "username": "master",
+        "password_hash": hash_password("master123"),
+        "first_name": "Master",
+        "last_name": "Editor",
+        "phone": "",
+        "xp_total": 10000,
+        "current_level": 10,
+        "daily_streak": 30,
+        "is_admin": True,
+        "is_master": True,
+        "avatar": "ME",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "last_login": datetime.now(timezone.utc).isoformat()
     }
@@ -803,6 +981,10 @@ async def seed_initial_data():
     existing_admin = await db.users.find_one({"email": "admin@equipped.ai"})
     if not existing_admin:
         await db.users.insert_one(demo_admin)
+    
+    existing_master = await db.users.find_one({"email": "master@equipped.ai"})
+    if not existing_master:
+        await db.users.insert_one(master_editor)
     
     return modules_data
 
