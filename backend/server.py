@@ -816,6 +816,61 @@ async def get_all_users(user: dict = Depends(require_admin)):
     users = await db.users.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
     return users
 
+class UserVerificationUpdate(BaseModel):
+    is_verified: bool
+
+@api_router.put("/admin/users/{user_id}/verify")
+async def update_user_verification(user_id: str, data: UserVerificationUpdate, admin: dict = Depends(require_admin)):
+    """Verify or revoke user access - paywall control"""
+    result = await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"is_verified": data.is_verified, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    updated_user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+    return updated_user
+
+# ==================== SCREENSHOT DETECTION ====================
+
+class ScreenshotAttempt(BaseModel):
+    type: str
+    page: str
+    lesson_id: Optional[str] = None
+
+@api_router.post("/security/screenshot-attempt")
+async def report_screenshot_attempt(data: ScreenshotAttempt, user: dict = Depends(require_user)):
+    """Log screenshot/screen capture attempt and notify admins"""
+    alert = {
+        "user_id": user["user_id"],
+        "user_email": user.get("email", ""),
+        "user_name": f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+        "type": data.type,
+        "page": data.page,
+        "lesson_id": data.lesson_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "read": False
+    }
+    await db.screenshot_alerts.insert_one(alert)
+    logger.warning(f"Screenshot attempt detected: {user.get('email')} on {data.page} ({data.type})")
+    return {"message": "Alert logged"}
+
+@api_router.get("/admin/screenshot-alerts")
+async def get_screenshot_alerts(user: dict = Depends(require_admin)):
+    """Get all screenshot/screen capture alerts for admin review"""
+    alerts = await db.screenshot_alerts.find({}, {"_id": 0}).sort("timestamp", -1).to_list(100)
+    return alerts
+
+@api_router.put("/admin/screenshot-alerts/{alert_id}/read")
+async def mark_alert_read(alert_id: str, user: dict = Depends(require_admin)):
+    """Mark screenshot alert as read"""
+    await db.screenshot_alerts.update_one(
+        {"_id": alert_id},
+        {"$set": {"read": True}}
+    )
+    return {"message": "Alert marked as read"}
+
 # ==================== SEED DATA ====================
 
 async def seed_initial_data():
