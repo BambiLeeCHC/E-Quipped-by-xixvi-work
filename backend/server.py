@@ -1012,6 +1012,7 @@ async def seed_initial_data():
         "daily_streak": 15,
         "is_admin": True,
         "is_master": False,
+        "is_verified": True,  # Admin has full access
         "avatar": "AU",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "last_login": datetime.now(timezone.utc).isoformat()
@@ -1028,6 +1029,14 @@ async def seed_initial_data():
         "phone": "",
         "xp_total": 10000,
         "current_level": 10,
+        "daily_streak": 30,
+        "is_admin": True,
+        "is_master": True,
+        "is_verified": True,  # Master has full access
+        "avatar": "ME",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_login": datetime.now(timezone.utc).isoformat()
+    }
         "daily_streak": 30,
         "is_admin": True,
         "is_master": True,
