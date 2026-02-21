@@ -271,6 +271,95 @@ class EQuippedAPITester:
         
         return analytics_success and users_success
 
+    def test_master_editor_functionality(self):
+        """Test master editor features"""
+        print("\n👨‍💻 === MASTER EDITOR TESTS ===")
+        
+        # Login as master user
+        master_login_success, master_login_response = self.run_test(
+            "Master User Login",
+            "POST", 
+            "auth/login",
+            200,
+            data={"email": "master@equipped.ai", "password": "master123"}
+        )
+        
+        if not master_login_success:
+            return False
+            
+        # Store master token
+        master_token = self.token
+        self.token = master_login_response.get('token')
+        master_user = master_login_response.get('user', {})
+        
+        if not master_user.get('is_master'):
+            print("   ❌ User does not have master editor privileges")
+            return False
+            
+        print(f"   ✅ Master user authenticated: {master_user.get('email')}")
+        
+        # Test AI content generation endpoint
+        ai_content_data = {
+            "prompt": "Create a lesson about prompt engineering basics",
+            "content_type": "lesson",
+            "context": "This is for beginner AI users"
+        }
+        
+        ai_content_success, ai_content_response = self.run_test(
+            "AI Content Generation",
+            "POST",
+            "ai/generate-content",
+            200,
+            data=ai_content_data
+        )
+        
+        # Test module update (master only)
+        modules_success, modules_response = self.run_test(
+            "Get Modules for Master Test",
+            "GET",
+            "modules",
+            200
+        )
+        
+        module_update_success = False
+        if modules_success and isinstance(modules_response, list) and len(modules_response) > 0:
+            module_id = modules_response[0].get('module_id')
+            update_data = {
+                "description": "Updated by master editor test"
+            }
+            
+            module_update_success, _ = self.run_test(
+                f"Update Module (Master Only)",
+                "PUT",
+                f"modules/{module_id}",
+                200,
+                data=update_data
+            )
+        
+        # Test lesson update (master only)
+        lesson_update_success = False
+        if modules_success and isinstance(modules_response, list):
+            for module in modules_response:
+                if 'lessons' in module and len(module['lessons']) > 0:
+                    lesson_id = module['lessons'][0]['lesson_id']
+                    lesson_update_data = {
+                        "title": "Updated by master editor test"
+                    }
+                    
+                    lesson_update_success, _ = self.run_test(
+                        f"Update Lesson (Master Only)",
+                        "PUT",
+                        f"lessons/{lesson_id}",
+                        200,
+                        data=lesson_update_data
+                    )
+                    break
+        
+        # Restore original token
+        self.token = master_token
+        
+        return ai_content_success and module_update_success and lesson_update_success
+
     def test_password_recovery(self):
         """Test password recovery functionality"""
         print("\n🔓 === PASSWORD RECOVERY TESTS ===")
