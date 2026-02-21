@@ -20,6 +20,34 @@ const API = `${BACKEND_URL}/api`;
 // Configure axios defaults
 axios.defaults.withCredentials = true;
 
+// Add axios interceptor to include token in all requests
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("equipped_token");
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Add axios response interceptor to handle auth errors
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid - but don't redirect during login/register
+      const publicPaths = ['/login', '/register', '/recovery', '/auth/callback'];
+      if (!publicPaths.some(path => window.location.pathname.includes(path))) {
+        // Token is invalid, clear storage but let the auth check handle redirect
+        console.log("401 error - token may be expired");
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ==================== CONTEXT ====================
 
 const AuthContext = createContext(null);
