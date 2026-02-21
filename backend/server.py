@@ -1037,13 +1037,6 @@ async def seed_initial_data():
         "created_at": datetime.now(timezone.utc).isoformat(),
         "last_login": datetime.now(timezone.utc).isoformat()
     }
-        "daily_streak": 30,
-        "is_admin": True,
-        "is_master": True,
-        "avatar": "ME",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "last_login": datetime.now(timezone.utc).isoformat()
-    }
     
     existing_admin = await db.users.find_one({"email": "admin@equipped.ai"})
     if not existing_admin:
