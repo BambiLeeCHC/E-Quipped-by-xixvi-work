@@ -1,7 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import {
   BookOpen,
@@ -17,9 +16,7 @@ import {
   Mic,
   Play,
   Search,
-  Send,
   Sparkles,
-  Star,
   Trophy,
   TrendingUp,
   Zap,
@@ -48,57 +45,6 @@ const MODULE_COLORS = [
   { from: "from-rose-400",    to: "to-red-400", text: "text-rose-600", border: "border-rose-200/60", active: "bg-rose-50 text-rose-700 border-rose-200/60" },
   { from: "from-indigo-400",  to: "to-blue-500", text: "text-indigo-600", border: "border-indigo-200/60", active: "bg-indigo-50 text-indigo-700 border-indigo-200/60" },
 ];
-
-// ── Access Request Card ────────────────────────────────────────────────────────
-function AccessRequestCard({ onRequested }: { onRequested: () => void }) {
-  const [message, setMessage] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const requestMutation = trpc.access.request.useMutation({
-    onSuccess: () => {
-      setSubmitted(true);
-      onRequested();
-      toast.success("Access request submitted! An admin will review it shortly.");
-    },
-    onError: () => toast.error("Failed to submit request. Please try again."),
-  });
-
-  if (submitted) {
-    return (
-      <div className="rounded-2xl border border-green-300/60 bg-green-50 p-6 text-center">
-        <CheckCircle2 className="w-10 h-10 text-green-500 mx-auto mb-3" />
-        <h3 className="font-semibold text-green-700 mb-1">Request Submitted</h3>
-        <p className="text-sm text-green-600/80">An admin will review your request and grant access shortly.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-2xl border border-fuchsia-200/60 bg-fuchsia-50/60 p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <Lock className="w-6 h-6 text-fuchsia-500" />
-        <div>
-          <h3 className="font-semibold text-foreground">Full Access Required</h3>
-          <p className="text-sm text-foreground/55">Request admin approval to unlock all modules and lessons</p>
-        </div>
-      </div>
-      <Textarea
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Optional: tell us about yourself and why you'd like access…"
-        className="resize-none bg-white border-border/60 focus:border-fuchsia-400 mb-3"
-        rows={3}
-      />
-      <Button
-        onClick={() => requestMutation.mutate({ message: message || undefined })}
-        disabled={requestMutation.isPending}
-        className="w-full gradient-primary text-white border-0 glow-primary"
-      >
-        <Send className="w-4 h-4 mr-2" />
-        {requestMutation.isPending ? "Submitting…" : "Request Full Access"}
-      </Button>
-    </div>
-  );
-}
 
 // ── Lesson Row ─────────────────────────────────────────────────────────────────
 function LessonRow({
@@ -308,7 +254,6 @@ export default function CourseCatalog() {
   const [, setLocation] = useLocation();
   const [activeModule, setActiveModule] = useState<number | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set([0]));
-  const [accessRequested, setAccessRequested] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const isAuthenticated = !loading && !!user;
@@ -332,14 +277,8 @@ export default function CourseCatalog() {
     { enabled: isAuthenticated }
   );
 
-  const { data: myRequest } = trpc.access.myRequest.useQuery(
-    undefined,
-    { enabled: isAuthenticated }
-  );
-
   const isVerified = (accessData as { isVerified?: boolean } | undefined)?.isVerified ?? false;
   const hasActiveSubscription = (accessData as { hasActiveSubscription?: boolean } | undefined)?.hasActiveSubscription ?? false;
-  const hasPendingRequest = myRequest?.status === "pending";
 
   // hasProSubscription is now derived from the backend courseAccess response
   // (which already merges subscription + admin-verified status into isVerified)
@@ -444,9 +383,8 @@ export default function CourseCatalog() {
           )}
         </div>
 
-        {/* Access banners */}
-        {/* Pro subscribers and admin-verified users: no banner needed — they have full access */}
-        {isAuthenticated && !isVerified && !hasPendingRequest && !accessRequested && (
+        {/* Access banner — shown only to authenticated users without access */}
+        {isAuthenticated && !isVerified && (
           <div className="mb-8 rounded-2xl border-2 border-fuchsia-200/60 bg-gradient-to-br from-fuchsia-50/80 to-violet-50/60 p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row items-start gap-5">
               {/* Icon */}
@@ -467,14 +405,6 @@ export default function CourseCatalog() {
                   >
                     <Crown className="w-3.5 h-3.5 mr-1.5" />Get Lifetime Access — $675
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-fuchsia-200 text-fuchsia-700 hover:bg-fuchsia-50 bg-white/70"
-                    onClick={() => setAccessRequested(true)}
-                  >
-                    Request Admin Access
-                  </Button>
                 </div>
                 <p className="text-xs text-fuchsia-700/50 mt-2.5 flex items-center gap-1">
                   <span className="w-3.5 h-3.5 rounded-full bg-emerald-100 inline-flex items-center justify-center">
@@ -483,20 +413,6 @@ export default function CourseCatalog() {
                   One-time payment · No subscription · 7-day money-back guarantee
                 </p>
               </div>
-            </div>
-            {accessRequested && (
-              <div className="mt-4 pt-4 border-t border-fuchsia-200/60">
-                <AccessRequestCard onRequested={() => { void refetchAccess(); }} />
-              </div>
-            )}
-          </div>
-        )}
-        {isAuthenticated && (hasPendingRequest) && !isVerified && (
-          <div className="mb-8 rounded-2xl border border-yellow-300/60 bg-yellow-50 p-4 flex items-center gap-3">
-            <Star className="w-5 h-5 text-yellow-500 shrink-0" />
-            <div className="flex-1">
-              <p className="font-medium text-yellow-700">Admin Access Request Pending</p>
-              <p className="text-sm text-yellow-600/80">An admin will review your request shortly. Or <button onClick={() => setLocation("/pricing")} className="underline font-medium">upgrade to Pro</button> for instant access.</p>
             </div>
           </div>
         )}

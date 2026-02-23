@@ -273,3 +273,14 @@
 - [x] Open Graph tags: og:type, og:title, og:description, og:url, og:site_name, og:locale
 - [x] Twitter Card tags: summary_large_image, twitter:title, twitter:description
 - [x] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 31: Remove Request Admin Access
+- [x] Removed AccessRequestCard component entirely from CourseCatalog
+- [x] Removed trpc.access.request.useMutation and all its state/handlers
+- [x] Removed trpc.access.myRequest query and hasPendingRequest derived state
+- [x] Removed accessRequested useState and setAccessRequested
+- [x] Removed pending-approval yellow banner
+- [x] Removed "Request Admin Access" secondary button from the upgrade banner
+- [x] Removed unused Textarea, Send, Star, CheckCircle2 imports
+- [x] Access banner now shows only the single "Get Lifetime Access — $675" CTA
+- [x] 25 vitest tests passing, zero TypeScript errors
