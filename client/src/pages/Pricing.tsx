@@ -408,7 +408,7 @@ export default function Pricing() {
                 },
                 {
                   q: "Can I get a refund?",
-                  a: "Absolutely. If you're not satisfied within 7 days of purchase, email us at support@e-quipped.com for a full refund — no questions asked. We stand behind the quality of the content.",
+                  a: "Absolutely. If you're not satisfied within 7 days of purchase, email us at equippedbyxixvi@gmail.com for a full refund — no questions asked. We stand behind the quality of the content.",
                 },
                 {
                   q: "Do I need a subscription to keep my access?",

@@ -2,10 +2,16 @@
  * client/src/components/FloatingSandbox.tsx
  *
  * Global floating AI Sandbox widget.
- * Renders on every page via App.tsx.
- * A FAB (floating action button) in the bottom-right corner opens/closes
- * the full sandbox drawer. The drawer slides in from the right and the
- * page content shifts left on desktop to keep everything visible.
+ * Renders on every page via App.tsx (suppressed on /sandbox).
+ *
+ * Reflow strategy: Instead of padding body (which leaves fixed headers misaligned),
+ * we inject a CSS rule on #app-layout-root that transitions its margin-right to
+ * match the drawer width. All page content (including sticky headers) reflows
+ * naturally because they are children of that div.
+ *
+ * Lesson context: When the user is on /lessons/:slug, we fetch the lesson title
+ * and display it as a context pill in the drawer header. A "Use Lesson Prompt"
+ * button pre-fills the system prompt with the lesson's applied prompt template.
  */
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +22,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import {
   BookmarkPlus,
+  BookOpen,
   FlaskConical,
   PanelRightClose,
   Send,
@@ -24,15 +31,17 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
 
 type Message = { role: "system" | "user" | "assistant"; content: string };
 
-// Width of the open sandbox drawer
-const DRAWER_WIDTH = "min(420px, 92vw)";
+const DRAWER_W_PX = 420;
+const DRAWER_WIDTH = `min(${DRAWER_W_PX}px, 92vw)`;
 
 export default function FloatingSandbox() {
   const { user } = useAuth();
+  const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState("You are a helpful AI assistant.");
   const [userInput, setUserInput] = useState("");
@@ -44,12 +53,38 @@ export default function FloatingSandbox() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to latest message
+  // ── Detect lesson context ──────────────────────────────────────────────────
+  const lessonSlugMatch = location.match(/^\/lessons\/(.+)$/);
+  const lessonSlug = lessonSlugMatch ? lessonSlugMatch[1] : null;
+
+  const { data: lessonData } = trpc.lessons.bySlug.useQuery(
+    { slug: lessonSlug ?? "" },
+    { enabled: !!lessonSlug }
+  );
+
+  const lessonTitle = lessonData?.title ?? null;
+  // promptTemplate column does not exist in DB yet — lesson context is display-only
+  const lessonPromptTemplate: string | null = null;
+
+  // ── Auto-scroll ────────────────────────────────────────────────────────────
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Lock body scroll on mobile when drawer is open
+  // ── Reflow: shift #app-layout-root margin-right on desktop ────────────────
+  useEffect(() => {
+    const root = document.getElementById("app-layout-root");
+    if (!root) return;
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return;
+    root.style.transition = "margin-right 0.32s cubic-bezier(0.16,1,0.3,1)";
+    root.style.marginRight = isOpen ? DRAWER_WIDTH : "0";
+    return () => {
+      root.style.marginRight = "0";
+    };
+  }, [isOpen]);
+
+  // ── Lock body scroll on mobile when drawer is open ────────────────────────
   useEffect(() => {
     if (window.innerWidth < 768) {
       document.body.style.overflow = isOpen ? "hidden" : "";
@@ -57,14 +92,13 @@ export default function FloatingSandbox() {
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
+  // ── tRPC mutations ─────────────────────────────────────────────────────────
   const chatMutation = trpc.sandbox.chat.useMutation({
     onSuccess: (data) => {
       const content = typeof data.content === "string" ? data.content : JSON.stringify(data.content);
       setMessages((prev) => [...prev, { role: "assistant", content }]);
     },
-    onError: (err) => {
-      toast.error("AI error: " + err.message);
-    },
+    onError: (err) => toast.error("AI error: " + err.message),
   });
 
   const savePromptMutation = trpc.prompts.save.useMutation({
@@ -83,16 +117,10 @@ export default function FloatingSandbox() {
     ];
     setMessages(newMessages);
     setUserInput("");
-
     const allMessages: Message[] = systemPrompt
       ? [{ role: "system", content: systemPrompt }, ...newMessages]
       : newMessages;
-
-    await chatMutation.mutateAsync({
-      messages: allMessages,
-      temperature: temperature[0],
-      maxTokens: maxTokens[0],
-    });
+    await chatMutation.mutateAsync({ messages: allMessages, temperature: temperature[0], maxTokens: maxTokens[0] });
   };
 
   const handleClear = () => setMessages([]);
@@ -107,26 +135,24 @@ export default function FloatingSandbox() {
     });
   };
 
+  const handleUseLessonPrompt = () => {
+    if (lessonPromptTemplate) {
+      setSystemPrompt(lessonPromptTemplate);
+      setSettingsOpen(true);
+      toast.success("Lesson prompt loaded into Settings");
+    }
+  };
+
   return (
     <>
-      {/* ── Page-level margin shift so content reflows on desktop ── */}
-      <style>{`
-        @media (min-width: 768px) {
-          body {
-            transition: padding-right 0.32s cubic-bezier(0.16,1,0.3,1);
-            padding-right: ${isOpen ? "min(420px, 92vw)" : "0"};
-          }
-        }
-      `}</style>
-
-      {/* ── FAB — always visible, bottom-right ── */}
+      {/* ── FAB ── */}
       <button
         onClick={() => setIsOpen((v) => !v)}
         aria-label={isOpen ? "Close AI Sandbox" : "Open AI Sandbox"}
         style={{
           position: "fixed",
           bottom: "1.5rem",
-          right: isOpen ? "calc(min(420px, 92vw) + 1rem)" : "1.5rem",
+          right: "1.5rem",
           zIndex: 60,
           display: "flex",
           alignItems: "center",
@@ -205,14 +231,42 @@ export default function FloatingSandbox() {
             flexShrink: 0,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <FlaskConical style={{ width: "1rem", height: "1rem", color: "oklch(0.58 0.26 330)" }} />
-            <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--foreground)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
+            <FlaskConical style={{ width: "1rem", height: "1rem", color: "oklch(0.58 0.26 330)", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--foreground)", flexShrink: 0 }}>
               AI Sandbox
             </span>
-            <Badge variant="outline" className="text-xs hidden sm:inline-flex">GPT-4o</Badge>
+            <Badge variant="outline" className="text-xs hidden sm:inline-flex shrink-0">GPT-4o</Badge>
+            {/* Lesson context pill */}
+            {lessonTitle && (
+              <span
+                title={`Lesson context: ${lessonTitle}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  padding: "0.2rem 0.55rem",
+                  borderRadius: "2rem",
+                  background: "oklch(0.58 0.26 330 / 0.12)",
+                  border: "1px solid oklch(0.58 0.26 330 / 0.35)",
+                  color: "oklch(0.52 0.26 330)",
+                  fontSize: "0.68rem",
+                  fontWeight: 600,
+                  maxWidth: "9rem",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  flexShrink: 1,
+                  cursor: lessonPromptTemplate ? "pointer" : "default",
+                }}
+                onClick={lessonPromptTemplate ? handleUseLessonPrompt : undefined}
+              >
+                <BookOpen style={{ width: "0.65rem", height: "0.65rem", flexShrink: 0 }} />
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{lessonTitle}</span>
+              </span>
+            )}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
             {/* Settings toggle */}
             <button
               onClick={() => setSettingsOpen((v) => !v)}
@@ -258,6 +312,50 @@ export default function FloatingSandbox() {
           </div>
         </div>
 
+        {/* ── Lesson context action bar ── */}
+        {lessonTitle && lessonPromptTemplate && (
+          <div
+            style={{
+              padding: "0.5rem 1.25rem",
+              borderBottom: "1px solid oklch(0.82 0.04 265 / 0.3)",
+              background: "oklch(0.58 0.26 330 / 0.06)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", minWidth: 0 }}>
+              <BookOpen style={{ width: "0.8rem", height: "0.8rem", color: "oklch(0.58 0.26 330)", flexShrink: 0 }} />
+              <span style={{ fontSize: "0.75rem", color: "oklch(0.45 0.04 265)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                Lesson context active
+              </span>
+            </div>
+            <button
+              onClick={handleUseLessonPrompt}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.3rem",
+                padding: "0.25rem 0.65rem",
+                borderRadius: "0.5rem",
+                border: "1.5px solid oklch(0.58 0.26 330 / 0.5)",
+                background: "oklch(0.58 0.26 330 / 0.10)",
+                color: "oklch(0.52 0.26 330)",
+                fontWeight: 600,
+                fontSize: "0.72rem",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              <BookmarkPlus style={{ width: "0.72rem", height: "0.72rem" }} />
+              Use Lesson Prompt
+            </button>
+          </div>
+        )}
+
         {/* ── Settings panel (collapsible) ── */}
         <div
           style={{
@@ -270,7 +368,6 @@ export default function FloatingSandbox() {
           }}
         >
           <div style={{ padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {/* System prompt */}
             <div>
               <Label style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "oklch(0.50 0.04 265)", display: "block", marginBottom: "0.4rem" }}>
                 System Prompt
@@ -283,14 +380,12 @@ export default function FloatingSandbox() {
               />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              {/* Temperature */}
               <div>
                 <Label style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "oklch(0.50 0.04 265)", display: "block", marginBottom: "0.4rem" }}>
                   Temp: <span style={{ color: "oklch(0.58 0.26 330)" }}>{temperature[0].toFixed(1)}</span>
                 </Label>
                 <Slider value={temperature} onValueChange={setTemperature} min={0} max={2} step={0.1} />
               </div>
-              {/* Max tokens */}
               <div>
                 <Label style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "oklch(0.50 0.04 265)", display: "block", marginBottom: "0.4rem" }}>
                   Tokens: <span style={{ color: "oklch(0.58 0.26 330)" }}>{maxTokens[0]}</span>
@@ -298,7 +393,6 @@ export default function FloatingSandbox() {
                 <Slider value={maxTokens} onValueChange={setMaxTokens} min={100} max={4000} step={100} />
               </div>
             </div>
-            {/* Quick actions */}
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <Button variant="outline" size="sm" className="flex-1 text-xs justify-start" onClick={() => { setShowSave(!showSave); setSettingsOpen(false); }} disabled={messages.length === 0}>
                 <BookmarkPlus className="h-3.5 w-3.5 mr-1" /> Save
@@ -310,7 +404,7 @@ export default function FloatingSandbox() {
           </div>
         </div>
 
-        {/* ── Not signed in state ── */}
+        {/* ── Not signed in ── */}
         {!user ? (
           <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", textAlign: "center" }}>
             <div>
@@ -330,8 +424,30 @@ export default function FloatingSandbox() {
                   <FlaskConical style={{ width: "2.5rem", height: "2.5rem", marginBottom: "0.75rem", opacity: 0.25 }} />
                   <p style={{ fontWeight: 600, marginBottom: "0.4rem", color: "var(--foreground)" }}>Start experimenting</p>
                   <p style={{ fontSize: "0.8rem", lineHeight: 1.5 }}>
-                    Type a prompt below. Open <strong>Settings</strong> to configure the system prompt and model parameters.
+                    Type a prompt below.{lessonTitle ? <> The <strong>{lessonTitle}</strong> lesson prompt is ready to load.</> : <> Open <strong>Settings</strong> to configure the system prompt.</>}
                   </p>
+                  {lessonTitle && lessonPromptTemplate && (
+                    <button
+                      onClick={handleUseLessonPrompt}
+                      style={{
+                        marginTop: "1rem",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.4rem",
+                        padding: "0.5rem 1rem",
+                        borderRadius: "0.75rem",
+                        border: "1.5px solid oklch(0.58 0.26 330 / 0.5)",
+                        background: "oklch(0.58 0.26 330 / 0.10)",
+                        color: "oklch(0.52 0.26 330)",
+                        fontWeight: 600,
+                        fontSize: "0.8rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <BookOpen style={{ width: "0.85rem", height: "0.85rem" }} />
+                      Load Lesson Prompt
+                    </button>
+                  )}
                 </div>
               )}
 

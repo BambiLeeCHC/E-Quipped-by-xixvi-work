@@ -526,7 +526,7 @@ export default function Home() {
           {/* Bottom row */}
           <div className="border-t border-border/30 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-foreground/35">
             <p>© {new Date().getFullYear()} E-Quipped: Work. All rights reserved.</p>
-            <p>support@e-quipped.com</p>
+            <p>equippedbyxixvi@gmail.com</p>
           </div>
         </div>
       </footer>

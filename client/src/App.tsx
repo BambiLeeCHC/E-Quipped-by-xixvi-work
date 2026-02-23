@@ -63,7 +63,15 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <Router />
+          {/*
+            #app-layout-root wraps all page content.
+            FloatingSandbox applies margin-right to this element (not body padding-right)
+            so that fixed/sticky headers shift together with the rest of the page
+            when the sandbox drawer opens on desktop.
+          */}
+          <div id="app-layout-root" style={{ position: "relative", minHeight: "100vh" }}>
+            <Router />
+          </div>
           <GlobalWidgets />
         </TooltipProvider>
       </ThemeProvider>

@@ -41,7 +41,7 @@ Note that disabling strictly necessary cookies will prevent you from logging in 
   },
   {
     title: "6. Contact",
-    body: `Questions about our use of cookies: **privacy@e-quipped.com**`,
+    body: `Questions about our use of cookies: **equippedbyxixvi@gmail.com**`,
   },
 ];
 

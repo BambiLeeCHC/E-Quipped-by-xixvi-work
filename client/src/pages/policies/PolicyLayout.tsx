@@ -179,8 +179,8 @@ export default function PolicyLayout({ title, subtitle, lastUpdated, sections }:
         <div className="mt-16 pt-8 border-t border-border/30 text-center">
           <p className="text-xs text-foreground/35">
             Questions? Email us at{" "}
-            <a href="mailto:support@e-quipped.com" className="underline hover:text-foreground/60">
-              support@e-quipped.com
+            <a href="mailto:equippedbyxixvi@gmail.com" className="underline hover:text-foreground/60">
+              equippedbyxixvi@gmail.com
             </a>
           </p>
         </div>

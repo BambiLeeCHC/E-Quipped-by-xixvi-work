@@ -13,13 +13,13 @@ const sections = [
     body: `You are eligible for a full refund if:
 
 - You request the refund within **7 calendar days** of your original purchase date
-- Your request is submitted to **support@e-quipped.com** from the email address associated with your account
+- Your request is submitted to **equippedbyxixvi@gmail.com** from the email address associated with your account
 
 There is no minimum or maximum usage requirement. You do not need to provide a reason, though feedback is always welcome.`,
   },
   {
     title: "3. How to Request a Refund",
-    body: `Send an email to **support@e-quipped.com** with the subject line "Refund Request" and include:
+    body: `Send an email to **equippedbyxixvi@gmail.com** with the subject line "Refund Request" and include:
 
 - The email address used to purchase
 - Your Stripe payment confirmation number (found in your purchase receipt email)
@@ -38,11 +38,11 @@ We will process your refund within **5 business days** of receiving your request
 - Accounts suspended or terminated due to violations of our Terms of Service
 - Chargebacks initiated without first contacting us — if you initiate a chargeback, we reserve the right to contest it and suspend your account
 
-If you are experiencing a technical issue that is preventing you from accessing the Platform, please contact us at **support@e-quipped.com** before requesting a refund — we will do our best to resolve it promptly.`,
+If you are experiencing a technical issue that is preventing you from accessing the Platform, please contact us at **equippedbyxixvi@gmail.com** before requesting a refund — we will do our best to resolve it promptly.`,
   },
   {
     title: "6. Contact",
-    body: `Refund requests and billing questions: **support@e-quipped.com**
+    body: `Refund requests and billing questions: **equippedbyxixvi@gmail.com**
 
 We aim to respond to all refund requests within 1 business day.`,
   },

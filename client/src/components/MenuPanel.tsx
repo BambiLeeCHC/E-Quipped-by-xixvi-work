@@ -413,7 +413,7 @@ export default function MenuPanel({ open, onClose }: Props) {
             © {new Date().getFullYear()} E-Quipped: Work
           </p>
           <p style={{ fontSize: "0.7rem", color: "oklch(0.36 0.02 265)", margin: 0 }}>
-            support@e-quipped.com
+            equippedbyxixvi@gmail.com
           </p>
         </div>
       </div>

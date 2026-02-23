@@ -18,7 +18,7 @@ const sections = [
   },
   {
     title: "4. Account Registration",
-    body: `You must create an account via Manus OAuth to access course content. You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately at support@e-quipped.com if you suspect unauthorised access.`,
+    body: `You must create an account via Manus OAuth to access course content. You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately at equippedbyxixvi@gmail.com if you suspect unauthorised access.`,
   },
   {
     title: "5. Purchases and Payment",
@@ -30,7 +30,7 @@ We reserve the right to change pricing for new customers at any time. Your Lifet
   },
   {
     title: "6. Refund Policy",
-    body: `We offer a **7-day money-back guarantee**. If you are not satisfied with the Platform for any reason, email us at support@e-quipped.com within 7 days of your purchase date and we will issue a full refund. No questions asked. See our Refund Policy for full details.`,
+    body: `We offer a **7-day money-back guarantee**. If you are not satisfied with the Platform for any reason, email us at equippedbyxixvi@gmail.com within 7 days of your purchase date and we will issue a full refund. No questions asked. See our Refund Policy for full details.`,
   },
   {
     title: "7. Intellectual Property",
@@ -79,7 +79,7 @@ We reserve the right to suspend or terminate accounts that violate these rules w
   },
   {
     title: "14. Contact",
-    body: `For questions about these Terms, contact us at **legal@e-quipped.com**.`,
+    body: `For questions about these Terms, contact us at **equippedbyxixvi@gmail.com**.`,
   },
 ];
 

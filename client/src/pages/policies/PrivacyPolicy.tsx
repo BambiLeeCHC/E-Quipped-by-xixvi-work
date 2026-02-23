@@ -7,7 +7,7 @@ import PolicyLayout from "./PolicyLayout";
 const sections = [
   {
     title: "1. Who We Are",
-    body: `E-Quipped: Work ("we", "us", "our") is an online AI-skills education platform operated by E-Quipped Ltd. Our registered address and data-controller contact is available at support@e-quipped.com. If you have any questions about how we handle your data, please reach out — we respond within 5 business days.`,
+    body: `E-Quipped: Work ("we", "us", "our") is an online AI-skills education platform operated by E-Quipped Ltd. Our registered address and data-controller contact is available at equippedbyxixvi@gmail.com. If you have any questions about how we handle your data, please reach out — we respond within 5 business days.`,
   },
   {
     title: "2. What Data We Collect",
@@ -78,7 +78,7 @@ No data is transferred outside the UK/EEA without adequate safeguards (Standard 
 
 **California residents (CCPA):** You have the right to know what personal information we collect, the right to delete it, and the right to opt out of its sale (we do not sell personal information).
 
-To exercise any right, email us at privacy@e-quipped.com. We will respond within 30 days.`,
+To exercise any right, email us at equippedbyxixvi@gmail.com. We will respond within 30 days.`,
   },
   {
     title: "9. Data Security",
@@ -94,7 +94,7 @@ To exercise any right, email us at privacy@e-quipped.com. We will respond within
   },
   {
     title: "12. Contact & Supervisory Authority",
-    body: `For privacy enquiries: **privacy@e-quipped.com**
+    body: `For privacy enquiries: **equippedbyxixvi@gmail.com**
 
 If you are in the EEA/UK and believe we have not addressed your concern adequately, you have the right to lodge a complaint with your local data protection authority (in the UK: the Information Commissioner's Office at ico.org.uk).`,
   },

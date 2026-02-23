@@ -336,3 +336,11 @@
 - [x] GlobalWidgets suppresses FloatingSandbox on /sandbox page to avoid duplication
 - [x] Fixed stale duplicate useAuth import in Profile.tsx
 - [x] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 34: Floating Sandbox Reflow Fix & Lesson Context Indicator
+- [ ] Audit content reflow: body padding-right approach has limitations (fixed headers, portals, modals don't reflow)
+- [ ] Fix reflow: wrap all page content in a layout div that transitions its margin-right instead of using body padding
+- [ ] Add lesson context indicator: detect /lessons/:slug route in FloatingSandbox
+- [ ] Fetch lesson title from tRPC when on a lesson page and display as a pill in the sandbox drawer header
+- [ ] Add "Use Lesson Prompt" button in the sandbox drawer when context is active
+- [ ] 25 vitest tests passing, zero TypeScript errors
