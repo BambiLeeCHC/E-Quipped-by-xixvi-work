@@ -93,6 +93,19 @@ export async function updateUserRole(userId: number, role: "user" | "admin" | "e
   await db.update(users).set({ role }).where(eq(users.id, userId));
 }
 
+export async function getUserProfile(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function getUserXpHistory(userId: number, limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(xpEvents).where(eq(xpEvents.userId, userId)).orderBy(desc(xpEvents.createdAt)).limit(limit);
+}
+
 export async function addXpToUser(userId: number, amount: number, reason: string, referenceId?: number, referenceType?: string) {
   const db = await getDb();
   if (!db) return;

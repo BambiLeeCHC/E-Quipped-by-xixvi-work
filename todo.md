@@ -87,3 +87,11 @@
 - [x] Embed inline login panel on the landing page (no external redirect)
 - [x] Remove all window.location.href = getLoginUrl() calls from the landing page
 - [x] Show login panel as a smooth in-page section when unauthenticated
+
+## Phase 16: User Profile Management
+- [x] Backend: list all users with progress/role data
+- [x] Backend: update user role (admin/editor/user)
+- [x] Backend: get individual user profile with full progress
+- [x] Admin Dashboard: Users tab with searchable profile cards
+- [x] Admin Dashboard: Role badge with promote/demote dropdown
+- [x] Admin Dashboard: Profile detail drawer/modal

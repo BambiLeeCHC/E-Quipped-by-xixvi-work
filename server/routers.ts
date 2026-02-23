@@ -19,6 +19,8 @@ import {
   deletePrompt,
   getAdminAnalytics,
   getAllUsers,
+  getUserProfile,
+  getUserXpHistory,
   getContentBlocksByLesson,
   getCourseBySlug,
   getCourses,
@@ -416,6 +418,25 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         requireAdmin(ctx.user.role);
         await addXpToUser(input.userId, input.amount, input.reason);
+        return { success: true };
+      }),
+    getUserProfile: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        requireAdmin(ctx.user.role);
+        const profile = await getUserProfile(input.userId);
+        const xpHistory = await getUserXpHistory(input.userId, 20);
+        return { profile, xpHistory };
+      }),
+    deleteUser: protectedProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        requireAdmin(ctx.user.role);
+        const db = await (await import("./db")).getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const { users: usersTable } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        await db.delete(usersTable).where(eq(usersTable.id, input.userId));
         return { success: true };
       }),
   }),

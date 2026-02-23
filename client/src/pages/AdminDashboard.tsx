@@ -127,9 +127,17 @@ export default function AdminDashboard() {
         {/* Users Table */}
         <Card className="bg-card border-border/50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              User Management
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                User Management
+              </span>
+              <button
+                onClick={() => setLocation("/admin/users")}
+                className="text-xs font-medium text-fuchsia-600 hover:text-fuchsia-700 transition-colors px-3 py-1 rounded-lg border border-fuchsia-200/60 hover:border-fuchsia-400/60 bg-fuchsia-50/60"
+              >
+                View All Profiles →
+              </button>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">

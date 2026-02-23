@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import EditorDashboard from "./pages/EditorDashboard";
 import LessonEditor from "./pages/LessonEditor";
+import AdminUsers from "./pages/AdminUsers";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/sandbox" component={AISandbox} />
       <Route path="/profile" component={Profile} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/users" component={AdminUsers} />
       <Route path="/editor" component={EditorDashboard} />
       <Route path="/editor/lessons/:lessonId" component={LessonEditor} />
       <Route path="/404" component={NotFound} />
