@@ -66,3 +66,12 @@
 - [x] Full lesson content block editor (text/HTML, code, callout, image URL, video URL, audio, prompt exercise, quiz, divider)
 - [x] Live HTML preview pane that renders content in real time from the editor
 - [x] Wire LessonEditor into EditorDashboard lessons view
+
+## Phase 12: Permissions & Messaging
+- [x] Enforce editor/admin-only access on all editor routes (frontend guards)
+- [x] Enforce editor/admin-only access on all backend tRPC procedures
+- [x] Hide Editor/Admin nav links from regular users
+- [x] Redirect unauthorized users away from /editor and /admin routes
+- [x] Redesign landing page hero with full AI business mastery messaging
+- [x] Add rotating skill showcase (prompt engineering → presentations → transcription → etc.)
+- [x] Update features section to reflect full AI business skill curriculum
