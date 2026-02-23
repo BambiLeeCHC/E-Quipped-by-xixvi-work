@@ -9,6 +9,8 @@ import { trpc } from "@/lib/trpc";
 import {
   BookOpen,
   ChevronLeft,
+  Crown,
+  CreditCard,
   Flame,
   LogOut,
   Shield,
@@ -27,6 +29,7 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const { data: stats } = trpc.progress.myStats.useQuery(undefined, { enabled: !!user });
   const { data: prompts } = trpc.prompts.list.useQuery(undefined, { enabled: !!user });
+  const { data: subscription } = trpc.stripe.mySubscription.useQuery(undefined, { enabled: !!user });
 
   if (loading) {
     return (
@@ -104,11 +107,44 @@ export default function Profile() {
                   <Badge className={roleColors[user.role ?? "user"] ?? ""}>
                     {user.role ?? "user"}
                   </Badge>
+                  {subscription?.isActive && (
+                    <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Pro {subscription.plan}
+                    </Badge>
+                  )}
                 </div>
 
                 {user.status === "trial" && (
                   <div className="mt-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-400">
                     Your account is in trial mode. Contact an admin to get verified access to premium content.
+                  </div>
+                )}
+                {!subscription?.isActive && (
+                  <button
+                    onClick={() => setLocation("/pricing")}
+                    style={{
+                      marginTop: "0.75rem",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.4rem",
+                      background: "linear-gradient(135deg, oklch(0.55 0.22 310), oklch(0.55 0.22 270))",
+                      border: "none",
+                      borderRadius: "0.6rem",
+                      padding: "0.45rem 1rem",
+                      color: "oklch(0.97 0.01 260)",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Upgrade to Pro
+                  </button>
+                )}
+                {subscription?.isActive && subscription.periodEnd && (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    Renews {new Date(subscription.periodEnd).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                   </div>
                 )}
               </CardContent>

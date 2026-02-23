@@ -160,6 +160,9 @@ export default function Home() {
                     <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground" onClick={() => setLocation("/sandbox")}>
                       Sandbox
                     </Button>
+                    <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground" onClick={() => setLocation("/pricing")}>
+                      Pricing
+                    </Button>
                     {(user.role === "admin" || user.role === "editor") && (
                       <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground" onClick={() => setLocation("/editor")}>
                         Editor
@@ -182,6 +185,9 @@ export default function Home() {
                   <>
                     <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground" onClick={() => setLocation("/courses")}>
                       Explore
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground" onClick={() => setLocation("/pricing")}>
+                      Pricing
                     </Button>
                     <Button
                       size="sm"

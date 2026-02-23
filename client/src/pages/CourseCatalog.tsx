@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Clock,
   Cpu,
+  Crown,
   FileText,
   Layers,
   Lock,
@@ -107,6 +108,8 @@ function LessonRow({
   passedLessonIds,
   isVerified,
   isFreePreview,
+  requiresPro,
+  hasProSubscription,
 }: {
   lesson: { id: number; title: string; slug: string; type: string; estimatedMinutes: number; xpReward: number; isPremium: boolean; description: string | null };
   lessonIndex: number;
@@ -114,18 +117,26 @@ function LessonRow({
   passedLessonIds: number[];
   isVerified: boolean;
   isFreePreview: boolean;
+  requiresPro: boolean;
+  hasProSubscription: boolean;
 }) {
   const [, navigate] = useLocation();
   const isPassed = passedLessonIds.includes(lesson.id);
-  const isLocked = !isFreePreview && !isVerified;
+  const isProLocked = requiresPro && !hasProSubscription;
+  const isLocked = (!isFreePreview && !isVerified) || isProLocked;
 
   return (
     <button
-      onClick={() => { if (!isLocked) navigate(`/lessons/${lesson.slug}`); }}
-      disabled={isLocked}
+      onClick={() => {
+        if (isProLocked) { navigate("/pricing"); return; }
+        if (!isLocked) navigate(`/lessons/${lesson.slug}`);
+      }}
+      disabled={!isFreePreview && !isVerified && !isProLocked}
       className={`w-full text-left group flex items-center gap-3 px-4 py-3 rounded-xl transition-all
-        ${isLocked
+        ${isLocked && !isProLocked
           ? "lucite border border-border/30 opacity-50 cursor-not-allowed"
+          : isProLocked
+          ? "lucite border border-amber-200/40 cursor-pointer hover:border-amber-300/60 hover:shadow-sm card-lift"
           : "lucite border border-border/30 hover:border-fuchsia-300/50 hover:shadow-sm cursor-pointer card-lift"
         }`}
     >
@@ -133,7 +144,11 @@ function LessonRow({
 
       {/* Status icon */}
       <div className="shrink-0">
-        {isLocked ? (
+        {isProLocked ? (
+          <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center">
+            <Crown className="w-3 h-3 text-amber-500" />
+          </div>
+        ) : isLocked ? (
           <div className="w-7 h-7 rounded-full bg-foreground/5 border border-border/40 flex items-center justify-center">
             <Lock className="w-3 h-3 text-foreground/25" />
           </div>
@@ -193,6 +208,7 @@ function ModuleSection({
   passedLessonIds,
   isExpanded,
   onToggle,
+  hasProSubscription,
 }: {
   module: { id: number; title: string; slug: string; description: string | null; xpReward: number };
   moduleIndex: number;
@@ -201,10 +217,13 @@ function ModuleSection({
   passedLessonIds: number[];
   isExpanded: boolean;
   onToggle: () => void;
+  hasProSubscription: boolean;
 }) {
   const { data: lessons = [] } = trpc.lessons.byModule.useQuery({ moduleId: module.id });
   const colors = MODULE_COLORS[moduleIndex % MODULE_COLORS.length];
   const Icon = MODULE_ICONS[module.slug] ?? BookOpen;
+  // Modules 2+ (index >= 1) require a Pro subscription
+  const moduleRequiresPro = moduleIndex >= 1;
 
   const passedCount = lessons.filter((l) => passedLessonIds.includes(l.id)).length;
   const totalCount = lessons.length;
@@ -273,6 +292,8 @@ function ModuleSection({
               passedLessonIds={passedLessonIds}
               isVerified={isVerified}
               isFreePreview={moduleIndex === 0 && li === 0}
+              requiresPro={moduleRequiresPro}
+              hasProSubscription={hasProSubscription}
             />
           ))}
         </div>
@@ -318,6 +339,12 @@ export default function CourseCatalog() {
 
   const isVerified = (accessData as { isVerified?: boolean } | undefined)?.isVerified ?? false;
   const hasPendingRequest = myRequest?.status === "pending";
+
+  // Subscription status for Pro gating
+  const { data: subscription } = trpc.stripe.mySubscription.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const hasProSubscription = subscription?.isActive ?? false;
 
   // Compute which modules are locked based on quiz completion
   const getModuleLocked = (moduleIndex: number): boolean => {
@@ -499,6 +526,7 @@ export default function CourseCatalog() {
                 passedLessonIds={passedLessonIds}
                 isExpanded={expandedModules.has(i)}
                 onToggle={() => toggleModule(i)}
+                hasProSubscription={hasProSubscription}
               />
             ))}
 

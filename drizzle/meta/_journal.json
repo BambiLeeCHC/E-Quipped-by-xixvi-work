@@ -36,6 +36,13 @@
       "when": 1771856820463,
       "tag": "0004_eager_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1771858016792,
+      "tag": "0005_daily_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

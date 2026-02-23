@@ -180,3 +180,20 @@
 - [x] All inline styles use oklch() for precise, accessible color values
 - [x] Seed 10 visual blocks across M1L1, M1L2, M2L1, M3L1
 - [x] 22 vitest tests passing, zero TypeScript errors
+
+## Phase 22: Stripe Payments & Subscriptions
+- [x] DB: add stripeCustomerId, stripeSubscriptionId, subscriptionStatus, subscriptionPlan, subscriptionPeriodEnd to users table
+- [x] DB: add stripe_payments table (userId, stripePaymentIntentId, stripeCustomerId, amount, currency, status, plan, createdAt)
+- [x] Apply DB migration (0005_daily_squadron_supreme.sql)
+- [x] server/stripe/client.ts — Stripe SDK singleton (API version 2026-01-28.clover)
+- [x] server/stripe/products.ts — 3 plans: Monthly ($29/mo), Annual ($189/yr), Lifetime ($497 one-time)
+- [x] server/stripe/webhook.ts — /api/stripe/webhook; handles checkout.session.completed, subscription.updated/deleted, invoice.paid; test event bypass
+- [x] server/_core/index.ts — registerStripeWebhook before express.json()
+- [x] server/routers.ts — stripe router: plans, mySubscription, createCheckout, createPortal, myPayments
+- [x] Pricing page (/pricing) — 3-tier plan cards, checkout CTA, active subscription banner, portal link, test card instructions
+- [x] Payment history page (/payments) — table with date/plan/amount/status
+- [x] App.tsx — /pricing and /payments routes registered
+- [x] Home.tsx — Pricing nav link in both authenticated and unauthenticated nav
+- [x] Profile.tsx — Pro subscription badge (Crown), Upgrade to Pro CTA, renewal date
+- [x] CourseCatalog.tsx — modules 2+ gated behind active Pro subscription; Crown icon; click redirects to /pricing
+- [x] 22 vitest tests passing, zero TypeScript errors

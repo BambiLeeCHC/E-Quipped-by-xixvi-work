@@ -14,6 +14,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import EditorDashboard from "./pages/EditorDashboard";
 import LessonEditor from "./pages/LessonEditor";
 import AdminUsers from "./pages/AdminUsers";
+import Pricing from "./pages/Pricing";
+import PaymentHistory from "./pages/PaymentHistory";
 
 function Router() {
   return (
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/editor" component={EditorDashboard} />
       <Route path="/editor/lessons/:lessonId" component={LessonEditor} />
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/payments" component={PaymentHistory} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -27,6 +27,12 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  // Stripe
+  stripeCustomerId: varchar("stripeCustomerId", { length: 64 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 64 }),
+  subscriptionStatus: mysqlEnum("subscriptionStatus", ["active", "trialing", "past_due", "canceled", "unpaid"]),
+  subscriptionPlan: mysqlEnum("subscriptionPlan", ["monthly", "annual", "lifetime"]),
+  subscriptionPeriodEnd: timestamp("subscriptionPeriodEnd"),
 });
 
 export type User = typeof users.$inferSelect;
@@ -221,3 +227,18 @@ export const sandboxMessages = mysqlTable("sandbox_messages", {
 });
 
 export type SandboxMessage = typeof sandboxMessages.$inferSelect;
+
+// ─── Stripe Payments ─────────────────────────────────────────────────────────
+export const stripePayments = mysqlTable("stripe_payments", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 64 }).notNull(),
+  stripeCustomerId: varchar("stripeCustomerId", { length: 64 }),
+  amount: int("amount").notNull(),      // in cents
+  currency: varchar("currency", { length: 8 }).default("usd").notNull(),
+  status: varchar("status", { length: 32 }).notNull(),
+  plan: mysqlEnum("plan", ["monthly", "annual", "lifetime"]),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StripePayment = typeof stripePayments.$inferSelect;

@@ -1,4 +1,8 @@
 import { TRPCError } from "@trpc/server";
+import { stripe } from "./stripe/client";
+import { PLANS, getPlanById } from "./stripe/products";
+import { stripePayments } from "../drizzle/schema";
+import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -701,6 +705,99 @@ Respond with ONLY valid JSON in this exact format:
         await reviewAccessRequest(input.requestId, ctx.user.id, input.decision);
         return { success: true };
       }),
+  }),
+
+  // ── Stripe Payments ──────────────────────────────────────────────────────
+  stripe: router({
+    // List available plans (public)
+    plans: publicProcedure.query(() => PLANS),
+
+    // Get current user's subscription status
+    mySubscription: protectedProcedure.query(async ({ ctx }) => {
+      const db = await import("./db").then((m) => m.getDb());
+      if (!db) return null;
+      const [user] = await db
+        .select()
+        .from(await import("../drizzle/schema").then((m) => m.users))
+        .where(eq((await import("../drizzle/schema")).users.id, ctx.user.id));
+      if (!user) return null;
+      return {
+        status: user.subscriptionStatus,
+        plan: user.subscriptionPlan,
+        periodEnd: user.subscriptionPeriodEnd,
+        isActive:
+          user.subscriptionStatus === "active" ||
+          user.subscriptionStatus === "trialing",
+      };
+    }),
+
+    // Create a Stripe Checkout session
+    createCheckout: protectedProcedure
+      .input(
+        z.object({
+          planId: z.enum(["monthly", "annual", "lifetime"]),
+          origin: z.string().url(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const plan = getPlanById(input.planId);
+        if (!plan) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid plan" });
+
+        const commonParams = {
+          line_items: [{ price: plan.priceId, quantity: 1 }] as { price: string; quantity: number }[],
+          client_reference_id: ctx.user.id.toString(),
+          customer_email: ctx.user.email ?? undefined,
+          allow_promotion_codes: true,
+          success_url: `${input.origin}/pricing?success=1&plan=${plan.id}`,
+          cancel_url: `${input.origin}/pricing?canceled=1`,
+          metadata: {
+            user_id: ctx.user.id.toString(),
+            customer_email: ctx.user.email ?? "",
+            customer_name: ctx.user.name ?? "",
+            plan: plan.id,
+          },
+        };
+
+        const session = await (plan.mode === "subscription"
+          ? stripe.checkout.sessions.create({ ...commonParams, mode: "subscription" })
+          : stripe.checkout.sessions.create({ ...commonParams, mode: "payment" }));
+        return { url: session.url };
+      }),
+
+    // Create a Stripe Customer Portal session (manage/cancel subscription)
+    createPortal: protectedProcedure
+      .input(z.object({ origin: z.string().url() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await import("./db").then((m) => m.getDb());
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        const [user] = await db
+          .select()
+          .from(await import("../drizzle/schema").then((m) => m.users))
+          .where(eq((await import("../drizzle/schema")).users.id, ctx.user.id));
+        if (!user?.stripeCustomerId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No Stripe customer found. Please subscribe first.",
+          });
+        }
+        const session = await stripe.billingPortal.sessions.create({
+          customer: user.stripeCustomerId,
+          return_url: `${input.origin}/profile`,
+        });
+        return { url: session.url };
+      }),
+
+    // Payment history for current user
+    myPayments: protectedProcedure.query(async ({ ctx }) => {
+      const db = await import("./db").then((m) => m.getDb());
+      if (!db) return [];
+      const payments = await db
+        .select()
+        .from(stripePayments)
+        .where(eq(stripePayments.userId, ctx.user.id))
+        .orderBy(desc(stripePayments.createdAt));
+      return payments;
+    }),
   }),
 
   // ── File Upload ───────────────────────────────────────────────────────────

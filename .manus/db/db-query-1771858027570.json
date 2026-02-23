@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `stripe_payments` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`stripePaymentIntentId` varchar(64) NOT NULL,\n\t`stripeCustomerId` varchar(64),\n\t`amount` int NOT NULL,\n\t`currency` varchar(8) NOT NULL DEFAULT 'usd',\n\t`status` varchar(32) NOT NULL,\n\t`plan` enum('monthly','annual','lifetime'),\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `stripe_payments_id` PRIMARY KEY(`id`)\n);\nALTER TABLE `users` ADD `stripeCustomerId` varchar(64);\nALTER TABLE `users` ADD `stripeSubscriptionId` varchar(64);\nALTER TABLE `users` ADD `subscriptionStatus` enum('active','trialing','past_due','canceled','unpaid');\nALTER TABLE `users` ADD `subscriptionPlan` enum('monthly','annual','lifetime');\nALTER TABLE `users` ADD `subscriptionPeriodEnd` timestamp;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UjifvLo5he9aPKL.cb1410cdee09 --database 5Gq9FmtRyMtz6crwcs7oBJ --execute CREATE TABLE `stripe_payments` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`stripePaymentIntentId` varchar(64) NOT NULL,\n\t`stripeCustomerId` varchar(64),\n\t`amount` int NOT NULL,\n\t`currency` varchar(8) NOT NULL DEFAULT 'usd',\n\t`status` varchar(32) NOT NULL,\n\t`plan` enum('monthly','annual','lifetime'),\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `stripe_payments_id` PRIMARY KEY(`id`)\n);\nALTER TABLE `users` ADD `stripeCustomerId` varchar(64);\nALTER TABLE `users` ADD `stripeSubscriptionId` varchar(64);\nALTER TABLE `users` ADD `subscriptionStatus` enum('active','trialing','past_due','canceled','unpaid');\nALTER TABLE `users` ADD `subscriptionPlan` enum('monthly','annual','lifetime');\nALTER TABLE `users` ADD `subscriptionPeriodEnd` timestamp;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2608
+}
