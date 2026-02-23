@@ -295,3 +295,249 @@
     box-shadow: 0 8px 32px oklch(0.60 0.28 330 / 0.12);
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Lesson Viewer — Dark Canvas with guaranteed WCAG AA contrast
+   All text on dark backgrounds uses minimum oklch(0.92) lightness
+   All text on light/tinted backgrounds uses minimum oklch(0.18) lightness
+───────────────────────────────────────────────────────────────────────────── */
+.lesson-canvas {
+  background: oklch(0.13 0.025 265);   /* deep indigo-black */
+  color: oklch(0.94 0.01 265);          /* near-white, warm */
+}
+
+/* Prose override for lesson canvas — ensures all HTML content is readable */
+.lesson-prose {
+  color: oklch(0.93 0.012 265);
+  line-height: 1.8;
+  font-size: 1rem;
+}
+.lesson-prose h1, .lesson-prose h2, .lesson-prose h3, .lesson-prose h4 {
+  color: oklch(0.98 0.008 265);
+  font-weight: 700;
+  margin-top: 1.75em;
+  margin-bottom: 0.6em;
+  line-height: 1.3;
+}
+.lesson-prose h2 { font-size: 1.45rem; }
+.lesson-prose h3 { font-size: 1.2rem; color: oklch(0.95 0.015 290); }
+.lesson-prose h4 { font-size: 1.05rem; color: oklch(0.92 0.02 290); }
+.lesson-prose p  { margin-bottom: 1em; }
+.lesson-prose strong { color: oklch(0.98 0.01 265); font-weight: 700; }
+.lesson-prose em { color: oklch(0.88 0.04 300); font-style: italic; }
+.lesson-prose ul, .lesson-prose ol { padding-left: 1.5em; margin-bottom: 1em; }
+.lesson-prose li { margin-bottom: 0.4em; color: oklch(0.91 0.012 265); }
+.lesson-prose li::marker { color: oklch(0.72 0.22 330); }
+.lesson-prose a { color: oklch(0.78 0.18 290); text-decoration: underline; }
+.lesson-prose a:hover { color: oklch(0.85 0.20 300); }
+.lesson-prose pre {
+  background: oklch(0.09 0.02 265);
+  border: 1px solid oklch(0.25 0.04 265);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.25em 0;
+}
+.lesson-prose code {
+  background: oklch(0.18 0.03 265);
+  color: oklch(0.82 0.14 150);
+  padding: 0.15em 0.4em;
+  border-radius: 0.3em;
+  font-size: 0.88em;
+}
+.lesson-prose pre code {
+  background: transparent;
+  padding: 0;
+  color: oklch(0.88 0.12 150);
+  font-size: 0.875rem;
+}
+.lesson-prose blockquote {
+  border-left: 3px solid oklch(0.60 0.28 330);
+  padding-left: 1em;
+  color: oklch(0.82 0.02 265);
+  font-style: italic;
+  margin: 1.25em 0;
+}
+.lesson-prose hr {
+  border-color: oklch(0.28 0.04 265);
+  margin: 2em 0;
+}
+.lesson-prose table { width: 100%; border-collapse: collapse; margin: 1.25em 0; }
+.lesson-prose th {
+  background: oklch(0.20 0.04 265);
+  color: oklch(0.96 0.01 265);
+  padding: 0.6em 0.9em;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid oklch(0.30 0.05 265);
+}
+.lesson-prose td {
+  padding: 0.55em 0.9em;
+  border-bottom: 1px solid oklch(0.22 0.03 265);
+  color: oklch(0.88 0.01 265);
+}
+.lesson-prose tr:last-child td { border-bottom: none; }
+
+/* ── Callout blocks ── */
+.lesson-callout-info {
+  background: oklch(0.18 0.06 240);
+  border: 1px solid oklch(0.45 0.15 240);
+  color: oklch(0.92 0.04 240);
+}
+.lesson-callout-info .callout-title { color: oklch(0.82 0.14 230); }
+.lesson-callout-warning {
+  background: oklch(0.18 0.06 60);
+  border: 1px solid oklch(0.55 0.18 60);
+  color: oklch(0.93 0.04 60);
+}
+.lesson-callout-warning .callout-title { color: oklch(0.88 0.18 65); }
+.lesson-callout-success {
+  background: oklch(0.17 0.06 155);
+  border: 1px solid oklch(0.50 0.18 155);
+  color: oklch(0.92 0.04 155);
+}
+.lesson-callout-success .callout-title { color: oklch(0.82 0.18 155); }
+.lesson-callout-tip {
+  background: oklch(0.17 0.07 310);
+  border: 1px solid oklch(0.55 0.22 320);
+  color: oklch(0.93 0.04 310);
+}
+.lesson-callout-tip .callout-title { color: oklch(0.82 0.22 320); }
+
+/* ── Code block ── */
+.lesson-code-block {
+  background: oklch(0.09 0.02 265);
+  border: 1px solid oklch(0.25 0.04 265);
+}
+.lesson-code-header {
+  background: oklch(0.15 0.03 265);
+  border-bottom: 1px solid oklch(0.25 0.04 265);
+  color: oklch(0.72 0.08 265);
+}
+.lesson-code-content {
+  color: oklch(0.88 0.12 150);
+}
+
+/* ── Step-flow block ── */
+.lesson-step-flow {}
+.lesson-step {
+  background: oklch(0.17 0.03 265);
+  border: 1px solid oklch(0.28 0.05 265);
+}
+.lesson-step-number {
+  background: oklch(0.60 0.28 330);
+  color: oklch(0.98 0.005 330);
+  font-weight: 800;
+  min-width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+.lesson-step-title { color: oklch(0.97 0.01 265); font-weight: 700; }
+.lesson-step-body  { color: oklch(0.86 0.012 265); font-size: 0.9rem; line-height: 1.6; }
+
+/* ── Flashcard block ── */
+.lesson-flashcard-grid {}
+.lesson-flashcard {
+  background: oklch(0.17 0.04 265);
+  border: 1px solid oklch(0.30 0.06 265);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  perspective: 600px;
+}
+.lesson-flashcard:hover {
+  transform: translateY(-2px);
+  border-color: oklch(0.55 0.22 330);
+}
+.lesson-flashcard-term {
+  color: oklch(0.82 0.18 330);
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.lesson-flashcard-def {
+  color: oklch(0.88 0.012 265);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+/* ── Stat-grid block ── */
+.lesson-stat-card {
+  background: oklch(0.17 0.04 265);
+  border: 1px solid oklch(0.28 0.05 265);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  text-align: center;
+}
+.lesson-stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+.lesson-stat-label {
+  color: oklch(0.78 0.015 265);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Key-concept diagram block ── */
+.lesson-concept-diagram {
+  background: oklch(0.15 0.04 265);
+  border: 1px solid oklch(0.28 0.06 265);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+.lesson-concept-center {
+  background: oklch(0.60 0.28 330);
+  color: oklch(0.99 0.005 330);
+  border-radius: 9999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: inline-block;
+}
+.lesson-concept-node {
+  background: oklch(0.20 0.05 265);
+  border: 1px solid oklch(0.38 0.10 290);
+  color: oklch(0.92 0.02 265);
+  border-radius: 0.75rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ── Quote / highlight block ── */
+.lesson-quote {
+  border-left: 4px solid oklch(0.60 0.28 330);
+  background: oklch(0.17 0.04 310);
+  padding: 1rem 1.25rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+  color: oklch(0.92 0.02 265);
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+.lesson-quote cite {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-style: normal;
+  color: oklch(0.72 0.08 290);
+}
+
+/* ── Divider ── */
+.lesson-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.35 0.06 290), transparent);
+  margin: 2rem 0;
+}

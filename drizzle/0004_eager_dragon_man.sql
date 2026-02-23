@@ -1,0 +1,1 @@
+ALTER TABLE `content_blocks` MODIFY COLUMN `type` enum('text','image','video','code','quiz','prompt_exercise','callout','step_flow','flashcard_grid','stat_grid','concept_diagram','quote','divider') NOT NULL;

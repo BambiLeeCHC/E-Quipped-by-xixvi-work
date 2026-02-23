@@ -14,14 +14,18 @@ import {
   ChevronRight,
   Clock,
   Code2,
+  Info,
+  Lightbulb,
   Loader2,
   Lock,
   MessageSquare,
   PanelRightClose,
   PanelRightOpen,
+  Quote,
   Send,
   Star,
   Trophy,
+  TriangleAlert,
   Zap,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -66,59 +70,109 @@ type ChatMessage = {
   qualityPassed?: boolean | null;
 };
 
+// ─── Callout icons ────────────────────────────────────────────────────────────
+const CALLOUT_META: Record<string, { cssClass: string; icon: React.ReactNode; label: string }> = {
+  info: {
+    cssClass: "lesson-callout-info",
+    icon: <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(0.72 0.18 230)" }} />,
+    label: "Note",
+  },
+  warning: {
+    cssClass: "lesson-callout-warning",
+    icon: <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(0.82 0.18 65)" }} />,
+    label: "Warning",
+  },
+  success: {
+    cssClass: "lesson-callout-success",
+    icon: <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(0.75 0.18 155)" }} />,
+    label: "Success",
+  },
+  tip: {
+    cssClass: "lesson-callout-tip",
+    icon: <Lightbulb className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(0.78 0.22 320)" }} />,
+    label: "Tip",
+  },
+};
+
 // ─── Content Block Renderer ───────────────────────────────────────────────────
 function BlockRenderer({ block }: { block: ContentBlock }) {
   const c = block.content as Record<string, unknown>;
 
   switch (block.type) {
+    // ── Text / HTML ──────────────────────────────────────────────────────────
     case "text":
       return (
         <div
-          className="prose prose-invert max-w-none text-foreground leading-relaxed"
+          className="lesson-prose"
           dangerouslySetInnerHTML={{ __html: (c.html as string) || (c.text as string) || "" }}
         />
       );
 
+    // ── Callout ──────────────────────────────────────────────────────────────
     case "callout": {
       const variant = (c.variant as string) || "info";
-      const colors: Record<string, string> = {
-        info: "border-blue-400/40 bg-blue-500/10 text-blue-200",
-        warning: "border-yellow-400/40 bg-yellow-500/10 text-yellow-200",
-        success: "border-green-400/40 bg-green-500/10 text-green-200",
-        tip: "border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-200",
-      };
+      const meta = CALLOUT_META[variant] || CALLOUT_META.info;
       return (
-        <div className={`rounded-xl border p-4 ${colors[variant] || colors.info}`}>
-          {!!c.title && <p className="font-semibold mb-1">{String(c.title)}</p>}
-          <p className="text-sm opacity-90">{String((c.body as string) || (c.text as string) || "")}</p>
+        <div className={`rounded-xl p-4 flex gap-3 ${meta.cssClass}`}>
+          {meta.icon}
+          <div className="min-w-0">
+            {!!c.title && (
+              <p className="callout-title font-bold text-sm mb-1">{String(c.title)}</p>
+            )}
+            <p className="text-sm leading-relaxed">
+              {String((c.body as string) || (c.text as string) || "")}
+            </p>
+          </div>
         </div>
       );
     }
 
+    // ── Code ─────────────────────────────────────────────────────────────────
     case "code":
       return (
-        <div className="rounded-xl overflow-hidden border border-white/10">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border-b border-white/10">
-            <Code2 className="w-4 h-4 text-fuchsia-400" />
-            <span className="text-xs text-white/60 font-mono">{(c.language as string) || "text"}</span>
+        <div className="rounded-xl overflow-hidden lesson-code-block">
+          <div className="flex items-center gap-2 px-4 py-2.5 lesson-code-header">
+            <Code2 className="w-4 h-4" style={{ color: "oklch(0.72 0.22 330)" }} />
+            <span className="text-xs font-mono font-semibold uppercase tracking-wider">
+              {(c.language as string) || "text"}
+            </span>
+            {!!c.title && (
+              <span className="ml-auto text-xs opacity-70">{String(c.title)}</span>
+            )}
           </div>
-          <pre className="p-4 text-sm font-mono text-green-300 overflow-x-auto bg-black/30">
+          <pre className="p-5 text-sm font-mono lesson-code-content overflow-x-auto leading-relaxed">
             <code>{c.code as string}</code>
           </pre>
         </div>
       );
 
+    // ── Image ─────────────────────────────────────────────────────────────────
     case "image":
       return (
-        <div className="rounded-xl overflow-hidden border border-white/10">
-          <img src={c.url as string} alt={(c.alt as string) || ""} className="w-full object-cover" />
-          {!!c.caption && <p className="text-center text-sm text-white/50 py-2 px-4">{String(c.caption)}</p>}
-        </div>
+        <figure className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(0.28 0.05 265)" }}>
+          <img
+            src={c.url as string}
+            alt={(c.alt as string) || ""}
+            className="w-full object-cover"
+          />
+          {!!c.caption && (
+            <figcaption
+              className="text-center text-sm py-2.5 px-4"
+              style={{ color: "oklch(0.72 0.02 265)", background: "oklch(0.15 0.03 265)" }}
+            >
+              {String(c.caption)}
+            </figcaption>
+          )}
+        </figure>
       );
 
+    // ── Video ─────────────────────────────────────────────────────────────────
     case "video":
       return (
-        <div className="rounded-xl overflow-hidden border border-white/10 aspect-video">
+        <div
+          className="rounded-xl overflow-hidden aspect-video"
+          style={{ border: "1px solid oklch(0.28 0.05 265)" }}
+        >
           <iframe
             src={c.url as string}
             className="w-full h-full"
@@ -128,12 +182,171 @@ function BlockRenderer({ block }: { block: ContentBlock }) {
         </div>
       );
 
+    // ── Quote ─────────────────────────────────────────────────────────────────
+    case "quote":
+      return (
+        <blockquote className="lesson-quote">
+          <Quote
+            className="w-5 h-5 mb-2 opacity-50"
+            style={{ color: "oklch(0.72 0.22 330)" }}
+          />
+          <p>{String(c.text || c.body || "")}</p>
+          {!!c.author && <cite>{String(c.author)}</cite>}
+        </blockquote>
+      );
+
+    // ── Divider ───────────────────────────────────────────────────────────────
     case "divider":
-      return <hr className="border-white/10 my-2" />;
+      return <hr className="lesson-divider" />;
+
+    // ── Step Flow ─────────────────────────────────────────────────────────────
+    case "step_flow": {
+      const steps = (c.steps as Array<{ title: string; body?: string; detail?: string }>) || [];
+      const title = c.title as string | undefined;
+      return (
+        <div className="lesson-step-flow space-y-3">
+          {!!title && (
+            <h4
+              className="text-sm font-bold uppercase tracking-widest mb-3"
+              style={{ color: "oklch(0.72 0.22 330)" }}
+            >
+              {title}
+            </h4>
+          )}
+          {steps.map((step, i) => (
+            <div key={i} className="lesson-step rounded-xl p-4 flex gap-4 items-start">
+              <div className="lesson-step-number">{i + 1}</div>
+              <div className="min-w-0">
+                <p className="lesson-step-title">{step.title}</p>
+                {!!(step.body || step.detail) && (
+                  <p className="lesson-step-body mt-1">{step.body || step.detail}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ── Flashcard Grid ────────────────────────────────────────────────────────
+    case "flashcard_grid": {
+      const cards = (c.cards as Array<{ term: string; definition: string }>) || [];
+      const title = c.title as string | undefined;
+      return (
+        <div className="space-y-3">
+          {!!title && (
+            <h4
+              className="text-sm font-bold uppercase tracking-widest"
+              style={{ color: "oklch(0.72 0.22 330)" }}
+            >
+              {title}
+            </h4>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lesson-flashcard-grid">
+            {cards.map((card, i) => (
+              <FlashCard key={i} term={card.term} definition={card.definition} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Stat Grid ─────────────────────────────────────────────────────────────
+    case "stat_grid": {
+      const stats = (c.stats as Array<{ value: string; label: string; color?: string }>) || [];
+      const title = c.title as string | undefined;
+      return (
+        <div className="space-y-3">
+          {!!title && (
+            <h4
+              className="text-sm font-bold uppercase tracking-widest"
+              style={{ color: "oklch(0.72 0.22 330)" }}
+            >
+              {title}
+            </h4>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {stats.map((stat, i) => (
+              <div key={i} className="lesson-stat-card">
+                <div
+                  className="lesson-stat-value"
+                  style={{ color: stat.color || "oklch(0.78 0.22 330)" }}
+                >
+                  {stat.value}
+                </div>
+                <div className="lesson-stat-label">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── Concept Diagram ───────────────────────────────────────────────────────
+    case "concept_diagram": {
+      const center = c.center as string | undefined;
+      const nodes = (c.nodes as string[]) || [];
+      const title = c.title as string | undefined;
+      return (
+        <div className="lesson-concept-diagram">
+          {!!title && (
+            <h4
+              className="text-sm font-bold uppercase tracking-widest mb-4"
+              style={{ color: "oklch(0.72 0.22 330)" }}
+            >
+              {title}
+            </h4>
+          )}
+          <div className="flex flex-col items-center gap-4">
+            {!!center && (
+              <div className="lesson-concept-center">{center}</div>
+            )}
+            {nodes.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 w-full">
+                {nodes.map((node, i) => (
+                  <div key={i} className="lesson-concept-node">{node}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     default:
       return null;
   }
+}
+
+// ─── Flashcard component with flip animation ──────────────────────────────────
+function FlashCard({ term, definition }: { term: string; definition: string }) {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <button
+      onClick={() => setFlipped((v) => !v)}
+      className="lesson-flashcard text-left w-full"
+      title="Click to flip"
+    >
+      {!flipped ? (
+        <>
+          <p className="lesson-flashcard-term">{term}</p>
+          <p className="text-[10px] mt-2" style={{ color: "oklch(0.55 0.04 265)" }}>
+            Click to reveal definition →
+          </p>
+        </>
+      ) : (
+        <>
+          <p
+            className="text-[10px] font-semibold uppercase tracking-wider mb-1.5"
+            style={{ color: "oklch(0.55 0.04 265)" }}
+          >
+            {term}
+          </p>
+          <p className="lesson-flashcard-def">{definition}</p>
+        </>
+      )}
+    </button>
+  );
 }
 
 // ─── Sandbox Side Panel ───────────────────────────────────────────────────────
@@ -164,15 +377,12 @@ function SandboxPanel({
   const scoreQualityMutation = trpc.sandbox.scoreQuality.useMutation();
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Sync initialMessages when they load (only on first load)
   const [initialized, setInitialized] = useState(false);
   useEffect(() => {
     if (!initialized && initialMessages.length > 0) {
       setMessages(initialMessages);
       const alreadyPassed = initialMessages.some((m) => m.role === "user" && m.qualityPassed === true);
-      if (alreadyPassed) {
-        setQualityUnlocked(true);
-      }
+      if (alreadyPassed) setQualityUnlocked(true);
       setInitialized(true);
     }
   }, [initialMessages, initialized]);
@@ -188,8 +398,6 @@ function SandboxPanel({
     if (!prompt.trim() || isLoading || isScoring) return;
     const userMsg = prompt.trim();
     setPrompt("");
-
-    // Optimistically add user message
     const userChatMsg: ChatMessage = { role: "user", content: userMsg };
     setMessages((prev) => [...prev, userChatMsg]);
     setIsLoading(true);
@@ -214,15 +422,8 @@ function SandboxPanel({
         typeof res.content === "string" ? res.content : JSON.stringify(res.content);
       const assistantMsg: ChatMessage = { role: "assistant", content: assistantContent };
       setMessages((prev) => [...prev, assistantMsg]);
+      saveMessageMutation.mutate({ lessonId, role: "assistant", content: assistantContent });
 
-      // Save assistant message to DB (no quality scoring needed)
-      saveMessageMutation.mutate({
-        lessonId,
-        role: "assistant",
-        content: assistantContent,
-      });
-
-      // Quality score the user's prompt (non-blocking)
       if (!qualityUnlocked) {
         setIsScoring(true);
         try {
@@ -231,51 +432,31 @@ function SandboxPanel({
             lessonTitle,
             prompt: userMsg,
           });
-
-          // Update the user message in state with quality info
           setMessages((prev) =>
             prev.map((m, i) =>
               i === prev.length - 2 && m.role === "user" && m.content === userMsg
-                ? {
-                    ...m,
-                    qualityScore: scoreResult.score,
-                    qualityFeedback: scoreResult.feedback,
-                    qualityPassed: scoreResult.passed,
-                  }
+                ? { ...m, qualityScore: scoreResult.score, qualityFeedback: scoreResult.feedback, qualityPassed: scoreResult.passed }
                 : m
             )
           );
-
           if (scoreResult.passed) {
             setQualityUnlocked(true);
             onQualityPassed();
             toast.success("Great prompt! Quiz unlocked.", { duration: 3000 });
           } else {
-            toast.info(`Quality score: ${scoreResult.score}/100 — ${scoreResult.feedback}`, {
-              duration: 5000,
-            });
+            toast.info(`Quality score: ${scoreResult.score}/100 — ${scoreResult.feedback}`, { duration: 5000 });
           }
         } catch {
-          // Fallback: save user message without quality score
-          saveMessageMutation.mutate({
-            lessonId,
-            role: "user",
-            content: userMsg,
-          });
+          saveMessageMutation.mutate({ lessonId, role: "user", content: userMsg });
         } finally {
           setIsScoring(false);
         }
       } else {
-        // Already unlocked — just save without scoring
-        saveMessageMutation.mutate({
-          lessonId,
-          role: "user",
-          content: userMsg,
-        });
+        saveMessageMutation.mutate({ lessonId, role: "user", content: userMsg });
       }
     } catch {
       toast.error("Failed to get AI response. Please try again.");
-      setMessages((prev) => prev.slice(0, -1)); // remove optimistic user message
+      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
@@ -284,25 +465,32 @@ function SandboxPanel({
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-        <Lock className="w-10 h-10 text-white/20 mb-3" />
-        <p className="text-white/50 text-sm">Sign in to use the AI sandbox</p>
+        <Lock className="w-10 h-10 mb-3" style={{ color: "oklch(0.40 0.04 265)" }} />
+        <p className="text-sm" style={{ color: "oklch(0.60 0.02 265)" }}>Sign in to use the AI sandbox</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full">
-      {/* Exercise instructions */}
       {!!exerciseContent?.instructions && (
-        <div className="p-3 border-b border-white/10 bg-fuchsia-500/5">
+        <div
+          className="p-3 border-b shrink-0"
+          style={{ background: "oklch(0.18 0.06 310)", borderColor: "oklch(0.30 0.08 310)" }}
+        >
           <div className="flex items-center gap-1.5 mb-1">
-            <Brain className="w-3.5 h-3.5 text-fuchsia-400" />
-            <span className="text-xs font-semibold text-fuchsia-300">Applied Exercise</span>
+            <Brain className="w-3.5 h-3.5" style={{ color: "oklch(0.78 0.22 320)" }} />
+            <span className="text-xs font-semibold" style={{ color: "oklch(0.82 0.18 320)" }}>
+              Applied Exercise
+            </span>
           </div>
-          <p className="text-xs text-white/70 leading-relaxed">{String(exerciseContent.instructions ?? "")}</p>
+          <p className="text-xs leading-relaxed" style={{ color: "oklch(0.82 0.04 265)" }}>
+            {String(exerciseContent.instructions ?? "")}
+          </p>
           {!!exerciseContent.starterPrompt && (
             <button
-              className="mt-2 text-xs text-fuchsia-400 hover:text-fuchsia-300 underline underline-offset-2"
+              className="mt-2 text-xs underline underline-offset-2"
+              style={{ color: "oklch(0.78 0.22 320)" }}
               onClick={() => setPrompt(String(exerciseContent!.starterPrompt))}
             >
               Use starter prompt →
@@ -311,33 +499,33 @@ function SandboxPanel({
         </div>
       )}
 
-      {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-white/25 py-8">
-            <MessageSquare className="w-8 h-8 mb-2" />
+          <div className="flex flex-col items-center justify-center h-full py-8" style={{ color: "oklch(0.45 0.02 265)" }}>
+            <MessageSquare className="w-8 h-8 mb-2 opacity-40" />
             <p className="text-xs text-center">Practice your skills with the AI assistant</p>
           </div>
         )}
         {messages.map((msg, i) => (
           <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
             <div
-              className={`max-w-[90%] rounded-xl px-3 py-2 text-xs leading-relaxed ${
+              className="max-w-[90%] rounded-xl px-3 py-2 text-xs leading-relaxed"
+              style={
                 msg.role === "user"
-                  ? "bg-fuchsia-600/80 text-white"
-                  : "bg-white/10 text-white/90"
-              }`}
+                  ? { background: "oklch(0.55 0.22 330)", color: "oklch(0.98 0.005 330)" }
+                  : { background: "oklch(0.20 0.04 265)", color: "oklch(0.90 0.012 265)" }
+              }
             >
               <p className="whitespace-pre-wrap">{msg.content}</p>
             </div>
-            {/* Quality feedback badge for user messages */}
             {msg.role === "user" && msg.qualityScore != null && (
               <div
-                className={`mt-1 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${
+                className="mt-1 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full"
+                style={
                   msg.qualityPassed
-                    ? "bg-green-500/20 text-green-400"
-                    : "bg-amber-500/20 text-amber-400"
-                }`}
+                    ? { background: "oklch(0.20 0.08 155)", color: "oklch(0.82 0.18 155)" }
+                    : { background: "oklch(0.20 0.08 60)", color: "oklch(0.85 0.18 65)" }
+                }
               >
                 {msg.qualityPassed ? (
                   <CheckCircle2 className="w-2.5 h-2.5" />
@@ -354,9 +542,12 @@ function SandboxPanel({
         ))}
         {(isLoading || isScoring) && (
           <div className="flex justify-start">
-            <div className="bg-white/10 rounded-xl px-3 py-2">
+            <div
+              className="rounded-xl px-3 py-2"
+              style={{ background: "oklch(0.20 0.04 265)" }}
+            >
               {isScoring ? (
-                <div className="flex items-center gap-1.5 text-xs text-fuchsia-300">
+                <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.78 0.22 320)" }}>
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span>Scoring your prompt…</span>
                 </div>
@@ -365,8 +556,8 @@ function SandboxPanel({
                   {[0, 150, 300].map((delay) => (
                     <span
                       key={delay}
-                      className="w-1.5 h-1.5 bg-fuchsia-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${delay}ms` }}
+                      className="w-1.5 h-1.5 rounded-full animate-bounce"
+                      style={{ background: "oklch(0.72 0.22 330)", animationDelay: `${delay}ms` }}
                     />
                   ))}
                 </div>
@@ -377,16 +568,18 @@ function SandboxPanel({
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-3 border-t border-white/10 space-y-2">
+      <div
+        className="p-3 border-t space-y-2 shrink-0"
+        style={{ borderColor: "oklch(0.25 0.04 265)" }}
+      >
         {qualityUnlocked && (
-          <div className="flex items-center gap-1.5 text-xs text-green-400">
+          <div className="flex items-center gap-1.5 text-xs" style={{ color: "oklch(0.78 0.18 155)" }}>
             <CheckCircle2 className="w-3 h-3" />
             <span>Applied exercise complete — quiz unlocked!</span>
           </div>
         )}
         {!qualityUnlocked && (
-          <p className="text-[10px] text-white/30">
+          <p className="text-[10px]" style={{ color: "oklch(0.55 0.02 265)" }}>
             Submit a quality prompt (60+ score) to unlock the quiz
           </p>
         )}
@@ -395,7 +588,12 @@ function SandboxPanel({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Type your prompt… (Ctrl+Enter to send)"
-            className="resize-none bg-white/5 border-white/20 text-white placeholder:text-white/30 focus:border-fuchsia-400 text-xs"
+            className="resize-none text-xs"
+            style={{
+              background: "oklch(0.18 0.03 265)",
+              border: "1px solid oklch(0.30 0.05 265)",
+              color: "oklch(0.92 0.01 265)",
+            }}
             rows={3}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();
@@ -405,7 +603,8 @@ function SandboxPanel({
             onClick={handleSend}
             disabled={!prompt.trim() || isLoading || isScoring}
             size="sm"
-            className="self-end bg-fuchsia-600 hover:bg-fuchsia-500 text-white shrink-0"
+            className="self-end shrink-0"
+            style={{ background: "oklch(0.55 0.22 330)", color: "oklch(0.98 0.005 330)" }}
           >
             <Send className="w-3.5 h-3.5" />
           </Button>
@@ -431,24 +630,27 @@ function QuizSection({
   const [result, setResult] = useState<QuizResult | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const submitMutation = trpc.quiz.submit.useMutation();
-
   const allAnswered = answers.every((a) => a !== null);
 
-  // Gate: quiz locked until applied exercise completed
   if (!appliedCompleted) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-        <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-400/30 flex items-center justify-center">
-          <Lock className="w-7 h-7 text-amber-400" />
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center"
+          style={{ background: "oklch(0.20 0.08 60)", border: "1px solid oklch(0.45 0.18 60)" }}
+        >
+          <Lock className="w-7 h-7" style={{ color: "oklch(0.82 0.18 65)" }} />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-white mb-1">Complete the Applied Exercise First</h3>
-          <p className="text-white/50 text-sm max-w-sm">
+          <h3 className="text-lg font-semibold mb-1" style={{ color: "oklch(0.97 0.01 265)" }}>
+            Complete the Applied Exercise First
+          </h3>
+          <p className="text-sm max-w-sm" style={{ color: "oklch(0.72 0.02 265)" }}>
             Submit a quality prompt (score 60+) in the AI sandbox to demonstrate comprehension before taking the quiz.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-white/30 mt-2">
-          <Brain className="w-4 h-4 text-fuchsia-400/60" />
+        <div className="flex items-center gap-2 text-xs mt-2" style={{ color: "oklch(0.55 0.04 265)" }}>
+          <Brain className="w-4 h-4" style={{ color: "oklch(0.65 0.18 320)" }} />
           <span>Open the sandbox panel on the right and practice the lesson exercise</span>
         </div>
       </div>
@@ -458,10 +660,7 @@ function QuizSection({
   const handleSubmit = async () => {
     if (!allAnswered) return;
     try {
-      const res = await submitMutation.mutateAsync({
-        lessonId,
-        answers: answers as number[],
-      });
+      const res = await submitMutation.mutateAsync({ lessonId, answers: answers as number[] });
       setResult(res as QuizResult);
       setSubmitted(true);
       if (res.passed) {
@@ -485,21 +684,27 @@ function QuizSection({
     return (
       <div className="space-y-6">
         <div
-          className={`rounded-2xl p-6 text-center border ${
-            result.passed ? "border-green-400/40 bg-green-500/10" : "border-red-400/40 bg-red-500/10"
-          }`}
+          className="rounded-2xl p-6 text-center"
+          style={
+            result.passed
+              ? { background: "oklch(0.17 0.06 155)", border: "1px solid oklch(0.45 0.18 155)" }
+              : { background: "oklch(0.17 0.06 25)", border: "1px solid oklch(0.45 0.18 25)" }
+          }
         >
           <div className="flex justify-center mb-3">
             {result.passed ? (
-              <Trophy className="w-12 h-12 text-yellow-400" />
+              <Trophy className="w-12 h-12" style={{ color: "oklch(0.82 0.18 80)" }} />
             ) : (
-              <AlertCircle className="w-12 h-12 text-red-400" />
+              <AlertCircle className="w-12 h-12" style={{ color: "oklch(0.72 0.22 25)" }} />
             )}
           </div>
-          <h3 className={`text-2xl font-bold mb-1 ${result.passed ? "text-green-300" : "text-red-300"}`}>
+          <h3
+            className="text-2xl font-bold mb-1"
+            style={{ color: result.passed ? "oklch(0.88 0.18 155)" : "oklch(0.82 0.22 25)" }}
+          >
             {result.passed ? "Quiz Passed!" : "Not Quite Yet"}
           </h3>
-          <p className="text-white/60 mb-3">
+          <p className="mb-3" style={{ color: "oklch(0.78 0.02 265)" }}>
             {result.correct} of {result.total} correct — {result.score}%
           </p>
           <Progress value={result.score} className="h-3 max-w-xs mx-auto" />
@@ -511,29 +716,33 @@ function QuizSection({
             return (
               <div
                 key={i}
-                className={`rounded-xl border p-4 ${
-                  correct ? "border-green-400/30 bg-green-500/5" : "border-red-400/30 bg-red-500/5"
-                }`}
+                className="rounded-xl p-4"
+                style={
+                  correct
+                    ? { background: "oklch(0.17 0.05 155)", border: "1px solid oklch(0.40 0.14 155)" }
+                    : { background: "oklch(0.17 0.05 25)", border: "1px solid oklch(0.40 0.14 25)" }
+                }
               >
                 <div className="flex items-start gap-2 mb-3">
                   {correct ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-400 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" style={{ color: "oklch(0.75 0.18 155)" }} />
                   ) : (
-                    <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 shrink-0" />
+                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" style={{ color: "oklch(0.72 0.22 25)" }} />
                   )}
-                  <p className="font-medium text-white/90">{q.question}</p>
+                  <p className="font-medium" style={{ color: "oklch(0.95 0.01 265)" }}>{q.question}</p>
                 </div>
                 <div className="space-y-1 ml-7">
                   {q.options.map((opt, oi) => (
                     <div
                       key={oi}
-                      className={`text-sm px-3 py-1.5 rounded-lg ${
+                      className="text-sm px-3 py-1.5 rounded-lg"
+                      style={
                         oi === q.correctIndex
-                          ? "bg-green-500/20 text-green-300"
+                          ? { background: "oklch(0.22 0.08 155)", color: "oklch(0.88 0.18 155)" }
                           : oi === q.chosenIndex && !correct
-                          ? "bg-red-500/20 text-red-300"
-                          : "text-white/40"
-                      }`}
+                          ? { background: "oklch(0.22 0.08 25)", color: "oklch(0.88 0.18 25)" }
+                          : { color: "oklch(0.60 0.02 265)" }
+                      }
                     >
                       {oi === q.correctIndex && "✓ "}
                       {oi === q.chosenIndex && !correct && "✗ "}
@@ -542,7 +751,9 @@ function QuizSection({
                   ))}
                 </div>
                 {q.explanation && (
-                  <p className="mt-2 ml-7 text-sm text-white/50 italic">{q.explanation}</p>
+                  <p className="mt-2 ml-7 text-sm italic" style={{ color: "oklch(0.65 0.02 265)" }}>
+                    {q.explanation}
+                  </p>
                 )}
               </div>
             );
@@ -550,7 +761,11 @@ function QuizSection({
         </div>
 
         {!result.passed && (
-          <Button onClick={handleRetry} className="w-full bg-fuchsia-600 hover:bg-fuchsia-500 text-white">
+          <Button
+            onClick={handleRetry}
+            className="w-full"
+            style={{ background: "oklch(0.55 0.22 330)", color: "oklch(0.98 0.005 330)" }}
+          >
             Try Again
           </Button>
         )}
@@ -560,15 +775,15 @@ function QuizSection({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-white/60 text-sm">
-        <Star className="w-4 h-4 text-yellow-400" />
+      <div className="flex items-center gap-2 text-sm" style={{ color: "oklch(0.72 0.02 265)" }}>
+        <Star className="w-4 h-4" style={{ color: "oklch(0.82 0.18 80)" }} />
         <span>Score 70% or higher to unlock the next lesson</span>
       </div>
 
       {questions.map((q, qi) => (
         <div key={q.id} className="space-y-3">
-          <p className="font-medium text-white/90">
-            <span className="text-fuchsia-400 mr-2">{qi + 1}.</span>
+          <p className="font-medium" style={{ color: "oklch(0.95 0.01 265)" }}>
+            <span className="mr-2" style={{ color: "oklch(0.72 0.22 330)" }}>{qi + 1}.</span>
             {q.question}
           </p>
           <div className="space-y-2">
@@ -580,13 +795,16 @@ function QuizSection({
                   next[qi] = oi;
                   setAnswers(next);
                 }}
-                className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${
+                className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all"
+                style={
                   answers[qi] === oi
-                    ? "border-fuchsia-400 bg-fuchsia-500/20 text-white"
-                    : "border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10"
-                }`}
+                    ? { border: "1px solid oklch(0.65 0.22 330)", background: "oklch(0.22 0.08 330)", color: "oklch(0.97 0.01 265)" }
+                    : { border: "1px solid oklch(0.28 0.04 265)", background: "oklch(0.18 0.03 265)", color: "oklch(0.82 0.01 265)" }
+                }
               >
-                <span className="font-mono text-fuchsia-400 mr-2">{String.fromCharCode(65 + oi)}.</span>
+                <span className="font-mono mr-2" style={{ color: "oklch(0.72 0.22 330)" }}>
+                  {String.fromCharCode(65 + oi)}.
+                </span>
                 {opt}
               </button>
             ))}
@@ -597,7 +815,8 @@ function QuizSection({
       <Button
         onClick={handleSubmit}
         disabled={!allAnswered || submitMutation.isPending}
-        className="w-full bg-fuchsia-600 hover:bg-fuchsia-500 text-white disabled:opacity-40"
+        className="w-full disabled:opacity-40"
+        style={{ background: "oklch(0.55 0.22 330)", color: "oklch(0.98 0.005 330)" }}
       >
         {submitMutation.isPending ? "Submitting…" : "Submit Quiz"}
       </Button>
@@ -628,17 +847,14 @@ export default function LessonViewer() {
     { lessonId: lesson?.id ?? 0 },
     { enabled: isAuthenticated && !!lesson?.id }
   );
-  // Load sandbox history for this lesson
   const { data: sandboxHistory = [] } = trpc.sandbox.getLessonHistory.useQuery(
     { lessonId: lesson?.id ?? 0 },
     { enabled: isAuthenticated && !!lesson?.id }
   );
-  // Check if quality was already passed (persisted)
   const { data: qualityAlreadyPassed } = trpc.sandbox.qualityPassed.useQuery(
     { lessonId: lesson?.id ?? 0 },
     { enabled: isAuthenticated && !!lesson?.id }
   );
-  // Adjacent lesson navigation
   const { data: adjacent } = trpc.lessons.adjacent.useQuery(
     { lessonId: lesson?.id ?? 0 },
     { enabled: !!lesson?.id }
@@ -647,7 +863,6 @@ export default function LessonViewer() {
   const learningBlocks = blocks.filter((b) => b.type !== "prompt_exercise");
   const exerciseBlocks = blocks.filter((b) => b.type === "prompt_exercise");
 
-  // Map DB history rows to ChatMessage type
   const historyMessages: ChatMessage[] = sandboxHistory.map((row) => ({
     role: row.role as "user" | "assistant",
     content: row.content,
@@ -664,25 +879,33 @@ export default function LessonViewer() {
   }, [bestAttempt]);
 
   useEffect(() => {
-    if (qualityAlreadyPassed) {
-      setAppliedCompleted(true);
-    }
+    if (qualityAlreadyPassed) setAppliedCompleted(true);
   }, [qualityAlreadyPassed]);
 
+  // ── Loading ──
   if (lessonLoading || blocksLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-fuchsia-400 border-t-transparent rounded-full animate-spin" />
+      <div
+        className="min-h-screen flex items-center justify-center lesson-canvas"
+      >
+        <div
+          className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: "oklch(0.72 0.22 330)", borderTopColor: "transparent" }}
+        />
       </div>
     );
   }
 
   if (!lesson) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center lesson-canvas">
         <div className="text-center">
-          <p className="text-white/60 mb-4">Lesson not found.</p>
-          <Button onClick={() => navigate("/courses")} variant="outline">
+          <p className="mb-4" style={{ color: "oklch(0.70 0.02 265)" }}>Lesson not found.</p>
+          <Button
+            onClick={() => navigate("/courses")}
+            variant="outline"
+            style={{ borderColor: "oklch(0.35 0.05 265)", color: "oklch(0.88 0.01 265)" }}
+          >
             Back to Courses
           </Button>
         </div>
@@ -696,42 +919,47 @@ export default function LessonViewer() {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen lesson-canvas flex flex-col">
       {/* ── Sticky Header ── */}
-      <div className="sticky top-0 z-40 border-b border-white/10 bg-background/90 backdrop-blur-xl shrink-0">
+      <div
+        className="sticky top-0 z-40 shrink-0 backdrop-blur-xl"
+        style={{
+          background: "oklch(0.13 0.025 265 / 0.95)",
+          borderBottom: "1px solid oklch(0.25 0.04 265)",
+        }}
+      >
         <div className="px-4 py-3 flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/courses")}
-            className="text-white/60 hover:text-white"
+            style={{ color: "oklch(0.72 0.04 265)" }}
+            className="hover:text-white"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Courses
           </Button>
           <div className="flex-1 min-w-0">
-            <h1 className="font-semibold text-white truncate">{lesson.title}</h1>
+            <h1 className="font-semibold truncate" style={{ color: "oklch(0.97 0.01 265)" }}>
+              {lesson.title}
+            </h1>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 text-white/40 text-xs">
+            <div className="flex items-center gap-2 text-xs" style={{ color: "oklch(0.60 0.02 265)" }}>
               <Clock className="w-3 h-3" />
               <span>{lesson.estimatedMinutes}m</span>
-              <Zap className="w-3 h-3 text-yellow-400" />
-              <span className="text-yellow-400">{lesson.xpReward} XP</span>
+              <Zap className="w-3 h-3" style={{ color: "oklch(0.82 0.18 80)" }} />
+              <span style={{ color: "oklch(0.82 0.18 80)" }}>{lesson.xpReward} XP</span>
             </div>
-            {/* Sandbox toggle */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSandboxOpen((v) => !v)}
-              className={`text-xs gap-1.5 ${sandboxOpen ? "text-fuchsia-300" : "text-white/50 hover:text-white"}`}
+              className="text-xs gap-1.5"
+              style={{ color: sandboxOpen ? "oklch(0.78 0.22 320)" : "oklch(0.60 0.02 265)" }}
               title={sandboxOpen ? "Hide sandbox" : "Show sandbox"}
             >
-              {sandboxOpen ? (
-                <PanelRightClose className="w-4 h-4" />
-              ) : (
-                <PanelRightOpen className="w-4 h-4" />
-              )}
+              {sandboxOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
               <span className="hidden sm:inline">Sandbox</span>
             </Button>
           </div>
@@ -748,29 +976,29 @@ export default function LessonViewer() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors"
+                style={
                   isActive
-                    ? "border-fuchsia-400 text-fuchsia-300"
-                    : "border-transparent text-white/50 hover:text-white/80"
-                }`}
+                    ? { borderColor: "oklch(0.72 0.22 330)", color: "oklch(0.82 0.22 330)" }
+                    : { borderColor: "transparent", color: "oklch(0.58 0.02 265)" }
+                }
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
-                {isQuizLocked && <Lock className="w-3 h-3 text-amber-400" />}
-                {isQuizDone && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+                {isQuizLocked && <Lock className="w-3 h-3" style={{ color: "oklch(0.82 0.18 65)" }} />}
+                {isQuizDone && <CheckCircle2 className="w-3 h-3" style={{ color: "oklch(0.75 0.18 155)" }} />}
               </button>
             );
           })}
 
-          {/* Applied completion indicator in header */}
           <div className="ml-auto flex items-center gap-1.5 text-xs pb-2 self-end">
             {appliedCompleted ? (
-              <span className="flex items-center gap-1 text-green-400">
+              <span className="flex items-center gap-1" style={{ color: "oklch(0.75 0.18 155)" }}>
                 <CheckCircle2 className="w-3 h-3" />
                 Applied done
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-amber-400/70">
+              <span className="flex items-center gap-1" style={{ color: "oklch(0.72 0.12 65)" }}>
                 <Brain className="w-3 h-3" />
                 Practice in sandbox to unlock quiz
               </span>
@@ -782,30 +1010,35 @@ export default function LessonViewer() {
       {/* ── Two-column body ── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Main content */}
-        <div
-          className={`flex-1 overflow-y-auto transition-all duration-300 ${
-            sandboxOpen ? "w-0" : "w-full"
-          }`}
-        >
+        <div className={`flex-1 overflow-y-auto transition-all duration-300 ${sandboxOpen ? "w-0" : "w-full"}`}>
           <div className="max-w-3xl mx-auto px-4 py-8">
+
             {/* ── Learn Tab ── */}
             {activeTab === "learn" && (
               <div className="space-y-6">
                 {lesson.description && (
-                  <p className="text-white/60 text-lg leading-relaxed">{lesson.description}</p>
+                  <p className="text-lg leading-relaxed" style={{ color: "oklch(0.75 0.02 265)" }}>
+                    {lesson.description}
+                  </p>
                 )}
                 <div className="flex flex-wrap gap-2 mb-2">
-                  <Badge variant="outline" className="capitalize border-white/20 text-white/60">
+                  <Badge
+                    variant="outline"
+                    className="capitalize"
+                    style={{ borderColor: "oklch(0.35 0.05 265)", color: "oklch(0.72 0.02 265)" }}
+                  >
                     {lesson.type}
                   </Badge>
                   {lesson.isPremium && (
-                    <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Premium</Badge>
+                    <Badge style={{ background: "oklch(0.22 0.08 60)", color: "oklch(0.88 0.18 65)", border: "1px solid oklch(0.45 0.18 60)" }}>
+                      Premium
+                    </Badge>
                   )}
                 </div>
 
                 {learningBlocks.length === 0 ? (
-                  <div className="text-center py-16 text-white/30">
-                    <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <div className="text-center py-16" style={{ color: "oklch(0.45 0.02 265)" }}>
+                    <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
                     <p>Lesson content is being prepared.</p>
                   </div>
                 ) : (
@@ -814,48 +1047,47 @@ export default function LessonViewer() {
                   ))
                 )}
 
-                {/* ── Navigation arrows + Go to Quiz ── */}
-                <div className="pt-6 border-t border-white/10 space-y-4">
-                  {/* Prev/Next navigation */}
+                {/* ── Navigation + Quiz CTA ── */}
+                <div
+                  className="pt-6 space-y-4"
+                  style={{ borderTop: "1px solid oklch(0.25 0.04 265)" }}
+                >
                   <div className="flex items-center justify-between gap-3">
                     {adjacent?.prev ? (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => navigate(`/lessons/${adjacent.prev!.slug}`)}
-                        className="flex items-center gap-1.5 border-white/20 text-white/70 hover:text-white hover:border-white/40 max-w-[45%]"
+                        className="flex items-center gap-1.5 max-w-[45%]"
+                        style={{ borderColor: "oklch(0.30 0.05 265)", color: "oklch(0.78 0.02 265)" }}
                       >
                         <ChevronLeft className="w-4 h-4 shrink-0" />
                         <span className="truncate text-xs">{adjacent.prev.title}</span>
                       </Button>
-                    ) : (
-                      <div />
-                    )}
+                    ) : <div />}
                     {adjacent?.next ? (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => navigate(`/lessons/${adjacent.next!.slug}`)}
-                        className="flex items-center gap-1.5 border-white/20 text-white/70 hover:text-white hover:border-white/40 max-w-[45%] ml-auto"
+                        className="flex items-center gap-1.5 max-w-[45%] ml-auto"
+                        style={{ borderColor: "oklch(0.30 0.05 265)", color: "oklch(0.78 0.02 265)" }}
                       >
                         <span className="truncate text-xs">{adjacent.next.title}</span>
                         <ChevronRight className="w-4 h-4 shrink-0" />
                       </Button>
-                    ) : (
-                      <div />
-                    )}
+                    ) : <div />}
                   </div>
 
-                  {/* Go to quiz CTA */}
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-white/40">
+                    <p className="text-sm" style={{ color: "oklch(0.55 0.02 265)" }}>
                       {appliedCompleted
                         ? "Applied exercise complete — take the quiz when ready."
                         : "Practice in the sandbox panel to unlock the quiz."}
                     </p>
                     <Button
                       onClick={() => setActiveTab("quiz")}
-                      className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+                      style={{ background: "oklch(0.55 0.22 330)", color: "oklch(0.98 0.005 330)" }}
                     >
                       Go to Quiz
                       <ChevronRight className="w-4 h-4 ml-1" />
@@ -869,72 +1101,83 @@ export default function LessonViewer() {
             {activeTab === "quiz" && (
               <div className="space-y-6">
                 {!isAuthenticated ? (
-                  <Card className="border-white/10 bg-white/5">
-                    <CardContent className="pt-6 text-center">
-                      <Lock className="w-10 h-10 text-white/30 mx-auto mb-3" />
-                      <p className="text-white/60 mb-4">Sign in to take the quiz and unlock the next lesson</p>
-                      <Button onClick={() => navigate("/")} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white">
-                        Sign In
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <div
+                    className="rounded-2xl p-8 text-center"
+                    style={{ background: "oklch(0.17 0.03 265)", border: "1px solid oklch(0.28 0.05 265)" }}
+                  >
+                    <Lock className="w-10 h-10 mx-auto mb-3" style={{ color: "oklch(0.45 0.04 265)" }} />
+                    <p className="mb-4" style={{ color: "oklch(0.72 0.02 265)" }}>
+                      Sign in to take the quiz and unlock the next lesson
+                    </p>
+                    <Button
+                      onClick={() => navigate("/")}
+                      style={{ background: "oklch(0.55 0.22 330)", color: "oklch(0.98 0.005 330)" }}
+                    >
+                      Sign In
+                    </Button>
+                  </div>
                 ) : quizPassed || bestAttempt?.passed ? (
-                  <Card className="border-green-400/30 bg-green-500/10">
-                    <CardContent className="pt-6 text-center">
-                      <Trophy className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
-                      <h3 className="text-xl font-bold text-green-300 mb-1">Quiz Completed!</h3>
-                      <p className="text-white/60">
-                        Best score: {bestAttempt?.score ?? 100}% — Next lesson unlocked
-                      </p>
-                      {/* Navigation after passing */}
-                      <div className="flex items-center justify-center gap-3 mt-4">
-                        {adjacent?.next && (
-                          <Button
-                            onClick={() => navigate(`/lessons/${adjacent.next!.slug}`)}
-                            className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
-                          >
-                            Next Lesson
-                            <ChevronRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        )}
+                  <div
+                    className="rounded-2xl p-8 text-center"
+                    style={{ background: "oklch(0.17 0.06 155)", border: "1px solid oklch(0.45 0.18 155)" }}
+                  >
+                    <Trophy className="w-12 h-12 mx-auto mb-3" style={{ color: "oklch(0.82 0.18 80)" }} />
+                    <h3 className="text-xl font-bold mb-1" style={{ color: "oklch(0.88 0.18 155)" }}>
+                      Quiz Completed!
+                    </h3>
+                    <p style={{ color: "oklch(0.75 0.02 265)" }}>
+                      Best score: {bestAttempt?.score ?? 100}% — Next lesson unlocked
+                    </p>
+                    <div className="flex items-center justify-center gap-3 mt-4">
+                      {adjacent?.next && (
                         <Button
-                          onClick={() => navigate("/courses")}
-                          variant="outline"
-                          className="border-white/20 text-white/70 hover:text-white"
+                          onClick={() => navigate(`/lessons/${adjacent.next!.slug}`)}
+                          style={{ background: "oklch(0.55 0.22 330)", color: "oklch(0.98 0.005 330)" }}
                         >
-                          Course Outline
+                          Next Lesson
+                          <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      )}
+                      <Button
+                        onClick={() => navigate("/courses")}
+                        variant="outline"
+                        style={{ borderColor: "oklch(0.35 0.05 265)", color: "oklch(0.78 0.02 265)" }}
+                      >
+                        Course Outline
+                      </Button>
+                    </div>
+                  </div>
                 ) : quizQuestions.length === 0 ? (
-                  <div className="text-center py-16 text-white/30">
-                    <Star className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <div className="text-center py-16" style={{ color: "oklch(0.45 0.02 265)" }}>
+                    <Star className="w-12 h-12 mx-auto mb-3 opacity-40" />
                     <p>Quiz questions are being prepared.</p>
                   </div>
                 ) : (
-                  <Card className="border-white/10 bg-white/5">
-                    <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <Star className="w-5 h-5 text-yellow-400" />
+                  <div
+                    className="rounded-2xl p-6"
+                    style={{ background: "oklch(0.17 0.03 265)", border: "1px solid oklch(0.28 0.05 265)" }}
+                  >
+                    <div className="flex items-center gap-2 mb-6">
+                      <Star className="w-5 h-5" style={{ color: "oklch(0.82 0.18 80)" }} />
+                      <h2 className="font-bold text-lg" style={{ color: "oklch(0.97 0.01 265)" }}>
                         Lesson Quiz
-                        <Badge variant="outline" className="ml-auto text-white/60 border-white/20">
-                          {quizQuestions.length} questions
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <QuizSection
-                        lessonId={lesson.id}
-                        questions={quizQuestions as QuizQuestion[]}
-                        appliedCompleted={appliedCompleted}
-                        onPass={() => setQuizPassed(true)}
-                      />
-                    </CardContent>
-                  </Card>
+                      </h2>
+                      <span
+                        className="ml-auto text-xs px-2 py-0.5 rounded-full"
+                        style={{ background: "oklch(0.22 0.04 265)", color: "oklch(0.72 0.02 265)" }}
+                      >
+                        {quizQuestions.length} questions
+                      </span>
+                    </div>
+                    <QuizSection
+                      lessonId={lesson.id}
+                      questions={quizQuestions as QuizQuestion[]}
+                      appliedCompleted={appliedCompleted}
+                      onPass={() => setQuizPassed(true)}
+                    />
+                  </div>
                 )}
 
-                {/* Navigation arrows on quiz tab too */}
                 {(adjacent?.prev || adjacent?.next) && (
                   <div className="flex items-center justify-between gap-3 pt-2">
                     {adjacent?.prev ? (
@@ -942,27 +1185,25 @@ export default function LessonViewer() {
                         variant="ghost"
                         size="sm"
                         onClick={() => navigate(`/lessons/${adjacent.prev!.slug}`)}
-                        className="flex items-center gap-1.5 text-white/50 hover:text-white max-w-[45%]"
+                        className="flex items-center gap-1.5 max-w-[45%]"
+                        style={{ color: "oklch(0.62 0.02 265)" }}
                       >
                         <ChevronLeft className="w-4 h-4 shrink-0" />
                         <span className="truncate text-xs">{adjacent.prev.title}</span>
                       </Button>
-                    ) : (
-                      <div />
-                    )}
+                    ) : <div />}
                     {adjacent?.next ? (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => navigate(`/lessons/${adjacent.next!.slug}`)}
-                        className="flex items-center gap-1.5 text-white/50 hover:text-white max-w-[45%] ml-auto"
+                        className="flex items-center gap-1.5 max-w-[45%] ml-auto"
+                        style={{ color: "oklch(0.62 0.02 265)" }}
                       >
                         <span className="truncate text-xs">{adjacent.next.title}</span>
                         <ChevronRight className="w-4 h-4 shrink-0" />
                       </Button>
-                    ) : (
-                      <div />
-                    )}
+                    ) : <div />}
                   </div>
                 )}
               </div>
@@ -972,26 +1213,33 @@ export default function LessonViewer() {
 
         {/* ── Sandbox Side Panel ── */}
         {sandboxOpen && (
-          <div className="w-80 xl:w-96 shrink-0 border-l border-white/10 bg-black/20 flex flex-col overflow-hidden">
-            {/* Panel header */}
-            <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2 shrink-0">
-              <Brain className="w-4 h-4 text-fuchsia-400" />
-              <span className="text-sm font-semibold text-white">AI Sandbox</span>
+          <div
+            className="w-80 xl:w-96 shrink-0 flex flex-col overflow-hidden"
+            style={{ borderLeft: "1px solid oklch(0.25 0.04 265)", background: "oklch(0.11 0.02 265)" }}
+          >
+            <div
+              className="px-4 py-3 flex items-center gap-2 shrink-0"
+              style={{ borderBottom: "1px solid oklch(0.25 0.04 265)" }}
+            >
+              <Brain className="w-4 h-4" style={{ color: "oklch(0.72 0.22 320)" }} />
+              <span className="text-sm font-semibold" style={{ color: "oklch(0.97 0.01 265)" }}>
+                AI Sandbox
+              </span>
               {historyMessages.length > 0 && (
-                <span className="text-[10px] text-white/30 ml-1">
+                <span className="text-[10px] ml-1" style={{ color: "oklch(0.50 0.02 265)" }}>
                   ({historyMessages.length} msg{historyMessages.length !== 1 ? "s" : ""})
                 </span>
               )}
-              <Badge
-                variant="outline"
-                className={`ml-auto text-xs ${
+              <span
+                className="ml-auto text-xs px-2 py-0.5 rounded-full"
+                style={
                   appliedCompleted
-                    ? "border-green-400/40 text-green-400"
-                    : "border-amber-400/40 text-amber-400"
-                }`}
+                    ? { background: "oklch(0.20 0.08 155)", color: "oklch(0.82 0.18 155)" }
+                    : { background: "oklch(0.20 0.08 60)", color: "oklch(0.85 0.18 65)" }
+                }
               >
                 {appliedCompleted ? "Complete" : "Required"}
-              </Badge>
+              </span>
             </div>
 
             {lesson && (

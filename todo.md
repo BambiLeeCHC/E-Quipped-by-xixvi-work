@@ -163,3 +163,20 @@
 - [x] LessonViewer: prev/next navigation arrows on Quiz tab too
 - [x] LessonViewer: "Next Lesson" button on quiz completion card
 - [x] 22 vitest tests passing, zero TypeScript errors
+
+## Phase 21: Visual Lesson Layout Enhancement & Contrast Fixes
+- [x] Audit all lesson canvas colors — identified low-contrast text-white/50 and text-white/60 on dark backgrounds
+- [x] Add dedicated lesson-canvas CSS class (deep indigo-black bg, near-white text, WCAG AA compliant)
+- [x] Add lesson-prose CSS class with full typographic overrides (h1-h4, p, ul, ol, code, pre, table, blockquote)
+- [x] Add high-contrast callout variants (info, warning, success, tip) with distinct border+bg+text colors
+- [x] Add lesson-code-block, lesson-code-header, lesson-code-content CSS classes
+- [x] New block type: step_flow — numbered step cards with fuchsia number badges
+- [x] New block type: flashcard_grid — flip-on-click term/definition cards
+- [x] New block type: stat_grid — large-value stat cards with colored values
+- [x] New block type: concept_diagram — center node + surrounding concept nodes
+- [x] New block type: quote — styled blockquote with left border and author attribution
+- [x] Extend content_blocks DB enum + apply migration
+- [x] Rewrite LessonViewer to use lesson-canvas dark theme throughout (no more text-white/50 anti-patterns)
+- [x] All inline styles use oklch() for precise, accessible color values
+- [x] Seed 10 visual blocks across M1L1, M1L2, M2L1, M3L1
+- [x] 22 vitest tests passing, zero TypeScript errors

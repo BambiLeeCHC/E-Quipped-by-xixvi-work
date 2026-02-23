@@ -89,7 +89,7 @@ export type Lesson = typeof lessons.$inferSelect;
 export const contentBlocks = mysqlTable("content_blocks", {
   id: int("id").autoincrement().primaryKey(),
   lessonId: int("lessonId").notNull(),
-  type: mysqlEnum("type", ["text", "image", "video", "code", "quiz", "prompt_exercise", "callout"]).notNull(),
+  type: mysqlEnum("type", ["text", "image", "video", "code", "quiz", "prompt_exercise", "callout", "step_flow", "flashcard_grid", "stat_grid", "concept_diagram", "quote", "divider"]).notNull(),
   order: int("order").default(0).notNull(),
   content: json("content").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
