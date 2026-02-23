@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import {
-  BookOpen,
   Brain,
   ChevronRight,
   FileText,
@@ -107,12 +106,7 @@ const useCases = [
   { icon: Wand2,        label: "Workflow AI",       color: "text-fuchsia-500" },
 ];
 
-const stats = [
-  { value: "10+", label: "Modules" },
-  { value: "50+", label: "Lessons" },
-  { value: "8+",  label: "Skills" },
-  { value: "3",   label: "AI Models" },
-];
+
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -273,37 +267,18 @@ export default function Home() {
                 </Button>
               </>
             ) : (
-              <>
-                <Button
-                  size="lg"
-                  className="gradient-primary text-white border-0 glow-spectrum px-8 h-12 text-base font-semibold"
-                  onClick={() => (window.location.href = getLoginUrl())}
-                >
-                  Start Learning Free
-                  <ChevronRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="px-8 h-12 text-base lucite border-fuchsia-200/60 text-foreground hover:border-fuchsia-400/60"
-                  onClick={() => setLocation("/courses")}
-                >
-                  <BookOpen className="mr-2 h-5 w-5 text-fuchsia-500" />
-                  Browse Courses
-                </Button>
-              </>
+              <Button
+                size="lg"
+                className="gradient-primary text-white border-0 glow-spectrum px-8 h-12 text-base font-semibold"
+                onClick={() => (window.location.href = getLoginUrl())}
+              >
+                Sign In to Get Started
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
             )}
           </div>
 
-          {/* Stats — lucite pills */}
-          <div className="grid grid-cols-4 gap-4 mt-16 max-w-lg mx-auto">
-            {stats.map((s) => (
-              <div key={s.label} className="lucite rounded-xl py-3 px-2 text-center card-lift">
-                <div className="text-2xl font-black text-gradient">{s.value}</div>
-                <div className="text-xs text-foreground/50 mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </div>
+
         </div>
       </section>
 

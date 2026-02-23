@@ -75,3 +75,7 @@
 - [x] Redesign landing page hero with full AI business mastery messaging
 - [x] Add rotating skill showcase (prompt engineering → presentations → transcription → etc.)
 - [x] Update features section to reflect full AI business skill curriculum
+
+## Phase 13: Hero Cleanup
+- [x] Remove stats pills (Modules, Lessons, Skills, AI Models) from hero
+- [x] Replace unauthenticated CTAs (Start Learning Free / Browse Courses) with a single Sign In / Login button
