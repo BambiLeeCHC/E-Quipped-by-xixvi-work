@@ -447,24 +447,45 @@ export default function CourseCatalog() {
         {/* Access banners */}
         {/* Pro subscribers and admin-verified users: no banner needed — they have full access */}
         {isAuthenticated && !isVerified && !hasPendingRequest && !accessRequested && (
-          <div className="mb-8 rounded-2xl border border-amber-200/60 bg-amber-50/60 p-5">
-            <div className="flex items-start gap-4">
-              <Crown className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+          <div className="mb-8 rounded-2xl border-2 border-fuchsia-200/60 bg-gradient-to-br from-fuchsia-50/80 to-violet-50/60 p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start gap-5">
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md shadow-fuchsia-200/50">
+                <Crown className="w-6 h-6 text-white" />
+              </div>
+              {/* Copy */}
               <div className="flex-1">
-                <p className="font-semibold text-amber-800 mb-1">Unlock Full Course Access</p>
-                <p className="text-sm text-amber-700/80 mb-3">Module 1, Lesson 1 is free. Subscribe to Pro to unlock all 7 modules and 36 lessons — or request admin approval if you have a voucher.</p>
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" className="gradient-primary text-white border-0 glow-primary" onClick={() => setLocation("/pricing")}>
-                    <Crown className="w-3.5 h-3.5 mr-1.5" />Upgrade to Pro
+                <p className="font-bold text-fuchsia-900 text-base mb-1">Unlock All 7 Modules — Lifetime Access</p>
+                <p className="text-sm text-fuchsia-800/70 mb-4 leading-relaxed">
+                  Module 1, Lesson 1 is free. Get full access to all 36 lessons, the AI sandbox, and every future module for a single one-time payment.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    size="sm"
+                    className="gradient-primary text-white border-0 glow-primary font-semibold px-5"
+                    onClick={() => setLocation("/pricing")}
+                  >
+                    <Crown className="w-3.5 h-3.5 mr-1.5" />Get Lifetime Access — $675
                   </Button>
-                  <Button size="sm" variant="outline" className="border-amber-300/60 text-amber-700 hover:bg-amber-100/60" onClick={() => setAccessRequested(true)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-fuchsia-200 text-fuchsia-700 hover:bg-fuchsia-50 bg-white/70"
+                    onClick={() => setAccessRequested(true)}
+                  >
                     Request Admin Access
                   </Button>
                 </div>
+                <p className="text-xs text-fuchsia-700/50 mt-2.5 flex items-center gap-1">
+                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-100 inline-flex items-center justify-center">
+                    <svg className="w-2 h-2 text-emerald-600" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </span>
+                  One-time payment · No subscription · 7-day money-back guarantee
+                </p>
               </div>
             </div>
             {accessRequested && (
-              <div className="mt-3 pt-3 border-t border-amber-200/60">
+              <div className="mt-4 pt-4 border-t border-fuchsia-200/60">
                 <AccessRequestCard onRequested={() => { void refetchAccess(); }} />
               </div>
             )}

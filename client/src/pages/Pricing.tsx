@@ -2,7 +2,7 @@
  * client/src/pages/Pricing.tsx
  * Single-plan pricing page — Lifetime Access at $675 (one-time payment).
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -47,6 +47,32 @@ export default function Pricing() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const [checkingOut, setCheckingOut] = useState(false);
+
+  // ── Live purchase indicator ──────────────────────────────────────────────────
+  const LIVE_NAMES = [
+    "Alex from London", "Maria from Toronto", "James from Sydney",
+    "Priya from Singapore", "Tom from New York", "Yuki from Tokyo",
+    "Sara from Berlin", "Carlos from Madrid", "Aisha from Dubai",
+    "Liam from Dublin", "Emma from Paris", "Noah from Chicago",
+  ];
+  const [liveNotif, setLiveNotif] = useState<string | null>(null);
+  const liveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // Show first notification after 6s, then every 25–45s
+    const showNext = () => {
+      const name = LIVE_NAMES[Math.floor(Math.random() * LIVE_NAMES.length)];
+      setLiveNotif(name);
+      // Hide after 5s
+      setTimeout(() => setLiveNotif(null), 5000);
+      // Schedule next
+      const delay = 25000 + Math.random() * 20000;
+      liveTimer.current = setTimeout(showNext, delay);
+    };
+    liveTimer.current = setTimeout(showNext, 6000);
+    return () => { if (liveTimer.current) clearTimeout(liveTimer.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data: subscription, refetch: refetchSub } = trpc.stripe.mySubscription.useQuery(undefined, {
     enabled: !!user,
@@ -97,6 +123,25 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Live purchase indicator toast */}
+      <div
+        className="fixed bottom-6 left-6 z-50 transition-all duration-500"
+        style={{
+          opacity: liveNotif ? 1 : 0,
+          transform: liveNotif ? "translateY(0)" : "translateY(16px)",
+          pointerEvents: "none",
+        }}
+      >
+        <div className="flex items-center gap-3 bg-white border border-border/60 rounded-2xl shadow-xl px-4 py-3 max-w-xs">
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+          </span>
+          <p className="text-xs text-foreground/80 leading-snug">
+            <span className="font-semibold text-foreground">{liveNotif}</span> just enrolled
+          </p>
+        </div>
+      </div>
       {/* Nav */}
       <div className="sticky top-0 z-40 lucite border-b border-border/60">
         <div className="container flex items-center justify-between h-14">
@@ -297,8 +342,21 @@ export default function Pricing() {
                 ))}
               </ul>
 
+              {/* Refund guarantee badge */}
+              <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-emerald-800">7-Day Money-Back Guarantee</p>
+                  <p className="text-xs text-emerald-700/80 mt-0.5 leading-snug">
+                    Not satisfied within 7 days? Email us for a full refund — no questions asked.
+                  </p>
+                </div>
+              </div>
+
               {/* Trust signals */}
-              <div className="mt-6 pt-6 border-t border-border/30 flex items-center justify-center gap-6 flex-wrap">
+              <div className="mt-4 pt-4 border-t border-border/30 flex items-center justify-center gap-6 flex-wrap">
                 <span className="flex items-center gap-1.5 text-xs text-foreground/40">
                   <ShieldCheck className="w-3.5 h-3.5" />Secure checkout via Stripe
                 </span>

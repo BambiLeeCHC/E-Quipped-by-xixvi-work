@@ -225,3 +225,27 @@
 - [x] Webhook: notifyOwner failure is caught and logged (non-blocking)
 - [x] scripts/create-stripe-price.mjs — reusable script for future price creation
 - [x] 25 vitest tests passing (3 new Stripe tests), zero TypeScript errors
+
+## Phase 26: Checkout Verification, Refund Badge, Live Indicator & More CTAs
+- [ ] Verify Stripe sandbox: create test checkout session via API script and confirm price_1T418U8sip4m1KcerxuWL85Q resolves
+- [ ] Pricing page: 7-day refund guarantee badge on the pricing card
+- [ ] Pricing page: animated live purchase indicator ("Someone just enrolled")
+- [ ] Homepage: "Get Lifetime Access" CTA section above footer
+- [ ] CourseCatalog: upgrade CTA banner when user is not verified (replace plain text)
+- [ ] LessonViewer: upgrade CTA overlay when lesson is locked (premium modules)
+- [ ] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 27: Legal Policies, Hamburger Menu & Header Polish
+- [x] Privacy Policy page (/privacy) — GDPR/CCPA compliant, 12 sections
+- [x] Terms of Service page (/terms) — 14 sections covering purchase, IP, acceptable use, AI sandbox
+- [x] Refund Policy page (/refund) — 7-day no-questions-asked guarantee
+- [x] Cookie Policy page (/cookies) — 3 cookies documented, table format
+- [x] Accessibility Statement page (/accessibility) — WCAG 2.1 AA, known limitations, testing approach
+- [x] Shared PolicyLayout component — lucite header, spectrum hero, section renderer with inline bold + table support
+- [x] Full-screen MenuPanel.tsx — dark lucite overlay, staggered slide-up entrance, fast fade-down exit, spectrum shimmer sweep on open
+- [x] "Work" wordmark uses spectrum-word class — continuous 4s hue-loop animation (fuchsia → violet → indigo → cyan → mint → amber → fuchsia)
+- [x] Hamburger button in Home.tsx header — always visible, opens MenuPanel
+- [x] MenuPanel includes primary nav + policy links + user greeting card + auth CTA
+- [x] Footer rebuilt — brand + tagline left, 5 policy links right, copyright + email bottom
+- [x] All 5 policy routes registered in App.tsx
+- [x] 25 vitest tests passing, zero TypeScript errors

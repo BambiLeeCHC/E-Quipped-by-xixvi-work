@@ -16,6 +16,11 @@ import LessonEditor from "./pages/LessonEditor";
 import AdminUsers from "./pages/AdminUsers";
 import Pricing from "./pages/Pricing";
 import PaymentHistory from "./pages/PaymentHistory";
+import PrivacyPolicy from "./pages/policies/PrivacyPolicy";
+import TermsOfService from "./pages/policies/TermsOfService";
+import RefundPolicy from "./pages/policies/RefundPolicy";
+import CookiePolicy from "./pages/policies/CookiePolicy";
+import AccessibilityStatement from "./pages/policies/AccessibilityStatement";
 
 function Router() {
   return (
@@ -32,6 +37,11 @@ function Router() {
       <Route path="/editor/lessons/:lessonId" component={LessonEditor} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/payments" component={PaymentHistory} />
+      <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/terms" component={TermsOfService} />
+      <Route path="/refund" component={RefundPolicy} />
+      <Route path="/cookies" component={CookiePolicy} />
+      <Route path="/accessibility" component={AccessibilityStatement} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

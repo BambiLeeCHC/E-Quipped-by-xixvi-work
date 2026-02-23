@@ -24,6 +24,8 @@ import {
 import { useEffect, useState } from "react";
 import { useLoginPopup } from "@/hooks/useLoginPopup";
 import { useLocation } from "wouter";
+import { Menu } from "lucide-react";
+import MenuPanel from "@/components/MenuPanel";
 
 // ─── Rotating skill showcase ─────────────────────────────────────────────────
 const skills = [
@@ -121,6 +123,7 @@ export default function Home() {
   // Rotating skill index
   const [skillIdx, setSkillIdx] = useState(0);
   const [fade, setFade] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -147,9 +150,17 @@ export default function Home() {
             <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center text-white font-black text-sm glow-primary">
               E
             </div>
-            <span className="text-gradient font-extrabold">E-Quipped: Work</span>
+            <span className="font-extrabold">E-Quipped:&nbsp;<span className="spectrum-word">Work</span></span>
           </button>
           <div className="flex items-center gap-2">
+            {/* Hamburger — always visible */}
+            <button
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              className="w-9 h-9 rounded-xl flex items-center justify-center border border-border/40 hover:bg-muted/60 transition-colors"
+            >
+              <Menu className="w-4.5 h-4.5" style={{ width: "1.1rem", height: "1.1rem" }} />
+            </button>
             {!loading && (
               <>
                 {user ? (
@@ -204,6 +215,9 @@ export default function Home() {
           </div>
         </div>
       </nav>
+
+      {/* ── Full-screen menu panel ── */}
+      <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {/* ── Hero ── */}
       <section className="pt-36 pb-24 px-4 relative overflow-hidden">
@@ -418,46 +432,102 @@ export default function Home() {
 
       {/* ── CTA ── */}
       <section className="py-24 px-4">
-        <div className="container max-w-3xl mx-auto text-center">
+        <div className="container max-w-4xl mx-auto">
           <div className="p-px rounded-3xl shimmer-spectrum">
-            <div className="lucite-flesh rounded-3xl p-12">
-              <div className="h-14 w-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-5 glow-primary">
-                <Sparkles className="h-7 w-7 text-white" />
+            <div className="lucite-flesh rounded-3xl p-10 sm:p-14">
+              <div className="grid sm:grid-cols-2 gap-10 items-center">
+                {/* Left: copy */}
+                <div>
+                  <div className="h-14 w-14 rounded-2xl gradient-primary flex items-center justify-center mb-5 glow-primary">
+                    <Sparkles className="h-7 w-7 text-white" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-4 text-foreground">
+                    Ready to become an AI-powered professional?
+                  </h2>
+                  <p className="text-foreground/60 mb-4 text-base leading-relaxed">
+                    Join E-Quipped: Work and master AI across every skill that matters in modern business — from prompt engineering to presentations, transcription, research, and beyond.
+                  </p>
+                  <ul className="space-y-2 mb-6">
+                    {["7 modules · 36 in-depth lessons","Live AI sandbox with quality scoring","Lifetime access — pay once, learn forever","7-day money-back guarantee"].map(item => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-foreground/70">
+                        <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                          <svg className="w-2.5 h-2.5 text-emerald-600" fill="none" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    size="lg"
+                    className="gradient-primary text-white border-0 glow-spectrum px-8 h-12 text-base font-semibold w-full sm:w-auto"
+                    onClick={() => user ? setLocation("/courses") : openPopup()}
+                  >
+                    {user ? "Go to Courses" : "Get Started Free"}
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </div>
+
+                {/* Right: pricing card */}
+                <div className="rounded-2xl border-2 border-fuchsia-200/70 bg-white shadow-lg shadow-fuchsia-100/30 overflow-hidden">
+                  <div className="h-1 w-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500" />
+                  <div className="p-6">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-fuchsia-500 mb-2">Lifetime Access</p>
+                    <div className="flex items-end gap-1 mb-1">
+                      <span className="text-4xl font-black text-foreground">$675</span>
+                      <span className="text-sm text-foreground/40 mb-1.5">one-time</span>
+                    </div>
+                    <p className="text-xs text-foreground/50 mb-5">No subscription. No renewals. Yours forever.</p>
+                    <Button
+                      size="lg"
+                      className="w-full gradient-primary text-white border-0 glow-primary font-bold mb-4"
+                      onClick={() => setLocation("/pricing")}
+                    >
+                      Get Lifetime Access
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2">
+                      <Shield className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <p className="text-xs text-emerald-700">7-day money-back guarantee</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h2 className="text-3xl font-bold mb-4 text-foreground">
-                Ready to become an AI-powered professional?
-              </h2>
-              <p className="text-foreground/60 mb-3 text-lg">
-                Join E-Quipped: Work and master AI across every skill that matters in modern business — from prompt engineering to presentations, transcription, research, and beyond.
-              </p>
-              <p className="text-foreground/45 mb-8 text-sm">
-                Structured curriculum · Live AI sandbox · Gamified progress · Verified access
-              </p>
-              <Button
-                size="lg"
-                className="gradient-primary text-white border-0 glow-spectrum px-10 h-12 text-base font-semibold"
-                onClick={() =>
-                  user ? setLocation("/courses") : openPopup()
-                }
-              >
-                {user ? "Go to Courses" : "Get Started Free"}
-                <ChevronRight className="ml-2 h-5 w-5" />
-              </Button>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-border py-8 px-4 lucite">
-        <div className="container flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-foreground/50">
-          <div className="flex items-center gap-2 font-semibold text-foreground/70">
-            <div className="h-6 w-6 rounded gradient-primary flex items-center justify-center text-white font-black text-xs">
-              E
+      <footer className="border-t border-border pt-10 pb-6 px-4 lucite">
+        <div className="container">
+          {/* Top row */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-8">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2 font-black text-base mb-1">
+                <div className="h-7 w-7 rounded-lg gradient-primary flex items-center justify-center text-white font-black text-xs">
+                  E
+                </div>
+                <span>E-Quipped:&nbsp;<span className="spectrum-word">Work</span></span>
+              </div>
+              <p className="text-xs text-foreground/40 max-w-xs">
+                The AI skills platform for professionals who want to work smarter.
+              </p>
             </div>
-            E-Quipped: Work
+            {/* Policy links */}
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-foreground/45">
+              <button onClick={() => setLocation("/privacy")} className="hover:text-foreground/70 transition-colors">Privacy Policy</button>
+              <button onClick={() => setLocation("/terms")} className="hover:text-foreground/70 transition-colors">Terms of Service</button>
+              <button onClick={() => setLocation("/refund")} className="hover:text-foreground/70 transition-colors">Refund Policy</button>
+              <button onClick={() => setLocation("/cookies")} className="hover:text-foreground/70 transition-colors">Cookie Policy</button>
+              <button onClick={() => setLocation("/accessibility")} className="hover:text-foreground/70 transition-colors">Accessibility</button>
+            </div>
           </div>
-          <p>© {new Date().getFullYear()} E-Quipped: Work. All rights reserved.</p>
+          {/* Bottom row */}
+          <div className="border-t border-border/30 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-foreground/35">
+            <p>© {new Date().getFullYear()} E-Quipped: Work. All rights reserved.</p>
+            <p>support@e-quipped.com</p>
+          </div>
         </div>
       </footer>
     </div>

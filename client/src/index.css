@@ -541,3 +541,41 @@
   background: linear-gradient(90deg, transparent, oklch(0.35 0.06 290), transparent);
   margin: 2rem 0;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Spectrum Word — continuous hue-loop on the word "Work" in the nav/menu
+   Uses background-clip: text so the gradient animates through the word.
+───────────────────────────────────────────────────────────────────────────── */
+.spectrum-word {
+  background-image: linear-gradient(
+    90deg,
+    oklch(0.72 0.25 330),  /* fuchsia */
+    oklch(0.68 0.24 290),  /* violet */
+    oklch(0.65 0.22 230),  /* indigo */
+    oklch(0.68 0.20 190),  /* cyan */
+    oklch(0.72 0.20 150),  /* mint */
+    oklch(0.75 0.22 80),   /* amber */
+    oklch(0.72 0.25 330)   /* back to fuchsia */
+  );
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: spectrum-loop 4s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spectrum-loop {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Menu shimmer sweep — one-shot shimmer that plays when the menu opens
+───────────────────────────────────────────────────────────────────────────── */
+@keyframes menu-shimmer {
+  0%   { opacity: 0; transform: translateX(-100%); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(100%); }
+}
