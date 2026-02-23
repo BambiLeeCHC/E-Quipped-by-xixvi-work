@@ -21,6 +21,8 @@ import TermsOfService from "./pages/policies/TermsOfService";
 import RefundPolicy from "./pages/policies/RefundPolicy";
 import CookiePolicy from "./pages/policies/CookiePolicy";
 import AccessibilityStatement from "./pages/policies/AccessibilityStatement";
+import FloatingSandbox from "./components/FloatingSandbox";
+import { useLocation } from "wouter";
 
 function Router() {
   return (
@@ -48,6 +50,13 @@ function Router() {
   );
 }
 
+function GlobalWidgets() {
+  const [location] = useLocation();
+  // Don't render the floating sandbox on the /sandbox page itself
+  if (location === "/sandbox") return null;
+  return <FloatingSandbox />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -55,6 +64,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <GlobalWidgets />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

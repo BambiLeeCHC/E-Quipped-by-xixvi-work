@@ -309,3 +309,30 @@
 - [x] AI Sandbox: auto-scroll to latest message via useRef
 - [x] AI Sandbox: empty state includes "Open Settings" CTA button
 - [x] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 33: Global Floating Sandbox
+- [ ] Create FloatingSandboxContext (open/close/toggle state, shared across all pages)
+- [ ] Create FloatingSandbox component — fixed right side-drawer, 420px wide, full-height
+- [ ] FloatingSandbox: multi-turn chat with system prompt, temperature, max tokens
+- [ ] FloatingSandbox: expand/collapse toggle with labeled icon button
+- [ ] FloatingSandbox: close (X) button
+- [ ] FloatingSandbox: main page content shifts left when drawer is open (margin-right reflow)
+- [ ] FloatingSandbox: persistent "Open Sandbox" FAB (floating action button) on all pages
+- [ ] Wire FloatingSandboxContext into main.tsx providers
+- [ ] Add FAB to App.tsx so it appears on every route
+- [ ] Remove redundant sandbox toggle from LessonViewer header (now global)
+- [ ] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 33: Global Floating Sandbox Widget
+- [x] Created FloatingSandbox component (client/src/components/FloatingSandbox.tsx)
+- [x] FAB in bottom-right corner — gradient fuchsia/violet, labeled "AI Sandbox"; shifts left when drawer is open
+- [x] Drawer slides in from right (420px / 92vw) with cubic-bezier spring animation
+- [x] Desktop: body padding-right transitions to match drawer width so page content reflows
+- [x] Mobile: backdrop overlay (blur + dark) closes drawer on tap
+- [x] Collapsible settings panel (system prompt, temperature, max tokens, quick actions) — max-height transition
+- [x] Full chat UI (messages, typing indicator, auto-scroll, input, save prompt, clear)
+- [x] Close button (X) in drawer header + "Close Sandbox" footer button
+- [x] FloatingSandbox wired globally in App.tsx via GlobalWidgets component
+- [x] GlobalWidgets suppresses FloatingSandbox on /sandbox page to avoid duplication
+- [x] Fixed stale duplicate useAuth import in Profile.tsx
+- [x] 25 vitest tests passing, zero TypeScript errors
