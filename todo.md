@@ -249,3 +249,10 @@
 - [x] Footer rebuilt — brand + tagline left, 5 policy links right, copyright + email bottom
 - [x] All 5 policy routes registered in App.tsx
 - [x] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 28: Pricing Page Avatar & Pop-up Fixes
+- [x] Removed live purchase pop-up toasts and all associated state/effect/ref logic
+- [x] Avatar bubbles: varied initials A, M, S, J, R with distinct spectrum hues
+- [x] Avatar bubbles: white background with 2.5px coloured border per bubble
+- [x] Avatar bubbles: pulsating glow keyframe (avatar-pulse, 2.4s ease-in-out infinite, staggered 0.4s per bubble)
+- [x] 25 vitest tests passing, zero TypeScript errors

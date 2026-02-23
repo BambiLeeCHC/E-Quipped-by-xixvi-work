@@ -579,3 +579,18 @@
   30%  { opacity: 1; }
   100% { opacity: 0; transform: translateX(100%); }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Avatar Bubble — pulsating glow ring for social proof bubbles on Pricing page
+   Each bubble inherits its border colour; the glow pulses outward and fades.
+───────────────────────────────────────────────────────────────────────────── */
+.avatar-bubble {
+  animation: avatar-pulse 2.4s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes avatar-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--bubble-glow, oklch(0.72 0.22 330 / 0.55)); }
+  50%  { box-shadow: 0 0 0 7px var(--bubble-glow, oklch(0.72 0.22 330 / 0)); }
+  100% { box-shadow: 0 0 0 0 var(--bubble-glow, oklch(0.72 0.22 330 / 0)); }
+}

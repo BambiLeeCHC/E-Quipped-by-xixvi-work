@@ -2,7 +2,7 @@
  * client/src/pages/Pricing.tsx
  * Single-plan pricing page — Lifetime Access at $675 (one-time payment).
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -47,32 +47,6 @@ export default function Pricing() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const [checkingOut, setCheckingOut] = useState(false);
-
-  // ── Live purchase indicator ──────────────────────────────────────────────────
-  const LIVE_NAMES = [
-    "Alex from London", "Maria from Toronto", "James from Sydney",
-    "Priya from Singapore", "Tom from New York", "Yuki from Tokyo",
-    "Sara from Berlin", "Carlos from Madrid", "Aisha from Dubai",
-    "Liam from Dublin", "Emma from Paris", "Noah from Chicago",
-  ];
-  const [liveNotif, setLiveNotif] = useState<string | null>(null);
-  const liveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    // Show first notification after 6s, then every 25–45s
-    const showNext = () => {
-      const name = LIVE_NAMES[Math.floor(Math.random() * LIVE_NAMES.length)];
-      setLiveNotif(name);
-      // Hide after 5s
-      setTimeout(() => setLiveNotif(null), 5000);
-      // Schedule next
-      const delay = 25000 + Math.random() * 20000;
-      liveTimer.current = setTimeout(showNext, delay);
-    };
-    liveTimer.current = setTimeout(showNext, 6000);
-    return () => { if (liveTimer.current) clearTimeout(liveTimer.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const { data: subscription, refetch: refetchSub } = trpc.stripe.mySubscription.useQuery(undefined, {
     enabled: !!user,
@@ -123,25 +97,6 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Live purchase indicator toast */}
-      <div
-        className="fixed bottom-6 left-6 z-50 transition-all duration-500"
-        style={{
-          opacity: liveNotif ? 1 : 0,
-          transform: liveNotif ? "translateY(0)" : "translateY(16px)",
-          pointerEvents: "none",
-        }}
-      >
-        <div className="flex items-center gap-3 bg-white border border-border/60 rounded-2xl shadow-xl px-4 py-3 max-w-xs">
-          <span className="relative flex h-2.5 w-2.5 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-          </span>
-          <p className="text-xs text-foreground/80 leading-snug">
-            <span className="font-semibold text-foreground">{liveNotif}</span> just enrolled
-          </p>
-        </div>
-      </div>
       {/* Nav */}
       <div className="sticky top-0 z-40 lucite border-b border-border/60">
         <div className="container flex items-center justify-between h-14">
@@ -209,15 +164,28 @@ export default function Pricing() {
         {/* Social proof */}
         <div className="mb-12">
           {/* Learner count bar */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="flex -space-x-2">
-              {["oklch(0.72 0.18 310)","oklch(0.68 0.20 250)","oklch(0.65 0.22 155)","oklch(0.70 0.20 30)","oklch(0.66 0.18 200)"].map((color, i) => (
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <div className="flex -space-x-2.5">
+              {[
+                { initial: "A", color: "oklch(0.72 0.22 330)", glow: "oklch(0.72 0.22 330 / 0.55)" },
+                { initial: "M", color: "oklch(0.68 0.22 280)", glow: "oklch(0.68 0.22 280 / 0.50)" },
+                { initial: "S", color: "oklch(0.65 0.20 220)", glow: "oklch(0.65 0.20 220 / 0.50)" },
+                { initial: "J", color: "oklch(0.68 0.20 155)", glow: "oklch(0.68 0.20 155 / 0.50)" },
+                { initial: "R", color: "oklch(0.70 0.20 40)",  glow: "oklch(0.70 0.20 40 / 0.50)"  },
+              ].map(({ initial, color, glow }, i) => (
                 <div
                   key={i}
-                  className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: color }}
+                  className="avatar-bubble w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold"
+                  style={{
+                    background: "white",
+                    border: `2.5px solid ${color}`,
+                    color: color,
+                    boxShadow: `0 0 0 0 ${glow}`,
+                    animationDelay: `${i * 0.4}s`,
+                    zIndex: 5 - i,
+                  }}
                 >
-                  {["A","B","C","D","E"][i]}
+                  {initial}
                 </div>
               ))}
             </div>
