@@ -1,0 +1,274 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { trpc } from "@/lib/trpc";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  MoreVertical,
+  Shield,
+  ShieldCheck,
+  ShieldX,
+  Users,
+  Zap,
+  BookOpen,
+  Activity,
+} from "lucide-react";
+import { useLocation } from "wouter";
+import { toast } from "sonner";
+
+export default function AdminDashboard() {
+  const { user, loading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  const { data: analytics, refetch: refetchAnalytics } = trpc.admin.analytics.useQuery(
+    undefined,
+    { enabled: !!user && user.role === "admin" }
+  );
+  const { data: users, refetch: refetchUsers } = trpc.admin.users.useQuery(
+    undefined,
+    { enabled: !!user && user.role === "admin" }
+  );
+  const { data: securityEvents } = trpc.security.events.useQuery(
+    undefined,
+    { enabled: !!user && user.role === "admin" }
+  );
+
+  const setStatusMutation = trpc.admin.setUserStatus.useMutation({
+    onSuccess: () => {
+      toast.success("User status updated");
+      refetchUsers();
+      refetchAnalytics();
+    },
+  });
+
+  const setRoleMutation = trpc.admin.setUserRole.useMutation({
+    onSuccess: () => {
+      toast.success("User role updated");
+      refetchUsers();
+    },
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Admin Access Required</h2>
+          <Button onClick={() => setLocation("/")}>Go Home</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const statCards = [
+    { icon: Users, label: "Total Users", value: analytics?.totalUsers ?? 0, color: "text-blue-400" },
+    { icon: ShieldCheck, label: "Verified", value: analytics?.verifiedUsers ?? 0, color: "text-emerald-400" },
+    { icon: Shield, label: "Trial", value: analytics?.trialUsers ?? 0, color: "text-yellow-400" },
+    { icon: BookOpen, label: "Completions", value: analytics?.totalCompletions ?? 0, color: "text-violet-400" },
+    { icon: AlertTriangle, label: "Security Events", value: analytics?.totalSecurityEvents ?? 0, color: "text-rose-400" },
+  ];
+
+  const statusColors: Record<string, string> = {
+    trial: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    verified: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+    banned: "bg-red-500/20 text-red-400 border-red-500/30",
+  };
+
+  const roleColors: Record<string, string> = {
+    user: "bg-muted/50 text-muted-foreground border-border/50",
+    editor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    admin: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b border-border/50 bg-card/30 backdrop-blur-xl sticky top-0 z-40">
+        <div className="container flex items-center gap-4 h-16">
+          <Button variant="ghost" size="sm" onClick={() => setLocation("/")}>
+            <ChevronLeft className="h-4 w-4 mr-1" /> Home
+          </Button>
+          <div className="h-4 w-px bg-border" />
+          <Shield className="h-4 w-4 text-primary" />
+          <h1 className="font-semibold">Admin Dashboard</h1>
+        </div>
+      </div>
+
+      <div className="container py-8 max-w-6xl mx-auto space-y-8">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {statCards.map((s) => (
+            <Card key={s.label} className="bg-card border-border/50">
+              <CardContent className="p-4">
+                <s.icon className={`h-5 w-5 ${s.color} mb-2`} />
+                <div className="text-2xl font-bold">{s.value}</div>
+                <div className="text-xs text-muted-foreground">{s.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Users Table */}
+        <Card className="bg-card border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              User Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    <th className="text-left px-4 py-3 text-muted-foreground font-medium">User</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground font-medium">Status</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground font-medium">Role</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground font-medium">XP</th>
+                    <th className="text-left px-4 py-3 text-muted-foreground font-medium">Joined</th>
+                    <th className="text-right px-4 py-3 text-muted-foreground font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users?.map((u) => (
+                    <tr key={u.id} className="border-b border-border/20 hover:bg-muted/10">
+                      <td className="px-4 py-3">
+                        <div className="font-medium">{u.name ?? "—"}</div>
+                        <div className="text-xs text-muted-foreground">{u.email ?? u.openId}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className={`text-xs ${statusColors[u.status ?? "trial"]}`}>
+                          {u.status ?? "trial"}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className={`text-xs ${roleColors[u.role ?? "user"]}`}>
+                          {u.role ?? "user"}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="flex items-center gap-1 text-amber-400">
+                          <Zap className="h-3 w-3" />
+                          {u.xp ?? 0}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {u.id !== user.id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => setStatusMutation.mutate({ userId: u.id, status: "verified" })}
+                                className="text-emerald-400"
+                              >
+                                <ShieldCheck className="h-4 w-4 mr-2" /> Verify
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setStatusMutation.mutate({ userId: u.id, status: "trial" })}
+                              >
+                                <Shield className="h-4 w-4 mr-2" /> Set Trial
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setStatusMutation.mutate({ userId: u.id, status: "banned" })}
+                                className="text-destructive"
+                              >
+                                <ShieldX className="h-4 w-4 mr-2" /> Ban
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setRoleMutation.mutate({ userId: u.id, role: "editor" })}
+                                className="text-blue-400"
+                              >
+                                <Activity className="h-4 w-4 mr-2" /> Make Editor
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => setRoleMutation.mutate({ userId: u.id, role: "user" })}
+                              >
+                                <Users className="h-4 w-4 mr-2" /> Set User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {(!users || users.length === 0) && (
+                <div className="text-center py-10 text-muted-foreground text-sm">No users found.</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Security Events */}
+        {securityEvents && securityEvents.length > 0 && (
+          <Card className="bg-card border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-rose-400" />
+                Recent Security Events
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/50">
+                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Type</th>
+                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Details</th>
+                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Page</th>
+                      <th className="text-left px-4 py-3 text-muted-foreground font-medium">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {securityEvents.slice(0, 20).map((e) => (
+                      <tr key={e.id} className="border-b border-border/20 hover:bg-muted/10">
+                        <td className="px-4 py-3">
+                          <Badge className="bg-rose-500/20 text-rose-400 border-rose-500/30 text-xs">
+                            {e.type}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs max-w-xs truncate">
+                          {e.details ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs max-w-xs truncate">
+                          {e.pageUrl ?? "—"}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground text-xs">
+                          {new Date(e.createdAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
