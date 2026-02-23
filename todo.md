@@ -141,10 +141,25 @@
 - [x] Save checkpoint and publish
 
 ## Phase 19: Sandbox Side Panel & Quiz Gating
-- [ ] Redesign LessonViewer as two-column layout: lesson content left, sandbox side panel right
-- [ ] Sandbox side panel is collapsible (toggle button) and persists across Learn/Quiz sections
-- [ ] Applied section pre-fills sandbox with lesson prompt template
-- [ ] Track sandbox submission count per lesson (applied_completed flag)
-- [ ] Quiz tab/section only unlocks after user submits at least one sandbox response in Applied
-- [ ] Show clear "Complete the Applied exercise first" message when quiz is locked
-- [ ] Push all changes to GitHub
+- [x] Redesign LessonViewer as two-column layout: lesson content left, sandbox side panel right
+- [x] Sandbox side panel is collapsible (toggle button) and persists across Learn/Quiz sections
+- [x] Applied section pre-fills sandbox with lesson prompt template
+- [x] Track sandbox submission count per lesson (applied_completed flag)
+- [x] Quiz tab/section only unlocks after user submits at least one sandbox response in Applied
+- [x] Show clear "Complete the Applied exercise first" message when quiz is locked
+- [x] Push all changes to GitHub
+
+## Phase 20: Prompt History, Quality Gate & Navigation
+- [x] DB: sandbox_messages table (userId, lessonId, role, content, qualityScore, qualityFeedback, qualityPassed, createdAt)
+- [x] Backend: sandbox.saveMessage procedure (persist user+assistant messages)
+- [x] Backend: sandbox.getLessonHistory procedure (load messages for a lesson)
+- [x] Backend: sandbox.scoreQuality LLM procedure (scores prompt quality, returns pass/fail + feedback)
+- [x] Backend: sandbox.qualityPassed query (check if user already passed quality gate for a lesson)
+- [x] Backend: lessons.adjacent procedure (prev/next lesson with cross-module support)
+- [x] LessonViewer: load and display previous sandbox messages on mount (history persists across sessions)
+- [x] LessonViewer: quality gate — LLM scores each submission, unlock quiz only on quality pass (score >= 60)
+- [x] LessonViewer: show quality feedback inline (score badge + improvement tip per message)
+- [x] LessonViewer: prev/next lesson navigation arrows at bottom of Learn tab
+- [x] LessonViewer: prev/next navigation arrows on Quiz tab too
+- [x] LessonViewer: "Next Lesson" button on quiz completion card
+- [x] 22 vitest tests passing, zero TypeScript errors

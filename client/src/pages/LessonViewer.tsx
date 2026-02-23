@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Clock,
   Code2,
+  Loader2,
   Lock,
   MessageSquare,
   PanelRightClose,
@@ -55,6 +56,14 @@ type QuizResult = {
     chosenIndex: number;
     explanation?: string | null;
   }[];
+};
+
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  qualityScore?: number | null;
+  qualityFeedback?: string | null;
+  qualityPassed?: boolean | null;
 };
 
 // ─── Content Block Renderer ───────────────────────────────────────────────────
@@ -129,63 +138,144 @@ function BlockRenderer({ block }: { block: ContentBlock }) {
 
 // ─── Sandbox Side Panel ───────────────────────────────────────────────────────
 function SandboxPanel({
+  lessonId,
   lessonTitle,
   exercises,
   isAuthenticated,
-  onFirstSubmit,
+  onQualityPassed,
+  initialMessages,
 }: {
+  lessonId: number;
   lessonTitle: string;
   exercises: ContentBlock[];
   isAuthenticated: boolean;
-  onFirstSubmit: () => void;
+  onQualityPassed: () => void;
+  initialMessages: ChatMessage[];
 }) {
   const [prompt, setPrompt] = useState("");
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isScoring, setIsScoring] = useState(false);
+  const [qualityUnlocked, setQualityUnlocked] = useState(
+    initialMessages.some((m) => m.role === "user" && m.qualityPassed === true)
+  );
   const chatMutation = trpc.sandbox.chat.useMutation();
+  const saveMessageMutation = trpc.sandbox.saveMessage.useMutation();
+  const scoreQualityMutation = trpc.sandbox.scoreQuality.useMutation();
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const activeExercise = exercises[0];
-  const exerciseContent = activeExercise?.content as Record<string, unknown> | undefined;
+  // Sync initialMessages when they load (only on first load)
+  const [initialized, setInitialized] = useState(false);
+  useEffect(() => {
+    if (!initialized && initialMessages.length > 0) {
+      setMessages(initialMessages);
+      const alreadyPassed = initialMessages.some((m) => m.role === "user" && m.qualityPassed === true);
+      if (alreadyPassed) {
+        setQualityUnlocked(true);
+      }
+      setInitialized(true);
+    }
+  }, [initialMessages, initialized]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const activeExercise = exercises[0];
+  const exerciseContent = activeExercise?.content as Record<string, unknown> | undefined;
+
   const handleSend = async () => {
-    if (!prompt.trim() || isLoading) return;
+    if (!prompt.trim() || isLoading || isScoring) return;
     const userMsg = prompt.trim();
     setPrompt("");
-    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+
+    // Optimistically add user message
+    const userChatMsg: ChatMessage = { role: "user", content: userMsg };
+    setMessages((prev) => [...prev, userChatMsg]);
     setIsLoading(true);
+
     try {
       const systemPrompt =
         (exerciseContent?.systemPrompt as string) ||
         `You are an AI business assistant helping a learner practice skills from the lesson: "${lessonTitle}". Provide helpful, constructive feedback on their prompts and demonstrate good AI usage in a business context.`;
+
       const res = await chatMutation.mutateAsync({
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...messages.map((m) => ({ role: m.role, content: m.content })),
           { role: "user", content: userMsg },
         ],
         model: "gpt-4o",
         temperature: 0.7,
         maxTokens: 800,
       });
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant" as const,
-          content: typeof res.content === "string" ? res.content : JSON.stringify(res.content),
-        },
-      ]);
-      if (!hasSubmitted) {
-        setHasSubmitted(true);
-        onFirstSubmit();
+
+      const assistantContent =
+        typeof res.content === "string" ? res.content : JSON.stringify(res.content);
+      const assistantMsg: ChatMessage = { role: "assistant", content: assistantContent };
+      setMessages((prev) => [...prev, assistantMsg]);
+
+      // Save assistant message to DB (no quality scoring needed)
+      saveMessageMutation.mutate({
+        lessonId,
+        role: "assistant",
+        content: assistantContent,
+      });
+
+      // Quality score the user's prompt (non-blocking)
+      if (!qualityUnlocked) {
+        setIsScoring(true);
+        try {
+          const scoreResult = await scoreQualityMutation.mutateAsync({
+            lessonId,
+            lessonTitle,
+            prompt: userMsg,
+          });
+
+          // Update the user message in state with quality info
+          setMessages((prev) =>
+            prev.map((m, i) =>
+              i === prev.length - 2 && m.role === "user" && m.content === userMsg
+                ? {
+                    ...m,
+                    qualityScore: scoreResult.score,
+                    qualityFeedback: scoreResult.feedback,
+                    qualityPassed: scoreResult.passed,
+                  }
+                : m
+            )
+          );
+
+          if (scoreResult.passed) {
+            setQualityUnlocked(true);
+            onQualityPassed();
+            toast.success("Great prompt! Quiz unlocked.", { duration: 3000 });
+          } else {
+            toast.info(`Quality score: ${scoreResult.score}/100 — ${scoreResult.feedback}`, {
+              duration: 5000,
+            });
+          }
+        } catch {
+          // Fallback: save user message without quality score
+          saveMessageMutation.mutate({
+            lessonId,
+            role: "user",
+            content: userMsg,
+          });
+        } finally {
+          setIsScoring(false);
+        }
+      } else {
+        // Already unlocked — just save without scoring
+        saveMessageMutation.mutate({
+          lessonId,
+          role: "user",
+          content: userMsg,
+        });
       }
     } catch {
       toast.error("Failed to get AI response. Please try again.");
+      setMessages((prev) => prev.slice(0, -1)); // remove optimistic user message
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +320,7 @@ function SandboxPanel({
           </div>
         )}
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
             <div
               className={`max-w-[90%] rounded-xl px-3 py-2 text-xs leading-relaxed ${
                 msg.role === "user"
@@ -240,20 +330,47 @@ function SandboxPanel({
             >
               <p className="whitespace-pre-wrap">{msg.content}</p>
             </div>
+            {/* Quality feedback badge for user messages */}
+            {msg.role === "user" && msg.qualityScore != null && (
+              <div
+                className={`mt-1 flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full ${
+                  msg.qualityPassed
+                    ? "bg-green-500/20 text-green-400"
+                    : "bg-amber-500/20 text-amber-400"
+                }`}
+              >
+                {msg.qualityPassed ? (
+                  <CheckCircle2 className="w-2.5 h-2.5" />
+                ) : (
+                  <AlertCircle className="w-2.5 h-2.5" />
+                )}
+                <span>
+                  Score {msg.qualityScore}/100
+                  {msg.qualityFeedback ? ` — ${msg.qualityFeedback}` : ""}
+                </span>
+              </div>
+            )}
           </div>
         ))}
-        {isLoading && (
+        {(isLoading || isScoring) && (
           <div className="flex justify-start">
             <div className="bg-white/10 rounded-xl px-3 py-2">
-              <div className="flex gap-1">
-                {[0, 150, 300].map((delay) => (
-                  <span
-                    key={delay}
-                    className="w-1.5 h-1.5 bg-fuchsia-400 rounded-full animate-bounce"
-                    style={{ animationDelay: `${delay}ms` }}
-                  />
-                ))}
-              </div>
+              {isScoring ? (
+                <div className="flex items-center gap-1.5 text-xs text-fuchsia-300">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>Scoring your prompt…</span>
+                </div>
+              ) : (
+                <div className="flex gap-1">
+                  {[0, 150, 300].map((delay) => (
+                    <span
+                      key={delay}
+                      className="w-1.5 h-1.5 bg-fuchsia-400 rounded-full animate-bounce"
+                      style={{ animationDelay: `${delay}ms` }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -262,11 +379,16 @@ function SandboxPanel({
 
       {/* Input */}
       <div className="p-3 border-t border-white/10 space-y-2">
-        {hasSubmitted && (
+        {qualityUnlocked && (
           <div className="flex items-center gap-1.5 text-xs text-green-400">
             <CheckCircle2 className="w-3 h-3" />
             <span>Applied exercise complete — quiz unlocked!</span>
           </div>
+        )}
+        {!qualityUnlocked && (
+          <p className="text-[10px] text-white/30">
+            Submit a quality prompt (60+ score) to unlock the quiz
+          </p>
         )}
         <div className="flex gap-2">
           <Textarea
@@ -281,7 +403,7 @@ function SandboxPanel({
           />
           <Button
             onClick={handleSend}
-            disabled={!prompt.trim() || isLoading}
+            disabled={!prompt.trim() || isLoading || isScoring}
             size="sm"
             className="self-end bg-fuchsia-600 hover:bg-fuchsia-500 text-white shrink-0"
           >
@@ -322,7 +444,7 @@ function QuizSection({
         <div>
           <h3 className="text-lg font-semibold text-white mb-1">Complete the Applied Exercise First</h3>
           <p className="text-white/50 text-sm max-w-sm">
-            You must demonstrate comprehension by submitting at least one response in the AI sandbox before the quiz unlocks.
+            Submit a quality prompt (score 60+) in the AI sandbox to demonstrate comprehension before taking the quiz.
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-white/30 mt-2">
@@ -506,16 +628,46 @@ export default function LessonViewer() {
     { lessonId: lesson?.id ?? 0 },
     { enabled: isAuthenticated && !!lesson?.id }
   );
+  // Load sandbox history for this lesson
+  const { data: sandboxHistory = [] } = trpc.sandbox.getLessonHistory.useQuery(
+    { lessonId: lesson?.id ?? 0 },
+    { enabled: isAuthenticated && !!lesson?.id }
+  );
+  // Check if quality was already passed (persisted)
+  const { data: qualityAlreadyPassed } = trpc.sandbox.qualityPassed.useQuery(
+    { lessonId: lesson?.id ?? 0 },
+    { enabled: isAuthenticated && !!lesson?.id }
+  );
+  // Adjacent lesson navigation
+  const { data: adjacent } = trpc.lessons.adjacent.useQuery(
+    { lessonId: lesson?.id ?? 0 },
+    { enabled: !!lesson?.id }
+  );
 
   const learningBlocks = blocks.filter((b) => b.type !== "prompt_exercise");
   const exerciseBlocks = blocks.filter((b) => b.type === "prompt_exercise");
 
+  // Map DB history rows to ChatMessage type
+  const historyMessages: ChatMessage[] = sandboxHistory.map((row) => ({
+    role: row.role as "user" | "assistant",
+    content: row.content,
+    qualityScore: row.qualityScore,
+    qualityFeedback: row.qualityFeedback,
+    qualityPassed: row.qualityPassed,
+  }));
+
   useEffect(() => {
     if (bestAttempt?.passed) {
       setQuizPassed(true);
-      setAppliedCompleted(true); // already passed means applied was done before
+      setAppliedCompleted(true);
     }
   }, [bestAttempt]);
+
+  useEffect(() => {
+    if (qualityAlreadyPassed) {
+      setAppliedCompleted(true);
+    }
+  }, [qualityAlreadyPassed]);
 
   if (lessonLoading || blocksLoading) {
     return (
@@ -662,19 +814,53 @@ export default function LessonViewer() {
                   ))
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                  <p className="text-sm text-white/40">
-                    {appliedCompleted
-                      ? "Applied exercise complete — take the quiz when ready."
-                      : "Practice in the sandbox panel to unlock the quiz."}
-                  </p>
-                  <Button
-                    onClick={() => setActiveTab("quiz")}
-                    className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
-                  >
-                    Go to Quiz
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
+                {/* ── Navigation arrows + Go to Quiz ── */}
+                <div className="pt-6 border-t border-white/10 space-y-4">
+                  {/* Prev/Next navigation */}
+                  <div className="flex items-center justify-between gap-3">
+                    {adjacent?.prev ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/lessons/${adjacent.prev!.slug}`)}
+                        className="flex items-center gap-1.5 border-white/20 text-white/70 hover:text-white hover:border-white/40 max-w-[45%]"
+                      >
+                        <ChevronLeft className="w-4 h-4 shrink-0" />
+                        <span className="truncate text-xs">{adjacent.prev.title}</span>
+                      </Button>
+                    ) : (
+                      <div />
+                    )}
+                    {adjacent?.next ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/lessons/${adjacent.next!.slug}`)}
+                        className="flex items-center gap-1.5 border-white/20 text-white/70 hover:text-white hover:border-white/40 max-w-[45%] ml-auto"
+                      >
+                        <span className="truncate text-xs">{adjacent.next.title}</span>
+                        <ChevronRight className="w-4 h-4 shrink-0" />
+                      </Button>
+                    ) : (
+                      <div />
+                    )}
+                  </div>
+
+                  {/* Go to quiz CTA */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-white/40">
+                      {appliedCompleted
+                        ? "Applied exercise complete — take the quiz when ready."
+                        : "Practice in the sandbox panel to unlock the quiz."}
+                    </p>
+                    <Button
+                      onClick={() => setActiveTab("quiz")}
+                      className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+                    >
+                      Go to Quiz
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -700,12 +886,25 @@ export default function LessonViewer() {
                       <p className="text-white/60">
                         Best score: {bestAttempt?.score ?? 100}% — Next lesson unlocked
                       </p>
-                      <Button
-                        onClick={() => navigate("/courses")}
-                        className="mt-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
-                      >
-                        Back to Course Outline
-                      </Button>
+                      {/* Navigation after passing */}
+                      <div className="flex items-center justify-center gap-3 mt-4">
+                        {adjacent?.next && (
+                          <Button
+                            onClick={() => navigate(`/lessons/${adjacent.next!.slug}`)}
+                            className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+                          >
+                            Next Lesson
+                            <ChevronRight className="w-4 h-4 ml-1" />
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => navigate("/courses")}
+                          variant="outline"
+                          className="border-white/20 text-white/70 hover:text-white"
+                        >
+                          Course Outline
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : quizQuestions.length === 0 ? (
@@ -734,6 +933,38 @@ export default function LessonViewer() {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Navigation arrows on quiz tab too */}
+                {(adjacent?.prev || adjacent?.next) && (
+                  <div className="flex items-center justify-between gap-3 pt-2">
+                    {adjacent?.prev ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/lessons/${adjacent.prev!.slug}`)}
+                        className="flex items-center gap-1.5 text-white/50 hover:text-white max-w-[45%]"
+                      >
+                        <ChevronLeft className="w-4 h-4 shrink-0" />
+                        <span className="truncate text-xs">{adjacent.prev.title}</span>
+                      </Button>
+                    ) : (
+                      <div />
+                    )}
+                    {adjacent?.next ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/lessons/${adjacent.next!.slug}`)}
+                        className="flex items-center gap-1.5 text-white/50 hover:text-white max-w-[45%] ml-auto"
+                      >
+                        <span className="truncate text-xs">{adjacent.next.title}</span>
+                        <ChevronRight className="w-4 h-4 shrink-0" />
+                      </Button>
+                    ) : (
+                      <div />
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -746,6 +977,11 @@ export default function LessonViewer() {
             <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2 shrink-0">
               <Brain className="w-4 h-4 text-fuchsia-400" />
               <span className="text-sm font-semibold text-white">AI Sandbox</span>
+              {historyMessages.length > 0 && (
+                <span className="text-[10px] text-white/30 ml-1">
+                  ({historyMessages.length} msg{historyMessages.length !== 1 ? "s" : ""})
+                </span>
+              )}
               <Badge
                 variant="outline"
                 className={`ml-auto text-xs ${
@@ -758,12 +994,16 @@ export default function LessonViewer() {
               </Badge>
             </div>
 
-            <SandboxPanel
-              lessonTitle={lesson.title}
-              exercises={exerciseBlocks as ContentBlock[]}
-              isAuthenticated={isAuthenticated}
-              onFirstSubmit={() => setAppliedCompleted(true)}
-            />
+            {lesson && (
+              <SandboxPanel
+                lessonId={lesson.id}
+                lessonTitle={lesson.title}
+                exercises={exerciseBlocks as ContentBlock[]}
+                isAuthenticated={isAuthenticated}
+                onQualityPassed={() => setAppliedCompleted(true)}
+                initialMessages={historyMessages}
+              />
+            )}
           </div>
         )}
       </div>

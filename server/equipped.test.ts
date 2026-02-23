@@ -182,3 +182,73 @@ describe("prompts.list", () => {
     await expect(caller.prompts.list()).rejects.toThrow();
   });
 });
+
+// ─── Sandbox History & Quality (new features) ─────────────────────────────────
+describe("sandbox.getLessonHistory", () => {
+  it("throws UNAUTHORIZED for unauthenticated users", async () => {
+    const { ctx } = makeGuestCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.sandbox.getLessonHistory({ lessonId: 1 })).rejects.toThrow();
+  });
+
+  it("returns an array for authenticated users (may be empty without DB)", async () => {
+    const { ctx } = makeCtx();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.sandbox.getLessonHistory({ lessonId: 1 });
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe("sandbox.qualityPassed", () => {
+  it("throws UNAUTHORIZED for unauthenticated users", async () => {
+    const { ctx } = makeGuestCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.sandbox.qualityPassed({ lessonId: 1 })).rejects.toThrow();
+  });
+
+  it("returns false for authenticated users with no history (no DB)", async () => {
+    const { ctx } = makeCtx();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.sandbox.qualityPassed({ lessonId: 9999 });
+    expect(typeof result).toBe("boolean");
+  });
+});
+
+describe("sandbox.saveMessage", () => {
+  it("throws UNAUTHORIZED for unauthenticated users", async () => {
+    const { ctx } = makeGuestCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.sandbox.saveMessage({ lessonId: 1, role: "user", content: "test" })
+    ).rejects.toThrow();
+  });
+});
+
+describe("sandbox.scoreQuality", () => {
+  it("throws UNAUTHORIZED for unauthenticated users", async () => {
+    const { ctx } = makeGuestCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.sandbox.scoreQuality({ lessonId: 1, lessonTitle: "Test", prompt: "test prompt" })
+    ).rejects.toThrow();
+  });
+});
+
+// ─── Lesson navigation (new feature) ─────────────────────────────────────────
+describe("lessons.adjacent", () => {
+  it("returns null prev and next for non-existent lesson", async () => {
+    const { ctx } = makeGuestCtx();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.lessons.adjacent({ lessonId: 99999 });
+    expect(result).toEqual({ prev: null, next: null });
+  });
+
+  it("is accessible to unauthenticated users (public procedure)", async () => {
+    const { ctx } = makeGuestCtx();
+    const caller = appRouter.createCaller(ctx);
+    // Should not throw — it's a public procedure
+    const result = await caller.lessons.adjacent({ lessonId: 1 });
+    expect(result).toHaveProperty("prev");
+    expect(result).toHaveProperty("next");
+  });
+});

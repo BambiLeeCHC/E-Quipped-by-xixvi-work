@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `sandbox_messages` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`lessonId` int NOT NULL,\n\t`role` enum('user','assistant') NOT NULL,\n\t`content` text NOT NULL,\n\t`qualityScore` int,\n\t`qualityFeedback` text,\n\t`qualityPassed` boolean NOT NULL DEFAULT false,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `sandbox_messages_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UjifvLo5he9aPKL.cb1410cdee09 --database 5Gq9FmtRyMtz6crwcs7oBJ --execute CREATE TABLE `sandbox_messages` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`lessonId` int NOT NULL,\n\t`role` enum('user','assistant') NOT NULL,\n\t`content` text NOT NULL,\n\t`qualityScore` int,\n\t`qualityFeedback` text,\n\t`qualityPassed` boolean NOT NULL DEFAULT false,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `sandbox_messages_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 213
+}

@@ -28,6 +28,7 @@ import {
   getContentBlocksByLesson,
   getCourseBySlug,
   getCourses,
+  getModuleById,
   getLessonById,
   getLessonBySlug,
   getLessonsByModule,
@@ -44,6 +45,9 @@ import {
   logSecurityEvent,
   reviewAccessRequest,
   savePrompt,
+  saveSandboxMessage,
+  getSandboxHistory,
+  getLessonQualityPassed,
   saveSandboxSession,
   submitQuizAttempt,
   updateCourse,
@@ -231,6 +235,62 @@ export const appRouter = router({
         await deleteLesson(input.id);
         return { success: true };
       }),
+
+    // ── Adjacent lesson navigation ─────────────────────────────────────────
+    adjacent: publicProcedure
+      .input(z.object({ lessonId: z.number() }))
+      .query(async ({ input }) => {
+        const lesson = await getLessonById(input.lessonId);
+        if (!lesson) return { prev: null, next: null };
+
+        // Get the current module to find the course
+        const currentMod = await getModuleById(lesson.moduleId);
+        if (!currentMod) return { prev: null, next: null };
+
+        const modLessons = await getLessonsByModule(lesson.moduleId, false);
+        const idx = modLessons.findIndex((l) => l.id === lesson.id);
+
+        let prev: { id: number; slug: string; title: string } | null = null;
+        let next: { id: number; slug: string; title: string } | null = null;
+
+        if (idx > 0) {
+          // Previous lesson in same module
+          const p = modLessons[idx - 1];
+          prev = { id: p.id, slug: p.slug, title: p.title };
+        } else {
+          // First lesson in module — look at last lesson of previous module
+          const allMods = await getModulesByCourse(currentMod.courseId, false);
+          const modIdx = allMods.findIndex((m) => m.id === lesson.moduleId);
+          if (modIdx > 0) {
+            const prevMod = allMods[modIdx - 1];
+            const prevModLessons = await getLessonsByModule(prevMod.id, false);
+            if (prevModLessons.length > 0) {
+              const p = prevModLessons[prevModLessons.length - 1];
+              prev = { id: p.id, slug: p.slug, title: p.title };
+            }
+          }
+        }
+
+        if (idx < modLessons.length - 1) {
+          // Next lesson in same module
+          const n = modLessons[idx + 1];
+          next = { id: n.id, slug: n.slug, title: n.title };
+        } else {
+          // Last lesson in module — look at first lesson of next module
+          const allMods = await getModulesByCourse(currentMod.courseId, false);
+          const modIdx = allMods.findIndex((m) => m.id === lesson.moduleId);
+          if (modIdx < allMods.length - 1) {
+            const nextMod = allMods[modIdx + 1];
+            const nextModLessons = await getLessonsByModule(nextMod.id, false);
+            if (nextModLessons.length > 0) {
+              const n = nextModLessons[0];
+              next = { id: n.id, slug: n.slug, title: n.title };
+            }
+          }
+        }
+
+        return { prev, next };
+      }),
   }),
 
   // ── Content Blocks ────────────────────────────────────────────────────────
@@ -335,6 +395,96 @@ export const appRouter = router({
       }),
 
     history: protectedProcedure.query(({ ctx }) => getSandboxSessionsByUser(ctx.user.id)),
+
+    // ── Lesson-scoped sandbox message history ──────────────────────────────
+    saveMessage: protectedProcedure
+      .input(z.object({
+        lessonId: z.number(),
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+        qualityScore: z.number().optional(),
+        qualityFeedback: z.string().optional(),
+        qualityPassed: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await saveSandboxMessage(
+          ctx.user.id,
+          input.lessonId,
+          input.role,
+          input.content,
+          input.qualityScore,
+          input.qualityFeedback,
+          input.qualityPassed
+        );
+        return { ok: true };
+      }),
+
+    getLessonHistory: protectedProcedure
+      .input(z.object({ lessonId: z.number() }))
+      .query(({ ctx, input }) => getSandboxHistory(ctx.user.id, input.lessonId)),
+
+    scoreQuality: protectedProcedure
+      .input(z.object({
+        lessonId: z.number(),
+        lessonTitle: z.string(),
+        prompt: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const scoringPrompt = `You are an AI learning quality assessor for a business AI mastery course.
+
+Lesson: "${input.lessonTitle}"
+Student prompt submitted: "${input.prompt}"
+
+Score this prompt on a scale of 0-100 based on:
+- Relevance to the lesson topic (0-40 points)
+- Specificity and clarity (0-30 points)
+- Practical business application (0-30 points)
+
+Respond with ONLY valid JSON in this exact format:
+{"score": <number 0-100>, "passed": <true if score >= 60>, "feedback": "<one sentence tip to improve>"}`;
+
+        try {
+          const response = await invokeLLM({
+            messages: [{ role: "user", content: scoringPrompt }],
+            max_tokens: 200,
+          });
+          const rawContent = response.choices?.[0]?.message?.content ?? "";
+          const raw = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
+          const jsonMatch = raw.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) throw new Error("No JSON in response");
+          const result = JSON.parse(jsonMatch[0]) as { score: number; passed: boolean; feedback: string };
+          // Persist the scored user message
+          await saveSandboxMessage(
+            ctx.user.id,
+            input.lessonId,
+            "user",
+            input.prompt,
+            result.score,
+            result.feedback,
+            result.passed
+          );
+          return result;
+        } catch {
+          // Fallback: pass if prompt is at least 20 words
+          const wordCount = input.prompt.trim().split(/\s+/).length;
+          const passed = wordCount >= 20;
+          const score = Math.min(100, wordCount * 3);
+          await saveSandboxMessage(
+            ctx.user.id,
+            input.lessonId,
+            "user",
+            input.prompt,
+            score,
+            passed ? "Good effort! Keep practising." : "Try to write a more detailed prompt (at least 20 words).",
+            passed
+          );
+          return { score, passed, feedback: passed ? "Good effort!" : "Try a more detailed prompt." };
+        }
+      }),
+
+    qualityPassed: protectedProcedure
+      .input(z.object({ lessonId: z.number() }))
+      .query(({ ctx, input }) => getLessonQualityPassed(ctx.user.id, input.lessonId)),
   }),
 
   // ── Prompt Library ────────────────────────────────────────────────────────

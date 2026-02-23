@@ -206,3 +206,18 @@ export const accessRequests = mysqlTable("access_requests", {
 });
 
 export type AccessRequest = typeof accessRequests.$inferSelect;
+
+// ─── Sandbox Messages ─────────────────────────────────────────────────────────
+export const sandboxMessages = mysqlTable("sandbox_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  lessonId: int("lessonId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  qualityScore: int("qualityScore"),        // 0-100, null until scored
+  qualityFeedback: text("qualityFeedback"), // LLM tip
+  qualityPassed: boolean("qualityPassed").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SandboxMessage = typeof sandboxMessages.$inferSelect;

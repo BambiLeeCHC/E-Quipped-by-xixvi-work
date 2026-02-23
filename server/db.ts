@@ -10,6 +10,7 @@ import {
   promptLibrary,
   quizAttempts,
   quizQuestions,
+  sandboxMessages,
   sandboxSessions,
   securityEvents,
   userProgress,
@@ -586,4 +587,68 @@ export async function reviewAccessRequest(
   if (status === "approved") {
     await updateUserStatus(req[0].userId, "verified");
   }
+}
+
+// ─── Sandbox Message Helpers ──────────────────────────────────────────────────
+
+export async function saveSandboxMessage(
+  userId: number,
+  lessonId: number,
+  role: "user" | "assistant",
+  content: string,
+  qualityScore?: number,
+  qualityFeedback?: string,
+  qualityPassed?: boolean
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(sandboxMessages).values({
+    userId,
+    lessonId,
+    role,
+    content,
+    qualityScore: qualityScore ?? null,
+    qualityFeedback: qualityFeedback ?? null,
+    qualityPassed: qualityPassed ?? false,
+  });
+}
+
+export async function getSandboxHistory(userId: number, lessonId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(sandboxMessages)
+    .where(
+      and(
+        eq(sandboxMessages.userId, userId),
+        eq(sandboxMessages.lessonId, lessonId)
+      )
+    )
+    .orderBy(sandboxMessages.createdAt);
+}
+
+export async function getLessonQualityPassed(userId: number, lessonId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db
+    .select({ qualityPassed: sandboxMessages.qualityPassed })
+    .from(sandboxMessages)
+    .where(
+      and(
+        eq(sandboxMessages.userId, userId),
+        eq(sandboxMessages.lessonId, lessonId),
+        eq(sandboxMessages.role, "user"),
+        eq(sandboxMessages.qualityPassed, true)
+      )
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
+export async function getModuleById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(modules).where(eq(modules.id, id)).limit(1);
+  return result[0];
 }
