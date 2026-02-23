@@ -22,6 +22,7 @@ import {
   CreditCard,
   RefreshCw,
   ShieldCheck,
+  ChevronDown,
 } from "lucide-react";
 
 const FEATURES = [
@@ -47,6 +48,7 @@ export default function Pricing() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const [checkingOut, setCheckingOut] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const { data: subscription, refetch: refetchSub } = trpc.stripe.mySubscription.useQuery(undefined, {
     enabled: !!user,
@@ -366,31 +368,98 @@ export default function Pricing() {
 
         {/* FAQ */}
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-xl font-bold text-foreground text-center mb-6">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            {[
-              {
-                q: "Is this really a one-time payment?",
-                a: "Yes. You pay $675 once and have access to E-Quipped: Work forever — including every new module we add in the future.",
-              },
-              {
-                q: "What happens after I pay?",
-                a: "Your account is upgraded instantly. All 7 modules and 36 lessons unlock immediately, and your progress is tracked from your first lesson.",
-              },
-              {
-                q: "Can I get a refund?",
-                a: "If you're not satisfied within 7 days of purchase, contact us for a full refund — no questions asked.",
-              },
-              {
-                q: "Do I need a subscription to keep my access?",
-                a: "No. Lifetime Access means exactly that — no renewals, no recurring charges, no expiry.",
-              },
-            ].map(({ q, a }) => (
-              <div key={q} className="rounded-xl border border-border/40 bg-white/60 lucite px-5 py-4">
-                <p className="font-semibold text-foreground text-sm mb-1.5">{q}</p>
-                <p className="text-sm text-foreground/60 leading-relaxed">{a}</p>
-              </div>
-            ))}
+          {/* Fuchsia bordered container */}
+          <div
+            className="rounded-2xl p-7"
+            style={{
+              border: "2px solid oklch(0.72 0.22 330 / 0.55)",
+              boxShadow: "0 0 32px 0 oklch(0.72 0.22 330 / 0.10), 0 4px 24px 0 oklch(0 0 0 / 0.07)",
+              background: "oklch(1 0 0 / 0.70)",
+            }}
+          >
+            {/* Fuchsia header */}
+            <h2
+              className="text-2xl font-black text-center mb-6"
+              style={{ color: "oklch(0.58 0.26 330)" }}
+            >
+              Frequently Asked Questions
+            </h2>
+
+            <div className="space-y-3">
+              {[
+                {
+                  q: "Is this really a one-time payment?",
+                  a: "Yes. You pay $675 once and have access to E-Quipped: Work forever — including every new module we add in the future. There are no subscriptions, no renewals, and no hidden fees.",
+                },
+                {
+                  q: "What happens after I pay?",
+                  a: "Your account is upgraded instantly. All 7 modules and 36 lessons unlock immediately, and your progress is tracked from your very first lesson. You'll see the change as soon as you return to the Courses page.",
+                },
+                {
+                  q: "Can I get a refund?",
+                  a: "Absolutely. If you're not satisfied within 7 days of purchase, email us at support@e-quipped.com for a full refund — no questions asked. We stand behind the quality of the content.",
+                },
+                {
+                  q: "Do I need a subscription to keep my access?",
+                  a: "No. Lifetime Access means exactly that — no renewals, no recurring charges, no expiry date. Pay once and the course is yours indefinitely.",
+                },
+                {
+                  q: "What's included in the AI Sandbox?",
+                  a: "The AI Sandbox is a live practice environment built into every lesson. You submit prompts, receive instant AI feedback scored on relevance, specificity, and business application, and unlock the quiz only after hitting a quality threshold. Your conversation history is saved so you can revisit and improve past submissions.",
+                },
+                {
+                  q: "Will new modules be added?",
+                  a: "Yes. We're actively building additional modules covering advanced AI workflows, industry-specific applications, and emerging tools. All future modules are included in your Lifetime Access at no extra cost.",
+                },
+              ].map(({ q, a }, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-xl overflow-hidden"
+                  style={{
+                    boxShadow: "0 2px 12px 0 oklch(0 0 0 / 0.09), 0 1px 3px 0 oklch(0 0 0 / 0.06)",
+                    border: "1px solid oklch(0.72 0.22 330 / 0.18)",
+                    background: "white",
+                  }}
+                >
+                  {/* Question row — clickable */}
+                  <button
+                    className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left group"
+                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                    aria-expanded={openFaq === idx}
+                  >
+                    <span
+                      className="font-semibold text-sm leading-snug"
+                      style={{ color: openFaq === idx ? "oklch(0.58 0.26 330)" : "oklch(0.20 0 0)" }}
+                    >
+                      {q}
+                    </span>
+                    <ChevronDown
+                      className="shrink-0 w-4 h-4 transition-transform duration-300"
+                      style={{
+                        color: "oklch(0.72 0.22 330)",
+                        transform: openFaq === idx ? "rotate(180deg)" : "rotate(0deg)",
+                      }}
+                    />
+                  </button>
+
+                  {/* Answer — animated slide */}
+                  <div
+                    style={{
+                      maxHeight: openFaq === idx ? "300px" : "0px",
+                      overflow: "hidden",
+                      transition: "max-height 0.35s cubic-bezier(0.4,0,0.2,1)",
+                    }}
+                  >
+                    <p
+                      className="px-5 pb-4 text-sm leading-relaxed"
+                      style={{ color: "oklch(0.38 0 0)" }}
+                    >
+                      {a}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

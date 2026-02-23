@@ -256,3 +256,11 @@
 - [x] Avatar bubbles: white background with 2.5px coloured border per bubble
 - [x] Avatar bubbles: pulsating glow keyframe (avatar-pulse, 2.4s ease-in-out infinite, staggered 0.4s per bubble)
 - [x] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 29: FAQ Section Redesign
+- [x] FAQ header: fuchsia colour (oklch 0.58 0.26 330) with a 2px fuchsia-bordered container and soft glow shadow
+- [x] FAQ items: each card has a drop shadow (0 2px 12px) and fuchsia-tinted border
+- [x] FAQ items: click-to-toggle accordion — answer slides open/closed via max-height transition (0.35s cubic-bezier)
+- [x] Chevron icon rotates 180° when answer is open; question text turns fuchsia when active
+- [x] Expanded FAQ from 4 to 6 questions (added Sandbox details and future modules)
+- [x] 25 vitest tests passing, zero TypeScript errors
