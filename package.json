@@ -1,5 +1,5 @@
 {
-  "name": "workspace",
+  "name": "e-quipped-ai-mastery",
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/BambiLeeCHC/E-Quipped-by-xixvi-work",
@@ -65,5 +65,13 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "zod": "^4.3.6"
+  },
+  "description": "E-Quipped AI Mastery Platform \u2014 React + FastAPI + MongoDB",
+  "scripts": {
+    "install:frontend": "cd frontend && yarn install",
+    "build": "cd frontend && yarn build",
+    "start:frontend": "cd frontend && yarn start",
+    "start:backend": "cd backend && python3 -m uvicorn server:app --host 0.0.0.0 --port 8001 --reload",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
   }
 }

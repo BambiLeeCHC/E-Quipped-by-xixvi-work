@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, Response, UploadFile, File, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
@@ -47,14 +48,30 @@ JWT_EXPIRATION_DAYS = 7
 # Emergent LLM Key
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 
+# ==================== LIFESPAN ====================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: startup and shutdown logic."""
+    # Startup
+    await seed_initial_data()
+    logger.info("E-Quipped AI Mastery Platform API started")
+    yield
+    # Shutdown — guard against missing DB client
+    if client is not None:
+        client.close()
+
 # Create the main app
-app = FastAPI(title="E-Quipped AI Mastery Platform API")
+app = FastAPI(title="E-Quipped AI Mastery Platform API", lifespan=lifespan)
+# CORS middleware must be registered before routes are included
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer(auto_error=False)
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # ==================== MODELS ====================
 
@@ -1379,20 +1396,3 @@ async def health():
 # Include router
 app.include_router(api_router)
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.on_event("startup")
-async def startup_event():
-    await seed_initial_data()
-    logger.info("E-Quipped AI Mastery Platform API started")
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
