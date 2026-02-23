@@ -10,6 +10,7 @@ import { stripe } from "./client";
 import { getDb } from "../db";
 import { users, stripePayments } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { notifyOwner } from "../_core/notification";
 
 export function registerStripeWebhook(app: Express) {
   app.post(
@@ -118,10 +119,21 @@ export function registerStripeWebhook(app: Express) {
                 userId,
                 stripePaymentIntentId: session.payment_intent as string,
                 stripeCustomerId: customerId,
-                amount: session.amount_total ?? 49700,
+                amount: session.amount_total ?? 67500,
                 currency: session.currency ?? "usd",
                 status: "succeeded",
                 plan: "lifetime",
+              });
+
+              // Notify owner of new sale
+              const buyerName = session.metadata?.customer_name ?? "Unknown";
+              const buyerEmail = session.metadata?.customer_email ?? "Unknown";
+              const amountFormatted = `$${((session.amount_total ?? 67500) / 100).toFixed(2)}`;
+              await notifyOwner({
+                title: `🎉 New Sale — E-Quipped Lifetime Access`,
+                content: `A new Lifetime Access purchase has been completed.\n\n**Buyer:** ${buyerName}\n**Email:** ${buyerEmail}\n**Amount:** ${amountFormatted} USD\n**Plan:** Lifetime (one-time)\n**Payment Intent:** ${session.payment_intent}\n\nThe user's account has been automatically upgraded to verified status with full course access.`,
+              }).catch((err) => {
+                console.error("[Webhook] notifyOwner failed:", err);
               });
             }
             break;

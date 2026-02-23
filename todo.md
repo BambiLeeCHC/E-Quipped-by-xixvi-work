@@ -214,3 +214,14 @@
 - [x] client/src/pages/Pricing.tsx — rewritten as single-plan hero layout: $675 price, 7 feature bullets, module list, FAQ, trust signals
 - [x] Removed all monthly/annual plan references from Pricing.tsx and products.ts
 - [x] 22 vitest tests passing, zero TypeScript errors
+
+## Phase 25: Stripe Price Creation, Social Proof & Purchase Notifications
+- [x] Created Stripe Product "E-Quipped: Work — Lifetime Access" (prod_U25JZyL2oQSBOZ)
+- [x] Created Stripe Price $675 one-time USD (price_1T418U8sip4m1KcerxuWL85Q)
+- [x] STRIPE_PRICE_LIFETIME env secret set to the real price ID
+- [x] Pricing page: learner count bar (200+ professionals, 5 avatar bubbles)
+- [x] Pricing page: 3 testimonial cards with star ratings, quote, name, role
+- [x] Webhook: notifyOwner called on checkout.session.completed with buyer name, email, amount, payment intent ID
+- [x] Webhook: notifyOwner failure is caught and logged (non-blocking)
+- [x] scripts/create-stripe-price.mjs — reusable script for future price creation
+- [x] 25 vitest tests passing (3 new Stripe tests), zero TypeScript errors

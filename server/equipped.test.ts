@@ -252,3 +252,33 @@ describe("lessons.adjacent", () => {
     expect(result).toHaveProperty("next");
   });
 });
+
+// ─── Stripe price configuration ───────────────────────────────────────────────
+describe("stripe.plans", () => {
+  it("STRIPE_PRICE_LIFETIME env var is set and matches expected prefix", () => {
+    const priceId = process.env.STRIPE_PRICE_LIFETIME;
+    expect(priceId).toBeDefined();
+    expect(typeof priceId).toBe("string");
+    // Stripe price IDs always start with "price_"
+    expect(priceId).toMatch(/^price_/);
+  });
+
+  it("plans query returns exactly one lifetime plan at $675", async () => {
+    const { ctx } = makeGuestCtx();
+    const caller = appRouter.createCaller(ctx);
+    const plans = await caller.stripe.plans();
+    expect(plans).toHaveLength(1);
+    expect(plans[0].id).toBe("lifetime");
+    expect(plans[0].amount).toBe(67500);
+    expect(plans[0].mode).toBe("payment");
+  });
+
+  it("createCheckout rejects non-lifetime planId", async () => {
+    const { ctx } = makeCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      // @ts-expect-error intentionally passing invalid planId
+      caller.stripe.createCheckout({ planId: "monthly", origin: "https://example.com" })
+    ).rejects.toThrow();
+  });
+});
