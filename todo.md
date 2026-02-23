@@ -206,3 +206,11 @@
 - [x] Frontend: CourseCatalog — pending admin request banner now includes inline "upgrade to Pro" link
 - [x] Frontend: CourseCatalog — unauthenticated banner updated to mention subscription
 - [x] 22 vitest tests passing, zero TypeScript errors
+
+## Phase 24: Single Lifetime Pricing at $675
+- [x] server/stripe/products.ts — replaced 3 plans with single lifetime plan at $675 (one-time payment, mode: payment)
+- [x] server/routers.ts — createCheckout now only accepts planId: "lifetime"; always uses mode: "payment"
+- [x] server/routers.ts — removed subscription branch from checkout session creation
+- [x] client/src/pages/Pricing.tsx — rewritten as single-plan hero layout: $675 price, 7 feature bullets, module list, FAQ, trust signals
+- [x] Removed all monthly/annual plan references from Pricing.tsx and products.ts
+- [x] 22 vitest tests passing, zero TypeScript errors

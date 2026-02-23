@@ -1,3 +1,7 @@
+/**
+ * client/src/pages/Pricing.tsx
+ * Single-plan pricing page — Lifetime Access at $675 (one-time payment).
+ */
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -7,422 +11,291 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   CheckCircle2,
-  Zap,
   Crown,
-  Infinity,
+  Zap,
+  BookOpen,
+  Brain,
+  Shield,
   ArrowRight,
   Sparkles,
+  Lock,
+  CreditCard,
+  RefreshCw,
   ShieldCheck,
-  Clock,
 } from "lucide-react";
 
-// ── Plan icon map ─────────────────────────────────────────────────────────────
-const PLAN_ICONS: Record<string, React.ReactNode> = {
-  monthly: <Zap className="w-6 h-6" />,
-  annual: <Crown className="w-6 h-6" />,
-  lifetime: <Infinity className="w-6 h-6" />,
-};
+const FEATURES = [
+  { icon: BookOpen,     text: "All 7 AI Business Modules — 36 in-depth lessons" },
+  { icon: Brain,        text: "AI Sandbox — unlimited practice sessions with live feedback" },
+  { icon: Zap,          text: "Prompt Library — save, rate & reuse your best prompts" },
+  { icon: CheckCircle2, text: "Quiz & XP tracking with completion certificates" },
+  { icon: Sparkles,     text: "All future modules included at no extra cost" },
+  { icon: Shield,       text: "Lifetime certificate updates & priority support" },
+];
 
-const PLAN_COLORS: Record<string, { bg: string; border: string; accent: string; text: string }> = {
-  monthly: {
-    bg: "oklch(0.16 0.04 250)",
-    border: "oklch(0.45 0.18 250)",
-    accent: "oklch(0.65 0.18 250)",
-    text: "oklch(0.78 0.12 250)",
-  },
-  annual: {
-    bg: "oklch(0.16 0.06 310)",
-    border: "oklch(0.55 0.22 310)",
-    accent: "oklch(0.72 0.22 310)",
-    text: "oklch(0.82 0.14 310)",
-  },
-  lifetime: {
-    bg: "oklch(0.16 0.06 155)",
-    border: "oklch(0.50 0.20 155)",
-    accent: "oklch(0.70 0.20 155)",
-    text: "oklch(0.80 0.14 155)",
-  },
-};
+const MODULES = [
+  "Foundations of AI Prompting",
+  "AI for Data & Analysis",
+  "AI for Business Writing",
+  "AI for Presentations & Decks",
+  "AI for Research & Synthesis",
+  "AI for Email & Client Comms",
+  "AI Workflow Automation",
+];
 
 export default function Pricing() {
   const { user } = useAuth();
-  const [location] = useLocation();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [, navigate] = useLocation();
+  const [checkingOut, setCheckingOut] = useState(false);
 
-  const { data: plans = [] } = trpc.stripe.plans.useQuery();
-  const { data: subscription } = trpc.stripe.mySubscription.useQuery(undefined, {
+  const { data: subscription, refetch: refetchSub } = trpc.stripe.mySubscription.useQuery(undefined, {
     enabled: !!user,
   });
+  const hasAccess = subscription?.isActive ?? false;
 
-  const createCheckout = trpc.stripe.createCheckout.useMutation();
-  const createPortal = trpc.stripe.createPortal.useMutation();
+  const createCheckout = trpc.stripe.createCheckout.useMutation({
+    onSuccess: ({ url }) => {
+      if (url) {
+        toast.info("Redirecting to secure checkout…");
+        window.open(url, "_blank");
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message ?? "Could not start checkout. Please try again.");
+    },
+    onSettled: () => setCheckingOut(false),
+  });
+
+  const createPortal = trpc.stripe.createPortal.useMutation({
+    onSuccess: ({ url }) => { if (url) window.open(url, "_blank"); },
+    onError: (err) => toast.error(err.message ?? "Could not open billing portal"),
+  });
 
   // Handle success / cancel query params
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "1") {
-      const plan = params.get("plan");
-      toast.success(`🎉 Welcome to E-Quipped Pro${plan ? ` (${plan})` : ""}! Your account is now active.`);
-      // Clean URL
+      toast.success("🎉 Payment confirmed — your Lifetime Access is now active!");
       window.history.replaceState({}, "", "/pricing");
+      void refetchSub();
     } else if (params.get("canceled") === "1") {
       toast.info("Checkout was cancelled — no charge was made.");
       window.history.replaceState({}, "", "/pricing");
     }
-  }, [location]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  async function handleSubscribe(planId: string) {
+  const handleBuy = () => {
     if (!user) {
-      toast.error("Please sign in to subscribe.");
+      navigate("/");
+      toast.info("Sign in first, then return to this page to purchase.");
       return;
     }
-    setLoadingPlan(planId);
-    try {
-      const result = await createCheckout.mutateAsync({
-        planId: planId as "monthly" | "annual" | "lifetime",
-        origin: window.location.origin,
-      });
-      if (result.url) {
-        toast.info("Redirecting to secure checkout…");
-        window.open(result.url, "_blank");
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Checkout failed";
-      toast.error(msg);
-    } finally {
-      setLoadingPlan(null);
-    }
-  }
-
-  async function handleManage() {
-    try {
-      const result = await createPortal.mutateAsync({ origin: window.location.origin });
-      if (result.url) window.open(result.url, "_blank");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Could not open billing portal";
-      toast.error(msg);
-    }
-  }
-
-  const isActive = subscription?.isActive;
-  const currentPlan = subscription?.plan;
+    setCheckingOut(true);
+    createCheckout.mutate({ planId: "lifetime", origin: window.location.origin });
+  };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(160deg, oklch(0.10 0.04 260) 0%, oklch(0.08 0.02 280) 50%, oklch(0.11 0.05 310) 100%)",
-        color: "oklch(0.94 0.01 260)",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
-      {/* ── Hero ──────────────────────────────────────────────────────────────── */}
-      <div style={{ textAlign: "center", padding: "4rem 1.5rem 2rem" }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            background: "oklch(0.22 0.08 310 / 0.5)",
-            border: "1px solid oklch(0.55 0.22 310 / 0.4)",
-            borderRadius: "9999px",
-            padding: "0.35rem 1rem",
-            fontSize: "0.8rem",
-            color: "oklch(0.82 0.14 310)",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Simple, transparent pricing
-        </div>
-
-        <h1
-          style={{
-            fontSize: "clamp(2rem, 5vw, 3.5rem)",
-            fontWeight: 800,
-            lineHeight: 1.1,
-            marginBottom: "1rem",
-            color: "oklch(0.97 0.01 260)",
-          }}
-        >
-          Invest in your AI skills
-        </h1>
-        <p
-          style={{
-            fontSize: "1.15rem",
-            color: "oklch(0.72 0.04 260)",
-            maxWidth: "520px",
-            margin: "0 auto 1rem",
-            lineHeight: 1.6,
-          }}
-        >
-          Unlock all 7 AI business modules, unlimited sandbox sessions, and your personal prompt library.
-        </p>
-
-        {/* Active subscription banner */}
-        {isActive && (
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.6rem",
-              background: "oklch(0.22 0.08 155 / 0.5)",
-              border: "1px solid oklch(0.50 0.20 155 / 0.5)",
-              borderRadius: "0.75rem",
-              padding: "0.6rem 1.2rem",
-              fontSize: "0.9rem",
-              color: "oklch(0.80 0.14 155)",
-              marginTop: "0.5rem",
-            }}
+    <div className="min-h-screen bg-background">
+      {/* Nav */}
+      <div className="sticky top-0 z-40 lucite border-b border-border/60">
+        <div className="container flex items-center justify-between h-14">
+          <button
+            onClick={() => navigate("/")}
+            className="font-bold text-fuchsia-600 hover:text-fuchsia-700 transition-colors text-sm"
           >
-            <ShieldCheck className="w-4 h-4" />
-            You are on the <strong style={{ color: "oklch(0.90 0.16 155)" }}>Pro {currentPlan}</strong> plan.{" "}
-            <button
-              onClick={handleManage}
-              style={{
-                background: "none",
-                border: "none",
-                color: "oklch(0.80 0.14 155)",
-                cursor: "pointer",
-                textDecoration: "underline",
-                fontSize: "inherit",
-                padding: 0,
-              }}
-            >
-              Manage subscription
-            </button>
-          </div>
-        )}
+            E-Quipped: Work
+          </button>
+          {user && (
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate("/courses")} className="text-xs text-foreground/50 hover:text-foreground transition-colors">Courses</button>
+              <button
+                onClick={() => navigate("/profile")}
+                className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-white font-bold text-xs glow-primary"
+              >
+                {(user.name ?? user.email ?? "U")[0]?.toUpperCase()}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* ── Plan Cards ────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "1.5rem",
-          maxWidth: "1000px",
-          margin: "0 auto",
-          padding: "1rem 1.5rem 4rem",
-        }}
-      >
-        {plans.map((plan) => {
-          const colors = PLAN_COLORS[plan.id] ?? PLAN_COLORS.monthly;
-          const isCurrent = currentPlan === plan.id && isActive;
-          const isAnnual = plan.id === "annual";
+      <div className="container max-w-4xl mx-auto py-16 px-4">
 
-          return (
-            <div
-              key={plan.id}
-              style={{
-                background: colors.bg,
-                border: `1.5px solid ${isCurrent ? colors.accent : colors.border + "80"}`,
-                borderRadius: "1.25rem",
-                padding: "2rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1.25rem",
-                position: "relative",
-                transform: isAnnual ? "scale(1.03)" : "scale(1)",
-                boxShadow: isAnnual
-                  ? `0 0 40px ${colors.accent}30`
-                  : "none",
-                transition: "box-shadow 0.2s",
-              }}
-            >
-              {/* Badge */}
-              {plan.badge && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "-0.75rem",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    background: colors.accent,
-                    color: "oklch(0.10 0.02 260)",
-                    fontSize: "0.7rem",
-                    fontWeight: 700,
-                    padding: "0.2rem 0.75rem",
-                    borderRadius: "9999px",
-                    whiteSpace: "nowrap",
-                    letterSpacing: "0.05em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {plan.badge}
-                </div>
-              )}
+        {/* Already has access */}
+        {hasAccess && (
+          <div className="mb-10 rounded-2xl border border-green-200/60 bg-green-50/60 p-6 flex items-center gap-4">
+            <Crown className="w-8 h-8 text-green-500 shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-green-800 text-lg">You have Lifetime Access</p>
+              <p className="text-sm text-green-700/80 mt-0.5">All modules and lessons are unlocked. Keep learning!</p>
+            </div>
+            <div className="flex gap-2 shrink-0 flex-wrap">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-green-300/60 text-green-700 hover:bg-green-100/60"
+                onClick={() => createPortal.mutate({ origin: window.location.origin })}
+                disabled={createPortal.isPending}
+              >
+                Manage Billing
+              </Button>
+              <Button className="gradient-primary text-white border-0 glow-primary" onClick={() => navigate("/courses")}>
+                Go to Courses <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </div>
+          </div>
+        )}
 
-              {/* Icon + Name */}
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div
-                  style={{
-                    width: "2.5rem",
-                    height: "2.5rem",
-                    borderRadius: "0.75rem",
-                    background: `${colors.accent}20`,
-                    border: `1px solid ${colors.accent}40`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: colors.accent,
-                  }}
-                >
-                  {PLAN_ICONS[plan.id]}
-                </div>
-                <div>
-                  <div
-                    style={{
-                      fontSize: "1rem",
-                      fontWeight: 700,
-                      color: "oklch(0.95 0.01 260)",
-                    }}
-                  >
-                    {plan.name}
-                  </div>
-                  <div style={{ fontSize: "0.78rem", color: colors.text }}>
-                    {plan.description}
-                  </div>
-                </div>
+        {/* Hero heading */}
+        <div className="text-center mb-12">
+          <Badge className="mb-4 bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200/60 px-3 py-1 text-xs font-semibold uppercase tracking-wider">
+            <Sparkles className="w-3 h-3 mr-1.5" />One-Time Payment · No Subscription · No Renewals
+          </Badge>
+          <h1 className="text-4xl sm:text-5xl font-black text-foreground mb-4 leading-tight">
+            Master AI for Business.<br />
+            <span className="text-fuchsia-600">Pay Once. Own It Forever.</span>
+          </h1>
+          <p className="text-lg text-foreground/60 max-w-2xl mx-auto leading-relaxed">
+            E-Quipped: Work gives you everything you need to use AI across every dimension of modern business — from prompt engineering fundamentals to automated workflows.
+          </p>
+        </div>
+
+        {/* Pricing card */}
+        <div className="max-w-lg mx-auto mb-14">
+          <div className="relative rounded-3xl border-2 border-fuchsia-300/60 bg-white shadow-2xl shadow-fuchsia-100/40 overflow-hidden">
+            {/* Top accent bar */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500" />
+
+            <div className="p-8 sm:p-10">
+              {/* Badges */}
+              <div className="flex items-center justify-between mb-6">
+                <Badge className="bg-fuchsia-600 text-white border-0 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+                  <Crown className="w-3 h-3 mr-1.5" />Lifetime Access
+                </Badge>
+                <Badge variant="outline" className="border-green-300/60 text-green-700 bg-green-50 text-xs font-semibold">
+                  One-Time Payment
+                </Badge>
               </div>
 
               {/* Price */}
-              <div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "0.25rem" }}>
-                  <span
-                    style={{
-                      fontSize: "2.5rem",
-                      fontWeight: 800,
-                      color: "oklch(0.97 0.01 260)",
-                      lineHeight: 1,
-                    }}
-                  >
-                    ${(plan.amount / 100).toFixed(0)}
-                  </span>
-                  <span style={{ fontSize: "0.85rem", color: colors.text }}>
-                    {plan.interval === "month"
-                      ? "/ month"
-                      : plan.interval === "year"
-                      ? "/ year"
-                      : "one-time"}
-                  </span>
+              <div className="mb-6">
+                <div className="flex items-end gap-2 mb-1">
+                  <span className="text-6xl font-black text-foreground">$675</span>
+                  <span className="text-foreground/40 text-lg mb-2">USD</span>
                 </div>
-                {plan.id === "annual" && (
-                  <div style={{ fontSize: "0.78rem", color: colors.text, marginTop: "0.25rem" }}>
-                    ~${Math.round(plan.amount / 100 / 12)}/mo — save 35% vs monthly
-                  </div>
-                )}
+                <p className="text-sm text-foreground/50">
+                  One payment. Permanent access. All future modules included.
+                </p>
               </div>
 
+              {/* CTA */}
+              {!hasAccess ? (
+                <Button
+                  size="lg"
+                  className="w-full gradient-primary text-white border-0 glow-primary text-base font-bold py-6 rounded-xl mb-6"
+                  onClick={handleBuy}
+                  disabled={checkingOut}
+                >
+                  {checkingOut ? (
+                    <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Opening Checkout…</>
+                  ) : (
+                    <><CreditCard className="w-4 h-4 mr-2" />Get Lifetime Access — $675</>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  className="w-full gradient-primary text-white border-0 glow-primary text-base font-bold py-6 rounded-xl mb-6"
+                  onClick={() => navigate("/courses")}
+                >
+                  <ArrowRight className="w-4 h-4 mr-2" />Go to Your Courses
+                </Button>
+              )}
+
               {/* Features */}
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {plan.features.map((f) => (
-                  <li
-                    key={f}
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "0.5rem",
-                      fontSize: "0.875rem",
-                      color: "oklch(0.88 0.02 260)",
-                    }}
-                  >
-                    <CheckCircle2
-                      className="w-4 h-4 flex-shrink-0 mt-0.5"
-                      style={{ color: colors.accent }}
-                    />
-                    {f}
+              <ul className="space-y-3">
+                {FEATURES.map(({ icon: Icon, text }) => (
+                  <li key={text} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-fuchsia-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="w-3 h-3 text-fuchsia-600" />
+                    </div>
+                    <span className="text-sm text-foreground/75 leading-snug">{text}</span>
                   </li>
                 ))}
               </ul>
 
-              {/* CTA */}
-              <div style={{ marginTop: "auto" }}>
-                {isCurrent ? (
-                  <button
-                    onClick={handleManage}
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      borderRadius: "0.75rem",
-                      background: `${colors.accent}20`,
-                      border: `1px solid ${colors.accent}60`,
-                      color: colors.accent,
-                      fontWeight: 600,
-                      fontSize: "0.9rem",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.4rem",
-                    }}
-                  >
-                    <ShieldCheck className="w-4 h-4" />
-                    Current Plan — Manage
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleSubscribe(plan.id)}
-                    disabled={loadingPlan === plan.id}
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      borderRadius: "0.75rem",
-                      background: isAnnual
-                        ? `linear-gradient(135deg, ${colors.accent}, oklch(0.65 0.22 280))`
-                        : colors.accent,
-                      border: "none",
-                      color: "oklch(0.10 0.02 260)",
-                      fontWeight: 700,
-                      fontSize: "0.9rem",
-                      cursor: loadingPlan === plan.id ? "not-allowed" : "pointer",
-                      opacity: loadingPlan === plan.id ? 0.7 : 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.4rem",
-                      transition: "opacity 0.15s",
-                    }}
-                  >
-                    {loadingPlan === plan.id ? (
-                      "Redirecting…"
-                    ) : (
-                      <>
-                        {user ? "Get Started" : "Sign In to Subscribe"}
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                )}
+              {/* Trust signals */}
+              <div className="mt-6 pt-6 border-t border-border/30 flex items-center justify-center gap-6 flex-wrap">
+                <span className="flex items-center gap-1.5 text-xs text-foreground/40">
+                  <ShieldCheck className="w-3.5 h-3.5" />Secure checkout via Stripe
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-foreground/40">
+                  <Lock className="w-3.5 h-3.5" />No recurring charges
+                </span>
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
 
-      {/* ── Free tier reminder ────────────────────────────────────────────────── */}
-      <div
-        style={{
-          textAlign: "center",
-          padding: "0 1.5rem 3rem",
-          color: "oklch(0.60 0.03 260)",
-          fontSize: "0.85rem",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            marginBottom: "0.5rem",
-          }}
-        >
-          <Clock className="w-3.5 h-3.5" />
-          Module 1, Lesson 1 is always free — no credit card required.
+          {/* Test mode note */}
+          <p className="text-center text-xs text-foreground/35 mt-4">
+            Testing? Use card <span className="font-mono font-semibold">4242 4242 4242 4242</span> with any future expiry and any CVC.
+          </p>
         </div>
-        <div>
-          Test payments use card <code style={{ background: "oklch(0.18 0.03 260)", padding: "0.1rem 0.4rem", borderRadius: "0.3rem" }}>4242 4242 4242 4242</code> with any future expiry and any CVC.
+
+        {/* What's included — module list */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-foreground text-center mb-8">
+            Everything included in your Lifetime Access
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {MODULES.map((mod, i) => (
+              <div key={mod} className="flex items-center gap-3 rounded-xl border border-border/40 bg-white/60 px-4 py-3 lucite">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center shrink-0">
+                  <span className="text-white text-xs font-bold">{i + 1}</span>
+                </div>
+                <span className="text-sm font-medium text-foreground/80">{mod}</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-3 rounded-xl border border-dashed border-fuchsia-300/60 bg-fuchsia-50/40 px-4 py-3">
+              <div className="w-7 h-7 rounded-lg bg-fuchsia-100 flex items-center justify-center shrink-0">
+                <Sparkles className="w-3.5 h-3.5 text-fuchsia-600" />
+              </div>
+              <span className="text-sm font-medium text-fuchsia-600">Future modules — included free</span>
+            </div>
+          </div>
         </div>
+
+        {/* FAQ */}
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-xl font-bold text-foreground text-center mb-6">Common questions</h2>
+          <div className="space-y-4">
+            {[
+              {
+                q: "Is this really a one-time payment?",
+                a: "Yes. You pay $675 once and have access to E-Quipped: Work forever — including every new module we add in the future.",
+              },
+              {
+                q: "What happens after I pay?",
+                a: "Your account is upgraded instantly. All 7 modules and 36 lessons unlock immediately, and your progress is tracked from your first lesson.",
+              },
+              {
+                q: "Can I get a refund?",
+                a: "If you're not satisfied within 7 days of purchase, contact us for a full refund — no questions asked.",
+              },
+              {
+                q: "Do I need a subscription to keep my access?",
+                a: "No. Lifetime Access means exactly that — no renewals, no recurring charges, no expiry.",
+              },
+            ].map(({ q, a }) => (
+              <div key={q} className="rounded-xl border border-border/40 bg-white/60 lucite px-5 py-4">
+                <p className="font-semibold text-foreground text-sm mb-1.5">{q}</p>
+                <p className="text-sm text-foreground/60 leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );

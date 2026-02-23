@@ -743,7 +743,7 @@ Respond with ONLY valid JSON in this exact format:
     createCheckout: protectedProcedure
       .input(
         z.object({
-          planId: z.enum(["monthly", "annual", "lifetime"]),
+          planId: z.enum(["lifetime"]),
           origin: z.string().url(),
         })
       )
@@ -766,9 +766,8 @@ Respond with ONLY valid JSON in this exact format:
           },
         };
 
-        const session = await (plan.mode === "subscription"
-          ? stripe.checkout.sessions.create({ ...commonParams, mode: "subscription" })
-          : stripe.checkout.sessions.create({ ...commonParams, mode: "payment" }));
+        // Lifetime plan is always a one-time payment
+        const session = await stripe.checkout.sessions.create({ ...commonParams, mode: "payment" });
         return { url: session.url };
       }),
 
