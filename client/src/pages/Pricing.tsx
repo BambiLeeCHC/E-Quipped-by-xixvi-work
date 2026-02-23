@@ -20,11 +20,21 @@ import {
   ArrowRight,
   Sparkles,
   Lock,
-  CreditCard,
-  RefreshCw,
   ShieldCheck,
   ChevronDown,
 } from "lucide-react";
+
+// Declare the Stripe Buy Button custom element for TypeScript
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      "stripe-buy-button": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+        "buy-button-id": string;
+        "publishable-key": string;
+      };
+    }
+  }
+}
 
 const FEATURES = [
   { icon: BookOpen,     text: "All 7 AI Business Modules — 36 in-depth lessons" },
@@ -48,56 +58,30 @@ const MODULES = [
 export default function Pricing() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
-  const [checkingOut, setCheckingOut] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { data: subscription, refetch: refetchSub } = trpc.stripe.mySubscription.useQuery(undefined, {
+  const { data: subscription } = trpc.stripe.mySubscription.useQuery(undefined, {
     enabled: !!user,
   });
   const hasAccess = subscription?.isActive ?? false;
-
-  const createCheckout = trpc.stripe.createCheckout.useMutation({
-    onSuccess: ({ url }) => {
-      if (url) {
-        toast.info("Redirecting to secure checkout…");
-        window.open(url, "_blank");
-      }
-    },
-    onError: (err) => {
-      toast.error(err.message ?? "Could not start checkout. Please try again.");
-    },
-    onSettled: () => setCheckingOut(false),
-  });
 
   const createPortal = trpc.stripe.createPortal.useMutation({
     onSuccess: ({ url }) => { if (url) window.open(url, "_blank"); },
     onError: (err) => toast.error(err.message ?? "Could not open billing portal"),
   });
 
-  // Handle success / cancel query params
+  // Inject the Stripe Buy Button script once
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("success") === "1") {
-      toast.success("🎉 Payment confirmed — your Lifetime Access is now active!");
-      window.history.replaceState({}, "", "/pricing");
-      void refetchSub();
-    } else if (params.get("canceled") === "1") {
-      toast.info("Checkout was cancelled — no charge was made.");
-      window.history.replaceState({}, "", "/pricing");
+    const scriptId = "stripe-buy-button-script";
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://js.stripe.com/v3/buy-button.js";
+      script.async = true;
+      document.body.appendChild(script);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleBuy = () => {
-    if (!user) {
-      navigate("/");
-      toast.info("Sign in first, then return to this page to purchase.");
-      return;
-    }
-    setCheckingOut(true);
-    createCheckout.mutate({ planId: "lifetime", origin: window.location.origin });
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -289,18 +273,12 @@ export default function Pricing() {
 
               {/* CTA */}
               {!hasAccess ? (
-                <Button
-                  size="lg"
-                  className="w-full gradient-primary text-white border-0 glow-primary text-base font-bold py-6 rounded-xl mb-6"
-                  onClick={handleBuy}
-                  disabled={checkingOut}
-                >
-                  {checkingOut ? (
-                    <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Opening Checkout…</>
-                  ) : (
-                    <><CreditCard className="w-4 h-4 mr-2" />Get Lifetime Access — $675</>
-                  )}
-                </Button>
+                <div className="w-full flex justify-center mb-6">
+                  <stripe-buy-button
+                    buy-button-id="buy_btn_1T43o2IOR2BacWbdfi01wKlq"
+                    publishable-key="pk_live_51T40WtIOR2BacWbdaTbIP7L4fhyvJfiOTEWd1L7dFrCFMyQwm3oNkSJLH1dvIjn4r8DbQEPFSUbQguqPwMohQlBs007qoppT2I"
+                  />
+                </div>
               ) : (
                 <Button
                   size="lg"
