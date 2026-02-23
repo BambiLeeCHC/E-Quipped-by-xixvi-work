@@ -57,7 +57,7 @@
 ## Phase 10: Tests, Polish & Publish
 - [x] Vitest unit tests — 14 tests, 2 files, all passing
 - [x] TypeScript — zero errors
-- [ ] Save checkpoint and publish
+- [x] Save checkpoint and publish
 
 ## Phase 11: Design Refresh & Editor Upgrade
 - [x] Brighter lucite/spectrum color scheme with fuchsia accents and flesh tone hints
@@ -100,3 +100,42 @@
 - [x] Recover original modules/lessons from GitHub repo source files
 - [x] Seed 1 course, 7 modules, 36 lessons into the database
 - [x] Rebuild CourseCatalog as structured module/lesson outline with bookmark nav
+
+## Phase 18: Comprehensive Gated AI Business Course
+
+### Schema & Backend
+- [x] Add quiz_questions table (lessonId, question, options JSON, correctIndex, explanation)
+- [x] Add quiz_attempts table (userId, lessonId, score, passed, answers JSON, attemptedAt)
+- [x] Add access_requests table (userId, status: pending/approved/denied, requestedAt, reviewedAt)
+- [x] Add quizPassed flag to lesson_progress table
+- [x] Backend: submitQuiz procedure (grade, record attempt, unlock next lesson if passed)
+- [x] Backend: getLessonAccess procedure (check user approval + quiz gate chain)
+- [x] Backend: admin.listAccessRequests and admin.approveAccess procedures
+- [x] Backend: auto-request access on first login
+
+### Content Seeding
+- [x] Seed full lesson content for all 7 modules (learning section HTML + applied prompts)
+- [x] Seed 5 quiz questions per lesson (35 lessons × 5 = 175 questions)
+- [x] Mark lesson 1 of module 1 as free/public (no access gate)
+
+### Frontend: Lesson Viewer
+- [x] Learning section tab with rich HTML content rendering
+- [x] Applied Learning tab with embedded sandbox (pre-filled prompt template)
+- [x] End-of-lesson quiz (5 MCQ questions, must score 80%+ to pass)
+- [x] Quiz result screen with pass/fail feedback and unlock animation
+- [x] "Request Access" screen for locked users (triggers access_request)
+- [x] Lesson navigation (prev/next) with lock indicators
+
+### Frontend: Course Catalogue
+- [x] Show lock state per module (locked until previous module quizzes all passed)
+- [x] Show lock state per lesson (locked until previous lesson quiz passed)
+- [x] Show "Free Preview" badge on Lesson 1 of Module 1
+- [x] Show "Pending Approval" state for users awaiting admin access
+
+### Frontend: Admin Panel
+- [x] Access requests tab in Admin Dashboard (approve/deny with one click)
+- [x] Notification badge on Admin nav when pending requests exist
+
+### Tests & Polish
+- [x] Vitest tests for quiz grading and access gating logic
+- [x] Save checkpoint and publish

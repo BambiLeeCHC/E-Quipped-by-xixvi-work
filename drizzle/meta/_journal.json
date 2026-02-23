@@ -15,6 +15,13 @@
       "when": 1771849541903,
       "tag": "0001_fixed_mantis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1771853339705,
+      "tag": "0002_glamorous_domino",
+      "breakpoints": true
     }
   ]
 }

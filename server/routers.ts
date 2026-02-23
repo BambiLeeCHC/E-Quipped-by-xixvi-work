@@ -8,6 +8,7 @@ import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import {
   addXpToUser,
   completeLesson,
+  createAccessRequest,
   createCourse,
   createLesson,
   createModule,
@@ -17,8 +18,11 @@ import {
   deleteLesson,
   deleteModule,
   deletePrompt,
+  getAccessRequestByUser,
   getAdminAnalytics,
+  getAllAccessRequests,
   getAllUsers,
+  getBestQuizAttempt,
   getUserProfile,
   getUserXpHistory,
   getContentBlocksByLesson,
@@ -28,7 +32,9 @@ import {
   getLessonBySlug,
   getLessonsByModule,
   getModulesByCourse,
+  getPassedLessonIds,
   getPromptsByUser,
+  getQuizQuestionsByLesson,
   getSandboxSessionsByUser,
   getSecurityEvents,
   getUserById,
@@ -36,8 +42,10 @@ import {
   getUserProgressForLesson,
   getUserStats,
   logSecurityEvent,
+  reviewAccessRequest,
   savePrompt,
   saveSandboxSession,
+  submitQuizAttempt,
   updateCourse,
   updateLesson,
   updateModule,
@@ -437,6 +445,110 @@ export const appRouter = router({
         const { users: usersTable } = await import("../drizzle/schema");
         const { eq } = await import("drizzle-orm");
         await db.delete(usersTable).where(eq(usersTable.id, input.userId));
+        return { success: true };
+      }),
+  }),
+
+  // ── Quiz ─────────────────────────────────────────────────────────────────
+  quiz: router({
+    questions: publicProcedure
+      .input(z.object({ lessonId: z.number() }))
+      .query(({ input }) => getQuizQuestionsByLesson(input.lessonId)),
+
+    bestAttempt: protectedProcedure
+      .input(z.object({ lessonId: z.number() }))
+      .query(({ ctx, input }) => getBestQuizAttempt(ctx.user.id, input.lessonId)),
+
+    submit: protectedProcedure
+      .input(z.object({
+        lessonId: z.number(),
+        answers: z.array(z.number()),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return submitQuizAttempt(ctx.user.id, input.lessonId, input.answers);
+      }),
+  }),
+
+  // ── Gating ────────────────────────────────────────────────────────────────
+  gating: router({
+    // Returns which lesson IDs the current user has passed quizzes for
+    passedLessons: protectedProcedure
+      .query(({ ctx }) => getPassedLessonIds(ctx.user.id)),
+
+    // Returns full course structure with lock status for each lesson
+    courseAccess: protectedProcedure
+      .input(z.object({ courseId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const user = await getUserById(ctx.user.id);
+        const isVerified = user?.status === "verified" || user?.role === "admin" || user?.role === "editor";
+        const courseModules = await getModulesByCourse(input.courseId, false);
+        const passedIds = await getPassedLessonIds(ctx.user.id);
+        const passedSet = new Set(passedIds);
+
+        const result = [];
+        let prevModuleAllPassed = true; // Module 1 is always accessible (with lesson 1 free)
+
+        for (let mi = 0; mi < courseModules.length; mi++) {
+          const mod = courseModules[mi];
+          const modLessons = await getLessonsByModule(mod.id, false);
+          const moduleLocked = mi > 0 && !prevModuleAllPassed;
+
+          const lessonsWithAccess = modLessons.map((lesson, li) => {
+            // Lesson 1 of Module 1 is always free
+            const isFreePreview = mi === 0 && li === 0;
+            // All other lessons require verified status and previous quiz passed
+            let locked = false;
+            if (!isFreePreview) {
+              if (!isVerified) {
+                locked = true; // needs admin approval
+              } else if (moduleLocked) {
+                locked = true; // previous module not completed
+              } else if (li > 0) {
+                // Need to have passed previous lesson quiz
+                const prevLesson = modLessons[li - 1];
+                locked = !passedSet.has(prevLesson.id);
+              }
+            }
+            return { ...lesson, locked, isFreePreview };
+          });
+
+          const allPassed = modLessons.every((l) => passedSet.has(l.id));
+          prevModuleAllPassed = allPassed;
+
+          result.push({ ...mod, locked: moduleLocked, lessons: lessonsWithAccess });
+        }
+        return { modules: result, isVerified };
+      }),
+  }),
+
+  // ── Access Requests ───────────────────────────────────────────────────────
+  access: router({
+    myRequest: protectedProcedure
+      .query(({ ctx }) => getAccessRequestByUser(ctx.user.id)),
+
+    request: protectedProcedure
+      .input(z.object({ message: z.string().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        return createAccessRequest(ctx.user.id, input.message);
+      }),
+
+    // Admin: list all requests
+    list: protectedProcedure
+      .input(z.object({ status: z.enum(["pending", "approved", "denied"]).optional() }))
+      .query(async ({ ctx, input }) => {
+        requireAdmin(ctx.user.role);
+        return getAllAccessRequests(input.status);
+      }),
+
+    // Admin: approve or deny
+    review: protectedProcedure
+      .input(z.object({
+        requestId: z.number(),
+        decision: z.enum(["approved", "denied"]),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        requireAdmin(ctx.user.role);
+        await reviewAccessRequest(input.requestId, ctx.user.id, input.decision);
         return { success: true };
       }),
   }),

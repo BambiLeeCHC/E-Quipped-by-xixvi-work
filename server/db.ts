@@ -1,12 +1,15 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
+  accessRequests,
   contentBlocks,
   courses,
   InsertUser,
   lessons,
   modules,
   promptLibrary,
+  quizAttempts,
+  quizQuestions,
   sandboxSessions,
   securityEvents,
   userProgress,
@@ -433,4 +436,154 @@ export async function getAdminAnalytics() {
     totalSecurityEvents: totalSecurityEvents[0]?.count ?? 0,
     recentUsers,
   };
+}
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+export async function getQuizQuestionsByLesson(lessonId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(quizQuestions)
+    .where(eq(quizQuestions.lessonId, lessonId))
+    .orderBy(quizQuestions.order);
+}
+
+export async function submitQuizAttempt(
+  userId: number,
+  lessonId: number,
+  answers: number[],
+) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+
+  const questions = await getQuizQuestionsByLesson(lessonId);
+  if (questions.length === 0) throw new Error("No quiz questions found");
+
+  let correct = 0;
+  for (let i = 0; i < questions.length; i++) {
+    if (answers[i] === questions[i].correctIndex) correct++;
+  }
+  const score = Math.round((correct / questions.length) * 100);
+  const passed = score >= 70;
+
+  await db.insert(quizAttempts).values({ userId, lessonId, score, passed, answers });
+
+  if (passed) {
+    await completeLesson(userId, lessonId);
+  }
+
+  return {
+    score,
+    passed,
+    correct,
+    total: questions.length,
+    questions: questions.map((q, i) => ({
+      question: q.question,
+      options: q.options as string[],
+      correctIndex: q.correctIndex,
+      chosenIndex: answers[i],
+      explanation: q.explanation,
+    })),
+  };
+}
+
+export async function getBestQuizAttempt(userId: number, lessonId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const attempts = await db
+    .select()
+    .from(quizAttempts)
+    .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.lessonId, lessonId)))
+    .orderBy(desc(quizAttempts.score))
+    .limit(1);
+  return attempts[0] ?? null;
+}
+
+export async function getPassedLessonIds(userId: number): Promise<number[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select({ lessonId: quizAttempts.lessonId })
+    .from(quizAttempts)
+    .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.passed, true)));
+  const ids = rows.map((r) => r.lessonId);
+  return ids.filter((id, idx) => ids.indexOf(id) === idx);
+}
+
+// ─── Access Requests ──────────────────────────────────────────────────────────
+export async function createAccessRequest(userId: number, message?: string) {
+  const db = await getDb();
+  if (!db) return null;
+  // Check if there's already a pending request
+  const existing = await db
+    .select()
+    .from(accessRequests)
+    .where(and(eq(accessRequests.userId, userId), eq(accessRequests.status, "pending")))
+    .limit(1);
+  if (existing.length > 0) return existing[0];
+  const result = await db.insert(accessRequests).values({ userId, message });
+  return result[0];
+}
+
+export async function getAccessRequestByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(accessRequests)
+    .where(eq(accessRequests.userId, userId))
+    .orderBy(desc(accessRequests.requestedAt))
+    .limit(1);
+  return result[0] ?? null;
+}
+
+export async function getAllAccessRequests(status?: "pending" | "approved" | "denied") {
+  const db = await getDb();
+  if (!db) return [];
+  const cond = status ? eq(accessRequests.status, status) : undefined;
+  const rows = await db
+    .select({
+      id: accessRequests.id,
+      userId: accessRequests.userId,
+      status: accessRequests.status,
+      message: accessRequests.message,
+      reviewedBy: accessRequests.reviewedBy,
+      requestedAt: accessRequests.requestedAt,
+      reviewedAt: accessRequests.reviewedAt,
+      userName: users.name,
+      userEmail: users.email,
+      userOpenId: users.openId,
+    })
+    .from(accessRequests)
+    .leftJoin(users, eq(accessRequests.userId, users.id))
+    .where(cond)
+    .orderBy(desc(accessRequests.requestedAt))
+    .limit(200);
+  return rows;
+}
+
+export async function reviewAccessRequest(
+  requestId: number,
+  reviewedBy: number,
+  status: "approved" | "denied",
+) {
+  const db = await getDb();
+  if (!db) return;
+  const req = await db
+    .select()
+    .from(accessRequests)
+    .where(eq(accessRequests.id, requestId))
+    .limit(1);
+  if (!req[0]) return;
+
+  await db
+    .update(accessRequests)
+    .set({ status, reviewedBy, reviewedAt: new Date() })
+    .where(eq(accessRequests.id, requestId));
+
+  // If approved, verify the user
+  if (status === "approved") {
+    await updateUserStatus(req[0].userId, "verified");
+  }
 }

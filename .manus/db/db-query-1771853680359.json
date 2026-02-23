@@ -1,0 +1,262 @@
+{
+  "query": "SELECT l.id as lessonId, l.title as lessonTitle, l.moduleId, l.order as lessonOrder, m.title as moduleName FROM lessons l JOIN modules m ON l.moduleId = m.id ORDER BY l.moduleId, l.order LIMIT 40;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UjifvLo5he9aPKL.cb1410cdee09 --database 5Gq9FmtRyMtz6crwcs7oBJ --execute SELECT l.id as lessonId, l.title as lessonTitle, l.moduleId, l.order as lessonOrder, m.title as moduleName FROM lessons l JOIN modules m ON l.moduleId = m.id ORDER BY l.moduleId, l.order LIMIT 40;",
+  "rows": [
+    {
+      "lessonId": "1",
+      "lessonTitle": "Introduction to AI Writing",
+      "moduleId": "1",
+      "lessonOrder": "1",
+      "moduleName": "AI Writing Assistant"
+    },
+    {
+      "lessonId": "2",
+      "lessonTitle": "Rapid Email Drafting",
+      "moduleId": "1",
+      "lessonOrder": "2",
+      "moduleName": "AI Writing Assistant"
+    },
+    {
+      "lessonId": "3",
+      "lessonTitle": "Long Documents — Structure Before Content",
+      "moduleId": "1",
+      "lessonOrder": "3",
+      "moduleName": "AI Writing Assistant"
+    },
+    {
+      "lessonId": "4",
+      "lessonTitle": "Tone Matching Mastery",
+      "moduleId": "1",
+      "lessonOrder": "4",
+      "moduleName": "AI Writing Assistant"
+    },
+    {
+      "lessonId": "5",
+      "lessonTitle": "Refinement & Editing",
+      "moduleId": "1",
+      "lessonOrder": "5",
+      "moduleName": "AI Writing Assistant"
+    },
+    {
+      "lessonId": "6",
+      "lessonTitle": "Multi-Modal Documents",
+      "moduleId": "1",
+      "lessonOrder": "6",
+      "moduleName": "AI Writing Assistant"
+    },
+    {
+      "lessonId": "7",
+      "lessonTitle": "Meeting Transcription Basics",
+      "moduleId": "2",
+      "lessonOrder": "1",
+      "moduleName": "AI Meeting & Communication"
+    },
+    {
+      "lessonId": "8",
+      "lessonTitle": "Action Item Extraction",
+      "moduleId": "2",
+      "lessonOrder": "2",
+      "moduleName": "AI Meeting & Communication"
+    },
+    {
+      "lessonId": "9",
+      "lessonTitle": "AI Meeting Summaries",
+      "moduleId": "2",
+      "lessonOrder": "3",
+      "moduleName": "AI Meeting & Communication"
+    },
+    {
+      "lessonId": "10",
+      "lessonTitle": "Follow-Up Email Automation",
+      "moduleId": "2",
+      "lessonOrder": "4",
+      "moduleName": "AI Meeting & Communication"
+    },
+    {
+      "lessonId": "11",
+      "lessonTitle": "AI Agenda Creation",
+      "moduleId": "2",
+      "lessonOrder": "5",
+      "moduleName": "AI Meeting & Communication"
+    },
+    {
+      "lessonId": "12",
+      "lessonTitle": "Data Interpretation Prompts",
+      "moduleId": "3",
+      "lessonOrder": "1",
+      "moduleName": "AI Data & Analysis"
+    },
+    {
+      "lessonId": "13",
+      "lessonTitle": "Executive Report Generation",
+      "moduleId": "3",
+      "lessonOrder": "2",
+      "moduleName": "AI Data & Analysis"
+    },
+    {
+      "lessonId": "14",
+      "lessonTitle": "Trend Identification with AI",
+      "moduleId": "3",
+      "lessonOrder": "3",
+      "moduleName": "AI Data & Analysis"
+    },
+    {
+      "lessonId": "15",
+      "lessonTitle": "Visualization Prompting",
+      "moduleId": "3",
+      "lessonOrder": "4",
+      "moduleName": "AI Data & Analysis"
+    },
+    {
+      "lessonId": "16",
+      "lessonTitle": "AI Competitive Analysis",
+      "moduleId": "3",
+      "lessonOrder": "5",
+      "moduleName": "AI Data & Analysis"
+    },
+    {
+      "lessonId": "17",
+      "lessonTitle": "Building Presentation Outlines with AI",
+      "moduleId": "4",
+      "lessonOrder": "1",
+      "moduleName": "AI Presentation Creation"
+    },
+    {
+      "lessonId": "18",
+      "lessonTitle": "Slide Content Generation",
+      "moduleId": "4",
+      "lessonOrder": "2",
+      "moduleName": "AI Presentation Creation"
+    },
+    {
+      "lessonId": "19",
+      "lessonTitle": "Storytelling with Data Slides",
+      "moduleId": "4",
+      "lessonOrder": "3",
+      "moduleName": "AI Presentation Creation"
+    },
+    {
+      "lessonId": "20",
+      "lessonTitle": "Speaker Notes Mastery",
+      "moduleId": "4",
+      "lessonOrder": "4",
+      "moduleName": "AI Presentation Creation"
+    },
+    {
+      "lessonId": "21",
+      "lessonTitle": "Design Direction Prompts",
+      "moduleId": "4",
+      "lessonOrder": "5",
+      "moduleName": "AI Presentation Creation"
+    },
+    {
+      "lessonId": "22",
+      "lessonTitle": "Research Prompt Frameworks",
+      "moduleId": "5",
+      "lessonOrder": "1",
+      "moduleName": "AI Research & Summarization"
+    },
+    {
+      "lessonId": "23",
+      "lessonTitle": "Source Synthesis Techniques",
+      "moduleId": "5",
+      "lessonOrder": "2",
+      "moduleName": "AI Research & Summarization"
+    },
+    {
+      "lessonId": "24",
+      "lessonTitle": "Executive Briefing Documents",
+      "moduleId": "5",
+      "lessonOrder": "3",
+      "moduleName": "AI Research & Summarization"
+    },
+    {
+      "lessonId": "25",
+      "lessonTitle": "AI-Assisted Literature Reviews",
+      "moduleId": "5",
+      "lessonOrder": "4",
+      "moduleName": "AI Research & Summarization"
+    },
+    {
+      "lessonId": "26",
+      "lessonTitle": "AI Fact-Checking Workflow",
+      "moduleId": "5",
+      "lessonOrder": "5",
+      "moduleName": "AI Research & Summarization"
+    },
+    {
+      "lessonId": "27",
+      "lessonTitle": "Workflow Mapping with AI",
+      "moduleId": "6",
+      "lessonOrder": "1",
+      "moduleName": "AI Workflow Automation"
+    },
+    {
+      "lessonId": "28",
+      "lessonTitle": "Prompt Chaining Techniques",
+      "moduleId": "6",
+      "lessonOrder": "2",
+      "moduleName": "AI Workflow Automation"
+    },
+    {
+      "lessonId": "29",
+      "lessonTitle": "Automation Tool Integration",
+      "moduleId": "6",
+      "lessonOrder": "3",
+      "moduleName": "AI Workflow Automation"
+    },
+    {
+      "lessonId": "30",
+      "lessonTitle": "Approval Workflow Automation",
+      "moduleId": "6",
+      "lessonOrder": "4",
+      "moduleName": "AI Workflow Automation"
+    },
+    {
+      "lessonId": "31",
+      "lessonTitle": "Measuring Automation ROI",
+      "moduleId": "6",
+      "lessonOrder": "5",
+      "moduleName": "AI Workflow Automation"
+    },
+    {
+      "lessonId": "32",
+      "lessonTitle": "AI Proposal Generation",
+      "moduleId": "7",
+      "lessonOrder": "1",
+      "moduleName": "AI Client Communications"
+    },
+    {
+      "lessonId": "33",
+      "lessonTitle": "Personalization at Scale",
+      "moduleId": "7",
+      "lessonOrder": "2",
+      "moduleName": "AI Client Communications"
+    },
+    {
+      "lessonId": "34",
+      "lessonTitle": "Objection Handling Scripts",
+      "moduleId": "7",
+      "lessonOrder": "3",
+      "moduleName": "AI Client Communications"
+    },
+    {
+      "lessonId": "35",
+      "lessonTitle": "Relationship Nurture Sequences",
+      "moduleId": "7",
+      "lessonOrder": "4",
+      "moduleName": "AI Client Communications"
+    },
+    {
+      "lessonId": "36",
+      "lessonTitle": "Client Reporting Automation",
+      "moduleId": "7",
+      "lessonOrder": "5",
+      "moduleName": "AI Client Communications"
+    }
+  ],
+  "messages": [],
+  "stdout": "lessonId\tlessonTitle\tmoduleId\tlessonOrder\tmoduleName\n1\tIntroduction to AI Writing\t1\t1\tAI Writing Assistant\n2\tRapid Email Drafting\t1\t2\tAI Writing Assistant\n3\tLong Documents — Structure Before Content\t1\t3\tAI Writing Assistant\n4\tTone Matching Mastery\t1\t4\tAI Writing Assistant\n5\tRefinement & Editing\t1\t5\tAI Writing Assistant\n6\tMulti-Modal Documents\t1\t6\tAI Writing Assistant\n7\tMeeting Transcription Basics\t2\t1\tAI Meeting & Communication\n8\tAction Item Extraction\t2\t2\tAI Meeting & Communication\n9\tAI Meeting Summaries\t2\t3\tAI Meeting & Communication\n10\tFollow-Up Email Automation\t2\t4\tAI Meeting & Communication\n11\tAI Agenda Creation\t2\t5\tAI Meeting & Communication\n12\tData Interpretation Prompts\t3\t1\tAI Data & Analysis\n13\tExecutive Report Generation\t3\t2\tAI Data & Analysis\n14\tTrend Identification with AI\t3\t3\tAI Data & Analysis\n15\tVisualization Prompting\t3\t4\tAI Data & Analysis\n16\tAI Competitive Analysis\t3\t5\tAI Data & Analysis\n17\tBuilding Presentation Outlines with AI\t4\t1\tAI Presentation Creation\n18\tSlide Content Generation\t4\t2\tAI Presentation Creation\n19\tStorytelling with Data Slides\t4\t3\tAI Presentation Creation\n20\tSpeaker Notes Mastery\t4\t4\tAI Presentation Creation\n21\tDesign Direction Prompts\t4\t5\tAI Presentation Creation\n22\tResearch Prompt Frameworks\t5\t1\tAI Research & Summarization\n23\tSource Synthesis Techniques\t5\t2\tAI Research & Summarization\n24\tExecutive Briefing Documents\t5\t3\tAI Research & Summarization\n25\tAI-Assisted Literature Reviews\t5\t4\tAI Research & Summarization\n26\tAI Fact-Checking Workflow\t5\t5\tAI Research & Summarization\n27\tWorkflow Mapping with AI\t6\t1\tAI Workflow Automation\n28\tPrompt Chaining Techniques\t6\t2\tAI Workflow Automation\n29\tAutomation Tool Integration\t6\t3\tAI Workflow Automation\n30\tApproval Workflow Automation\t6\t4\tAI Workflow Automation\n31\tMeasuring Automation ROI\t6\t5\tAI Workflow Automation\n32\tAI Proposal Generation\t7\t1\tAI Client Communications\n33\tPersonalization at Scale\t7\t2\tAI Client Communications\n34\tObjection Handling Scripts\t7\t3\tAI Client Communications\n35\tRelationship Nurture Sequences\t7\t4\tAI Client Communications\n36\tClient Reporting Automation\t7\t5\tAI Client Communications\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

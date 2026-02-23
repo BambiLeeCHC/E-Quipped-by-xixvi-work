@@ -1,235 +1,659 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { CheckCircle2, ChevronLeft, Clock, Zap } from "lucide-react";
-import { useState } from "react";
+import {
+  AlertCircle,
+  BookOpen,
+  Brain,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Code2,
+  Lock,
+  MessageSquare,
+  Send,
+  Star,
+  Trophy,
+  Zap,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
 
-export default function LessonViewer() {
-  const { slug } = useParams<{ slug: string }>();
-  const { user } = useAuth();
-  const [, setLocation] = useLocation();
-  const [completing, setCompleting] = useState(false);
+// ─── Types ────────────────────────────────────────────────────────────────────
+type ContentBlock = {
+  id: number;
+  type: string;
+  order: number;
+  content: Record<string, unknown>;
+};
 
-  const { data: lesson, isLoading } = trpc.lessons.bySlug.useQuery({ slug: slug ?? "" });
-  const { data: blocks } = trpc.content.byLesson.useQuery(
-    { lessonId: lesson?.id ?? 0 },
-    { enabled: !!lesson?.id }
-  );
-  const { data: progress } = trpc.progress.forLesson.useQuery(
-    { lessonId: lesson?.id ?? 0 },
-    { enabled: !!user && !!lesson?.id }
-  );
+type QuizQuestion = {
+  id: number;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation?: string | null;
+};
 
-  const utils = trpc.useUtils();
-  const completeMutation = trpc.progress.complete.useMutation({
-    onSuccess: (data) => {
-      utils.progress.forLesson.invalidate();
-      utils.auth.me.invalidate();
-      toast.success(`Lesson complete! +${lesson?.xpReward ?? 0} XP earned`);
-    },
-  });
+type QuizResult = {
+  score: number;
+  passed: boolean;
+  correct: number;
+  total: number;
+  questions: {
+    question: string;
+    options: string[];
+    correctIndex: number;
+    chosenIndex: number;
+    explanation?: string | null;
+  }[];
+};
 
-  const handleComplete = async () => {
-    if (!lesson || completing) return;
-    setCompleting(true);
+// ─── Content Block Renderer ───────────────────────────────────────────────────
+function BlockRenderer({ block }: { block: ContentBlock }) {
+  const c = block.content as Record<string, unknown>;
+
+  switch (block.type) {
+    case "text":
+      return (
+        <div
+          className="prose prose-invert max-w-none text-foreground leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: (c.html as string) || (c.text as string) || "" }}
+        />
+      );
+
+    case "callout": {
+      const variant = (c.variant as string) || "info";
+      const colors: Record<string, string> = {
+        info: "border-blue-400/40 bg-blue-500/10 text-blue-200",
+        warning: "border-yellow-400/40 bg-yellow-500/10 text-yellow-200",
+        success: "border-green-400/40 bg-green-500/10 text-green-200",
+        tip: "border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-200",
+      };
+      return (
+        <div className={`rounded-xl border p-4 ${colors[variant] || colors.info}`}>
+          {!!c.title && <p className="font-semibold mb-1">{String(c.title)}</p>}
+          <p className="text-sm opacity-90">{String((c.body as string) || (c.text as string) || "")}</p>
+        </div>
+      );
+    }
+
+    case "code":
+      return (
+        <div className="rounded-xl overflow-hidden border border-white/10">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border-b border-white/10">
+            <Code2 className="w-4 h-4 text-fuchsia-400" />
+            <span className="text-xs text-white/60 font-mono">{(c.language as string) || "text"}</span>
+          </div>
+          <pre className="p-4 text-sm font-mono text-green-300 overflow-x-auto bg-black/30">
+            <code>{c.code as string}</code>
+          </pre>
+        </div>
+      );
+
+    case "image":
+      return (
+        <div className="rounded-xl overflow-hidden border border-white/10">
+          <img src={c.url as string} alt={(c.alt as string) || ""} className="w-full object-cover" />
+          {!!c.caption && <p className="text-center text-sm text-white/50 py-2 px-4">{String(c.caption)}</p>}
+        </div>
+      );
+
+    case "video":
+      return (
+        <div className="rounded-xl overflow-hidden border border-white/10 aspect-video">
+          <iframe
+            src={c.url as string}
+            className="w-full h-full"
+            allowFullScreen
+            title={(c.title as string) || "Video"}
+          />
+        </div>
+      );
+
+    case "divider":
+      return <hr className="border-white/10 my-2" />;
+
+    default:
+      return null;
+  }
+}
+
+// ─── Applied Sandbox Section ──────────────────────────────────────────────────
+function AppliedSandbox({ lessonTitle, exercises }: { lessonTitle: string; exercises: ContentBlock[] }) {
+  const [prompt, setPrompt] = useState("");
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const chatMutation = trpc.sandbox.chat.useMutation();
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const activeExercise = exercises[0];
+  const exerciseContent = activeExercise?.content as Record<string, unknown> | undefined;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!prompt.trim() || isLoading) return;
+    const userMsg = prompt.trim();
+    setPrompt("");
+    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    setIsLoading(true);
     try {
-      await completeMutation.mutateAsync({ lessonId: lesson.id });
+      const systemPrompt =
+        (exerciseContent?.systemPrompt as string) ||
+        `You are an AI business assistant helping a learner practice skills from the lesson: "${lessonTitle}". Provide helpful, constructive feedback on their prompts and demonstrate good AI usage in a business context.`;
+      const res = await chatMutation.mutateAsync({
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages,
+          { role: "user", content: userMsg },
+        ],
+        model: "gpt-4o",
+        temperature: 0.7,
+        maxTokens: 800,
+      });
+      setMessages((prev) => [...prev, { role: "assistant" as const, content: typeof res.content === "string" ? res.content : JSON.stringify(res.content) }]);
+    } catch {
+      toast.error("Failed to get AI response. Please try again.");
     } finally {
-      setCompleting(false);
+      setIsLoading(false);
     }
   };
 
-  if (isLoading) {
+  return (
+    <div className="space-y-4">
+      {!!exerciseContent?.instructions && (
+        <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Brain className="w-4 h-4 text-fuchsia-400" />
+            <span className="text-sm font-semibold text-fuchsia-300">Applied Exercise</span>
+          </div>
+          <p className="text-sm text-white/80">{String(exerciseContent.instructions)}</p>
+          {!!exerciseContent.starterPrompt && (
+            <div className="mt-3 p-3 rounded-lg bg-black/20 border border-white/10">
+              <p className="text-xs text-white/50 mb-1">Starter prompt suggestion:</p>
+              <p className="text-sm font-mono text-fuchsia-200">{String(exerciseContent.starterPrompt)}</p>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="mt-2 text-xs text-fuchsia-400 hover:text-fuchsia-300"
+                onClick={() => setPrompt(String(exerciseContent.starterPrompt))}
+              >
+                Use this prompt
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chat history */}
+      <div className="rounded-xl border border-white/10 bg-black/20 min-h-[200px] max-h-[400px] overflow-y-auto p-4 space-y-3">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-32 text-white/30">
+            <MessageSquare className="w-8 h-8 mb-2" />
+            <p className="text-sm">Start a conversation with the AI to practice your skills</p>
+          </div>
+        )}
+        {messages.map((msg, i) => (
+          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              className={`max-w-[85%] rounded-xl px-4 py-2 text-sm ${
+                msg.role === "user" ? "bg-fuchsia-600/80 text-white" : "bg-white/10 text-white/90"
+              }`}
+            >
+              <p className="whitespace-pre-wrap">{msg.content}</p>
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-white/10 rounded-xl px-4 py-2">
+              <div className="flex gap-1">
+                {[0, 150, 300].map((delay) => (
+                  <span
+                    key={delay}
+                    className="w-2 h-2 bg-fuchsia-400 rounded-full animate-bounce"
+                    style={{ animationDelay: `${delay}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div className="flex gap-2">
+        <Textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Type your prompt here… (Ctrl+Enter to send)"
+          className="resize-none bg-white/5 border-white/20 text-white placeholder:text-white/30 focus:border-fuchsia-400"
+          rows={3}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();
+          }}
+        />
+        <Button
+          onClick={handleSend}
+          disabled={!prompt.trim() || isLoading}
+          className="self-end bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+        >
+          <Send className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Quiz Section ─────────────────────────────────────────────────────────────
+function QuizSection({
+  lessonId,
+  questions,
+  onPass,
+}: {
+  lessonId: number;
+  questions: QuizQuestion[];
+  onPass: () => void;
+}) {
+  const [answers, setAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
+  const [result, setResult] = useState<QuizResult | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const submitMutation = trpc.quiz.submit.useMutation();
+
+  const allAnswered = answers.every((a) => a !== null);
+
+  const handleSubmit = async () => {
+    if (!allAnswered) return;
+    try {
+      const res = await submitMutation.mutateAsync({
+        lessonId,
+        answers: answers as number[],
+      });
+      setResult(res as QuizResult);
+      setSubmitted(true);
+      if (res.passed) {
+        toast.success(`Quiz passed! ${res.score}% — Next lesson unlocked!`);
+        setTimeout(onPass, 1500);
+      } else {
+        toast.error(`${res.score}% — You need 70% to pass. Review and try again.`);
+      }
+    } catch {
+      toast.error("Failed to submit quiz. Please try again.");
+    }
+  };
+
+  const handleRetry = () => {
+    setAnswers(Array(questions.length).fill(null));
+    setResult(null);
+    setSubmitted(false);
+  };
+
+  if (submitted && result) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
+      <div className="space-y-6">
+        <div
+          className={`rounded-2xl p-6 text-center border ${
+            result.passed ? "border-green-400/40 bg-green-500/10" : "border-red-400/40 bg-red-500/10"
+          }`}
+        >
+          <div className="flex justify-center mb-3">
+            {result.passed ? (
+              <Trophy className="w-12 h-12 text-yellow-400" />
+            ) : (
+              <AlertCircle className="w-12 h-12 text-red-400" />
+            )}
+          </div>
+          <h3 className={`text-2xl font-bold mb-1 ${result.passed ? "text-green-300" : "text-red-300"}`}>
+            {result.passed ? "Quiz Passed!" : "Not Quite Yet"}
+          </h3>
+          <p className="text-white/60 mb-3">
+            {result.correct} of {result.total} correct — {result.score}%
+          </p>
+          <Progress value={result.score} className="h-3 max-w-xs mx-auto" />
+        </div>
+
+        <div className="space-y-4">
+          {result.questions.map((q, i) => {
+            const correct = q.chosenIndex === q.correctIndex;
+            return (
+              <div
+                key={i}
+                className={`rounded-xl border p-4 ${
+                  correct ? "border-green-400/30 bg-green-500/5" : "border-red-400/30 bg-red-500/5"
+                }`}
+              >
+                <div className="flex items-start gap-2 mb-3">
+                  {correct ? (
+                    <CheckCircle2 className="w-5 h-5 text-green-400 mt-0.5 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 shrink-0" />
+                  )}
+                  <p className="font-medium text-white/90">{q.question}</p>
+                </div>
+                <div className="space-y-1 ml-7">
+                  {q.options.map((opt, oi) => (
+                    <div
+                      key={oi}
+                      className={`text-sm px-3 py-1.5 rounded-lg ${
+                        oi === q.correctIndex
+                          ? "bg-green-500/20 text-green-300"
+                          : oi === q.chosenIndex && !correct
+                          ? "bg-red-500/20 text-red-300"
+                          : "text-white/40"
+                      }`}
+                    >
+                      {oi === q.correctIndex && "✓ "}
+                      {oi === q.chosenIndex && !correct && "✗ "}
+                      {opt}
+                    </div>
+                  ))}
+                </div>
+                {q.explanation && (
+                  <p className="mt-2 ml-7 text-sm text-white/50 italic">{q.explanation}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {!result.passed && (
+          <Button onClick={handleRetry} className="w-full bg-fuchsia-600 hover:bg-fuchsia-500 text-white">
+            Try Again
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 text-white/60 text-sm">
+        <Star className="w-4 h-4 text-yellow-400" />
+        <span>Score 70% or higher to unlock the next lesson</span>
+      </div>
+
+      {questions.map((q, qi) => (
+        <div key={q.id} className="space-y-3">
+          <p className="font-medium text-white/90">
+            <span className="text-fuchsia-400 mr-2">{qi + 1}.</span>
+            {q.question}
+          </p>
+          <div className="space-y-2">
+            {q.options.map((opt, oi) => (
+              <button
+                key={oi}
+                onClick={() => {
+                  const next = [...answers];
+                  next[qi] = oi;
+                  setAnswers(next);
+                }}
+                className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all ${
+                  answers[qi] === oi
+                    ? "border-fuchsia-400 bg-fuchsia-500/20 text-white"
+                    : "border-white/10 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10"
+                }`}
+              >
+                <span className="font-mono text-fuchsia-400 mr-2">{String.fromCharCode(65 + oi)}.</span>
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <Button
+        onClick={handleSubmit}
+        disabled={!allAnswered || submitMutation.isPending}
+        className="w-full bg-fuchsia-600 hover:bg-fuchsia-500 text-white disabled:opacity-40"
+      >
+        {submitMutation.isPending ? "Submitting…" : "Submit Quiz"}
+      </Button>
+    </div>
+  );
+}
+
+// ─── Main LessonViewer ────────────────────────────────────────────────────────
+export default function LessonViewer() {
+  const { slug } = useParams<{ slug: string }>();
+  const [, navigate] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState<"learn" | "apply" | "quiz">("learn");
+  const [quizPassed, setQuizPassed] = useState(false);
+
+  const { data: lesson, isLoading: lessonLoading } = trpc.lessons.bySlug.useQuery({ slug: slug ?? "" });
+  const { data: blocks = [], isLoading: blocksLoading } = trpc.content.byLesson.useQuery(
+    { lessonId: lesson?.id ?? 0 },
+    { enabled: !!lesson?.id }
+  );
+  const { data: quizQuestions = [] } = trpc.quiz.questions.useQuery(
+    { lessonId: lesson?.id ?? 0 },
+    { enabled: !!lesson?.id }
+  );
+  const { data: bestAttempt } = trpc.quiz.bestAttempt.useQuery(
+    { lessonId: lesson?.id ?? 0 },
+    { enabled: isAuthenticated && !!lesson?.id }
+  );
+
+  const learningBlocks = blocks.filter((b) => b.type !== "prompt_exercise");
+  const exerciseBlocks = blocks.filter((b) => b.type === "prompt_exercise");
+
+  useEffect(() => {
+    if (bestAttempt?.passed) setQuizPassed(true);
+  }, [bestAttempt]);
+
+  if (lessonLoading || blocksLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-fuchsia-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!lesson) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Lesson not found</h2>
-          <Button onClick={() => setLocation("/courses")}>Back to Courses</Button>
+          <p className="text-white/60 mb-4">Lesson not found.</p>
+          <Button onClick={() => navigate("/courses")} variant="outline">
+            Back to Courses
+          </Button>
         </div>
       </div>
     );
   }
 
-  const isCompleted = progress?.status === "completed";
+  const tabs = [
+    { id: "learn" as const, label: "Learn", icon: BookOpen },
+    { id: "apply" as const, label: "Apply", icon: Brain },
+    { id: "quiz" as const, label: "Quiz", icon: Star },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border/50 bg-card/30 backdrop-blur-xl sticky top-0 z-40">
-        <div className="container flex items-center gap-4 h-16">
-          <Button variant="ghost" size="sm" onClick={() => setLocation("/courses")}>
-            <ChevronLeft className="h-4 w-4 mr-1" /> Courses
+      <div className="sticky top-0 z-40 border-b border-white/10 bg-background/90 backdrop-blur-xl">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/courses")}
+            className="text-white/60 hover:text-white"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Courses
           </Button>
-          <div className="h-4 w-px bg-border" />
-          <h1 className="font-semibold truncate flex-1">{lesson.title}</h1>
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Clock className="h-3 w-3" /> {lesson.estimatedMinutes}m
-            </span>
-            <span className="text-xs text-amber-400 flex items-center gap-1">
-              <Zap className="h-3 w-3" /> {lesson.xpReward} XP
-            </span>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-semibold text-white truncate">{lesson.title}</h1>
           </div>
+          <div className="flex items-center gap-2 text-white/40 text-xs shrink-0">
+            <Clock className="w-3 h-3" />
+            <span>{lesson.estimatedMinutes}m</span>
+            <Zap className="w-3 h-3 text-yellow-400" />
+            <span className="text-yellow-400">{lesson.xpReward} XP</span>
+          </div>
+        </div>
+
+        {/* Tab bar */}
+        <div className="max-w-4xl mx-auto px-4 flex gap-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            const isQuizDone = tab.id === "quiz" && (quizPassed || bestAttempt?.passed);
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  isActive
+                    ? "border-fuchsia-400 text-fuchsia-300"
+                    : "border-transparent text-white/50 hover:text-white/80"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+                {isQuizDone && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="container py-10 max-w-3xl mx-auto">
-        {/* Lesson meta */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2 mb-3">
-            <Badge variant="outline" className="capitalize">{lesson.type}</Badge>
-            {lesson.isPremium && (
-              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Premium</Badge>
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* ── Learn Tab ── */}
+        {activeTab === "learn" && (
+          <div className="space-y-6">
+            {lesson.description && (
+              <p className="text-white/60 text-lg leading-relaxed">{lesson.description}</p>
             )}
-            {isCompleted && (
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                <CheckCircle2 className="h-3 w-3 mr-1" /> Completed
+            <div className="flex flex-wrap gap-2 mb-2">
+              <Badge variant="outline" className="capitalize border-white/20 text-white/60">
+                {lesson.type}
               </Badge>
-            )}
-          </div>
-          <h2 className="text-3xl font-bold mb-3">{lesson.title}</h2>
-          {lesson.description && (
-            <p className="text-muted-foreground text-lg">{lesson.description}</p>
-          )}
-        </div>
-
-        {/* Content blocks */}
-        <div className="space-y-6 mb-10">
-          {blocks && blocks.length > 0 ? (
-            blocks.map((block) => <ContentBlock key={block.id} block={block} />)
-          ) : (
-            <Card className="bg-card border-border/50">
-              <CardContent className="p-8 text-center text-muted-foreground">
-                <p>Content for this lesson is being prepared.</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Complete button */}
-        {user && !isCompleted && (
-          <div className="flex justify-center">
-            <Button
-              size="lg"
-              className="gradient-primary text-white border-0 px-10 h-12"
-              onClick={handleComplete}
-              disabled={completing}
-            >
-              {completing ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white" />
-                  Completing...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  Mark as Complete (+{lesson.xpReward} XP)
-                </span>
+              {lesson.isPremium && (
+                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Premium</Badge>
               )}
-            </Button>
+            </div>
+
+            {learningBlocks.length === 0 ? (
+              <div className="text-center py-16 text-white/30">
+                <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Lesson content is being prepared.</p>
+              </div>
+            ) : (
+              learningBlocks.map((block) => (
+                <BlockRenderer key={block.id} block={block as ContentBlock} />
+              ))
+            )}
+
+            <div className="flex justify-end pt-4">
+              <Button
+                onClick={() => setActiveTab("apply")}
+                className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+              >
+                Continue to Applied Exercise
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           </div>
         )}
 
-        {isCompleted && (
-          <div className="flex justify-center">
-            <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-6 py-3">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="font-medium">Lesson completed!</span>
+        {/* ── Apply Tab ── */}
+        {activeTab === "apply" && (
+          <div className="space-y-6">
+            {!isAuthenticated ? (
+              <Card className="border-white/10 bg-white/5">
+                <CardContent className="pt-6 text-center">
+                  <Lock className="w-10 h-10 text-white/30 mx-auto mb-3" />
+                  <p className="text-white/60 mb-4">Sign in to access the AI sandbox</p>
+                  <Button onClick={() => navigate("/")} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white">
+                    Sign In
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <AppliedSandbox lessonTitle={lesson.title} exercises={exerciseBlocks as ContentBlock[]} />
+            )}
+
+            <div className="flex justify-end pt-4">
+              <Button
+                onClick={() => setActiveTab("quiz")}
+                className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+              >
+                Take the Quiz
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
             </div>
+          </div>
+        )}
+
+        {/* ── Quiz Tab ── */}
+        {activeTab === "quiz" && (
+          <div className="space-y-6">
+            {!isAuthenticated ? (
+              <Card className="border-white/10 bg-white/5">
+                <CardContent className="pt-6 text-center">
+                  <Lock className="w-10 h-10 text-white/30 mx-auto mb-3" />
+                  <p className="text-white/60 mb-4">Sign in to take the quiz and unlock the next lesson</p>
+                  <Button onClick={() => navigate("/")} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white">
+                    Sign In
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : quizPassed || bestAttempt?.passed ? (
+              <Card className="border-green-400/30 bg-green-500/10">
+                <CardContent className="pt-6 text-center">
+                  <Trophy className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <h3 className="text-xl font-bold text-green-300 mb-1">Quiz Completed!</h3>
+                  <p className="text-white/60">
+                    Best score: {bestAttempt?.score ?? 100}% — Next lesson unlocked
+                  </p>
+                  <Button
+                    onClick={() => navigate("/courses")}
+                    className="mt-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+                  >
+                    Back to Course Outline
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : quizQuestions.length === 0 ? (
+              <div className="text-center py-16 text-white/30">
+                <Star className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Quiz questions are being prepared.</p>
+              </div>
+            ) : (
+              <Card className="border-white/10 bg-white/5">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    Lesson Quiz
+                    <Badge variant="outline" className="ml-auto text-white/60 border-white/20">
+                      {quizQuestions.length} questions
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <QuizSection
+                    lessonId={lesson.id}
+                    questions={quizQuestions as QuizQuestion[]}
+                    onPass={() => setQuizPassed(true)}
+                  />
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>
     </div>
   );
-}
-
-function ContentBlock({ block }: { block: any }) {
-  const content = block.content as any;
-
-  switch (block.type) {
-    case "text":
-      return (
-        <div className="prose prose-invert max-w-none">
-          <div
-            className="text-foreground leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: content?.html ?? content?.text ?? "" }}
-          />
-        </div>
-      );
-
-    case "code":
-      return (
-        <div className="rounded-xl bg-muted border border-border/50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-muted/50">
-            <span className="text-xs text-muted-foreground font-mono">
-              {content?.language ?? "code"}
-            </span>
-          </div>
-          <pre className="p-4 overflow-x-auto text-sm font-mono text-foreground">
-            <code>{content?.code ?? ""}</code>
-          </pre>
-        </div>
-      );
-
-    case "callout":
-      return (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
-          {content?.title && (
-            <div className="font-semibold text-primary mb-2">{content.title}</div>
-          )}
-          <p className="text-sm text-foreground/80">{content?.text ?? ""}</p>
-        </div>
-      );
-
-    case "image":
-      return content?.url ? (
-        <div className="rounded-xl overflow-hidden border border-border/50">
-          <img src={content.url} alt={content?.alt ?? ""} className="w-full" />
-          {content?.caption && (
-            <p className="text-xs text-muted-foreground text-center py-2 px-4">{content.caption}</p>
-          )}
-        </div>
-      ) : null;
-
-    case "video":
-      return content?.url ? (
-        <div className="rounded-xl overflow-hidden border border-border/50 aspect-video">
-          <video controls className="w-full h-full" src={content.url} />
-        </div>
-      ) : null;
-
-    case "prompt_exercise":
-      return (
-        <Card className="bg-card border-primary/20">
-          <CardContent className="p-6">
-            <div className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">
-              Prompt Exercise
-            </div>
-            {content?.instructions && (
-              <p className="text-sm text-muted-foreground mb-4">{content.instructions}</p>
-            )}
-            {content?.starterPrompt && (
-              <div className="rounded-lg bg-muted p-4 font-mono text-sm text-foreground">
-                {content.starterPrompt}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      );
-
-    default:
-      return null;
-  }
 }

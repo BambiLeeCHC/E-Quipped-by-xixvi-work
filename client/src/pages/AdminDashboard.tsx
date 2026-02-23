@@ -11,12 +11,16 @@ import {
 import { trpc } from "@/lib/trpc";
 import {
   AlertTriangle,
+  CheckCircle2,
   ChevronLeft,
+  Clock,
+  MessageSquare,
   MoreVertical,
   Shield,
   ShieldCheck,
   ShieldX,
   Users,
+  XCircle,
   Zap,
   BookOpen,
   Activity,
@@ -54,6 +58,20 @@ export default function AdminDashboard() {
       toast.success("User role updated");
       refetchUsers();
     },
+  });
+
+  const { data: accessRequests = [], refetch: refetchRequests } = trpc.access.list.useQuery(
+    { status: "pending" },
+    { enabled: !!user && user.role === "admin" }
+  );
+
+  const reviewMutation = trpc.access.review.useMutation({
+    onSuccess: (_, vars) => {
+      toast.success(`Request ${vars.decision === "approved" ? "approved" : "denied"}.`);
+      refetchRequests();
+      refetchUsers();
+    },
+    onError: () => toast.error("Failed to update request."),
   });
 
   if (loading) {
@@ -228,6 +246,68 @@ export default function AdminDashboard() {
                 <div className="text-center py-10 text-muted-foreground text-sm">No users found.</div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Access Requests */}
+        <Card className="bg-card border-border/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-fuchsia-400" />
+              Access Requests
+              {accessRequests.length > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center h-5 w-5 rounded-full bg-fuchsia-500/20 text-fuchsia-400 text-xs font-bold">
+                  {accessRequests.length}
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {accessRequests.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground text-sm">No pending access requests.</div>
+            ) : (
+              <div className="divide-y divide-border/30">
+                {accessRequests.map((req) => (
+                  <div key={req.id} className="flex items-start gap-4 px-4 py-4 hover:bg-muted/10">
+                    <div className="h-9 w-9 rounded-full gradient-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      {(req.userName ?? req.userEmail ?? "U")[0]?.toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{req.userName ?? "Unknown"}</span>
+                        <span className="text-xs text-muted-foreground">{req.userEmail ?? req.userOpenId}</span>
+                      </div>
+                      {req.message && (
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{req.message}</p>
+                      )}
+                      <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {new Date(req.requestedAt).toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 text-xs"
+                        onClick={() => reviewMutation.mutate({ requestId: req.id, decision: "approved" })}
+                        disabled={reviewMutation.isPending}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-rose-400 border-rose-500/30 hover:bg-rose-500/10 text-xs"
+                        onClick={() => reviewMutation.mutate({ requestId: req.id, decision: "denied" })}
+                        disabled={reviewMutation.isPending}
+                      >
+                        <XCircle className="h-3.5 w-3.5 mr-1" />Deny
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

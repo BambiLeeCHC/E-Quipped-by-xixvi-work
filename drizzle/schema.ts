@@ -166,3 +166,43 @@ export const sandboxSessions = mysqlTable("sandbox_sessions", {
 });
 
 export type SandboxSession = typeof sandboxSessions.$inferSelect;
+
+// ─── Quiz Questions ───────────────────────────────────────────────────────────
+export const quizQuestions = mysqlTable("quiz_questions", {
+  id: int("id").autoincrement().primaryKey(),
+  lessonId: int("lessonId").notNull(),
+  order: int("order").default(0).notNull(),
+  question: text("question").notNull(),
+  options: json("options").notNull(), // string[]
+  correctIndex: int("correctIndex").notNull(),
+  explanation: text("explanation"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type QuizQuestion = typeof quizQuestions.$inferSelect;
+
+// ─── Quiz Attempts ────────────────────────────────────────────────────────────
+export const quizAttempts = mysqlTable("quiz_attempts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  lessonId: int("lessonId").notNull(),
+  score: int("score").default(0).notNull(),       // 0-100
+  passed: boolean("passed").default(false).notNull(),
+  answers: json("answers").notNull(),              // number[] — chosen indices
+  attemptedAt: timestamp("attemptedAt").defaultNow().notNull(),
+});
+
+export type QuizAttempt = typeof quizAttempts.$inferSelect;
+
+// ─── Access Requests ──────────────────────────────────────────────────────────
+export const accessRequests = mysqlTable("access_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "denied"]).default("pending").notNull(),
+  message: text("message"),
+  reviewedBy: int("reviewedBy"),
+  requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewedAt"),
+});
+
+export type AccessRequest = typeof accessRequests.$inferSelect;
