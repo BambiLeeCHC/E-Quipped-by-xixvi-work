@@ -366,7 +366,7 @@ export default function Pricing() {
 
         {/* FAQ */}
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-xl font-bold text-foreground text-center mb-6">Common questions</h2>
+          <h2 className="text-xl font-bold text-foreground text-center mb-6">Frequently Asked Questions</h2>
           <div className="space-y-4">
             {[
               {
