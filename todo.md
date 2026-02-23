@@ -139,3 +139,12 @@
 ### Tests & Polish
 - [x] Vitest tests for quiz grading and access gating logic
 - [x] Save checkpoint and publish
+
+## Phase 19: Sandbox Side Panel & Quiz Gating
+- [ ] Redesign LessonViewer as two-column layout: lesson content left, sandbox side panel right
+- [ ] Sandbox side panel is collapsible (toggle button) and persists across Learn/Quiz sections
+- [ ] Applied section pre-fills sandbox with lesson prompt template
+- [ ] Track sandbox submission count per lesson (applied_completed flag)
+- [ ] Quiz tab/section only unlocks after user submits at least one sandbox response in Applied
+- [ ] Show clear "Complete the Applied exercise first" message when quiz is locked
+- [ ] Push all changes to GitHub

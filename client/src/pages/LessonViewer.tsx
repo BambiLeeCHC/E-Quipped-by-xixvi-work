@@ -1,9 +1,9 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import {
   AlertCircle,
@@ -16,6 +16,8 @@ import {
   Code2,
   Lock,
   MessageSquare,
+  PanelRightClose,
+  PanelRightOpen,
   Send,
   Star,
   Trophy,
@@ -125,11 +127,22 @@ function BlockRenderer({ block }: { block: ContentBlock }) {
   }
 }
 
-// ─── Applied Sandbox Section ──────────────────────────────────────────────────
-function AppliedSandbox({ lessonTitle, exercises }: { lessonTitle: string; exercises: ContentBlock[] }) {
+// ─── Sandbox Side Panel ───────────────────────────────────────────────────────
+function SandboxPanel({
+  lessonTitle,
+  exercises,
+  isAuthenticated,
+  onFirstSubmit,
+}: {
+  lessonTitle: string;
+  exercises: ContentBlock[];
+  isAuthenticated: boolean;
+  onFirstSubmit: () => void;
+}) {
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const chatMutation = trpc.sandbox.chat.useMutation();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -160,7 +173,17 @@ function AppliedSandbox({ lessonTitle, exercises }: { lessonTitle: string; exerc
         temperature: 0.7,
         maxTokens: 800,
       });
-      setMessages((prev) => [...prev, { role: "assistant" as const, content: typeof res.content === "string" ? res.content : JSON.stringify(res.content) }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant" as const,
+          content: typeof res.content === "string" ? res.content : JSON.stringify(res.content),
+        },
+      ]);
+      if (!hasSubmitted) {
+        setHasSubmitted(true);
+        onFirstSubmit();
+      }
     } catch {
       toast.error("Failed to get AI response. Please try again.");
     } finally {
@@ -168,45 +191,51 @@ function AppliedSandbox({ lessonTitle, exercises }: { lessonTitle: string; exerc
     }
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <Lock className="w-10 h-10 text-white/20 mb-3" />
+        <p className="text-white/50 text-sm">Sign in to use the AI sandbox</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full">
+      {/* Exercise instructions */}
       {!!exerciseContent?.instructions && (
-        <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Brain className="w-4 h-4 text-fuchsia-400" />
-            <span className="text-sm font-semibold text-fuchsia-300">Applied Exercise</span>
+        <div className="p-3 border-b border-white/10 bg-fuchsia-500/5">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Brain className="w-3.5 h-3.5 text-fuchsia-400" />
+            <span className="text-xs font-semibold text-fuchsia-300">Applied Exercise</span>
           </div>
-          <p className="text-sm text-white/80">{String(exerciseContent.instructions)}</p>
+          <p className="text-xs text-white/70 leading-relaxed">{String(exerciseContent.instructions ?? "")}</p>
           {!!exerciseContent.starterPrompt && (
-            <div className="mt-3 p-3 rounded-lg bg-black/20 border border-white/10">
-              <p className="text-xs text-white/50 mb-1">Starter prompt suggestion:</p>
-              <p className="text-sm font-mono text-fuchsia-200">{String(exerciseContent.starterPrompt)}</p>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="mt-2 text-xs text-fuchsia-400 hover:text-fuchsia-300"
-                onClick={() => setPrompt(String(exerciseContent.starterPrompt))}
-              >
-                Use this prompt
-              </Button>
-            </div>
+            <button
+              className="mt-2 text-xs text-fuchsia-400 hover:text-fuchsia-300 underline underline-offset-2"
+              onClick={() => setPrompt(String(exerciseContent!.starterPrompt))}
+            >
+              Use starter prompt →
+            </button>
           )}
         </div>
       )}
 
-      {/* Chat history */}
-      <div className="rounded-xl border border-white/10 bg-black/20 min-h-[200px] max-h-[400px] overflow-y-auto p-4 space-y-3">
+      {/* Chat messages */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-32 text-white/30">
+          <div className="flex flex-col items-center justify-center h-full text-white/25 py-8">
             <MessageSquare className="w-8 h-8 mb-2" />
-            <p className="text-sm">Start a conversation with the AI to practice your skills</p>
+            <p className="text-xs text-center">Practice your skills with the AI assistant</p>
           </div>
         )}
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[85%] rounded-xl px-4 py-2 text-sm ${
-                msg.role === "user" ? "bg-fuchsia-600/80 text-white" : "bg-white/10 text-white/90"
+              className={`max-w-[90%] rounded-xl px-3 py-2 text-xs leading-relaxed ${
+                msg.role === "user"
+                  ? "bg-fuchsia-600/80 text-white"
+                  : "bg-white/10 text-white/90"
               }`}
             >
               <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -215,12 +244,12 @@ function AppliedSandbox({ lessonTitle, exercises }: { lessonTitle: string; exerc
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-white/10 rounded-xl px-4 py-2">
+            <div className="bg-white/10 rounded-xl px-3 py-2">
               <div className="flex gap-1">
                 {[0, 150, 300].map((delay) => (
                   <span
                     key={delay}
-                    className="w-2 h-2 bg-fuchsia-400 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-fuchsia-400 rounded-full animate-bounce"
                     style={{ animationDelay: `${delay}ms` }}
                   />
                 ))}
@@ -232,24 +261,33 @@ function AppliedSandbox({ lessonTitle, exercises }: { lessonTitle: string; exerc
       </div>
 
       {/* Input */}
-      <div className="flex gap-2">
-        <Textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Type your prompt here… (Ctrl+Enter to send)"
-          className="resize-none bg-white/5 border-white/20 text-white placeholder:text-white/30 focus:border-fuchsia-400"
-          rows={3}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();
-          }}
-        />
-        <Button
-          onClick={handleSend}
-          disabled={!prompt.trim() || isLoading}
-          className="self-end bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
-        >
-          <Send className="w-4 h-4" />
-        </Button>
+      <div className="p-3 border-t border-white/10 space-y-2">
+        {hasSubmitted && (
+          <div className="flex items-center gap-1.5 text-xs text-green-400">
+            <CheckCircle2 className="w-3 h-3" />
+            <span>Applied exercise complete — quiz unlocked!</span>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Type your prompt… (Ctrl+Enter to send)"
+            className="resize-none bg-white/5 border-white/20 text-white placeholder:text-white/30 focus:border-fuchsia-400 text-xs"
+            rows={3}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSend();
+            }}
+          />
+          <Button
+            onClick={handleSend}
+            disabled={!prompt.trim() || isLoading}
+            size="sm"
+            className="self-end bg-fuchsia-600 hover:bg-fuchsia-500 text-white shrink-0"
+          >
+            <Send className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -259,10 +297,12 @@ function AppliedSandbox({ lessonTitle, exercises }: { lessonTitle: string; exerc
 function QuizSection({
   lessonId,
   questions,
+  appliedCompleted,
   onPass,
 }: {
   lessonId: number;
   questions: QuizQuestion[];
+  appliedCompleted: boolean;
   onPass: () => void;
 }) {
   const [answers, setAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
@@ -271,6 +311,27 @@ function QuizSection({
   const submitMutation = trpc.quiz.submit.useMutation();
 
   const allAnswered = answers.every((a) => a !== null);
+
+  // Gate: quiz locked until applied exercise completed
+  if (!appliedCompleted) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+        <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-400/30 flex items-center justify-center">
+          <Lock className="w-7 h-7 text-amber-400" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-1">Complete the Applied Exercise First</h3>
+          <p className="text-white/50 text-sm max-w-sm">
+            You must demonstrate comprehension by submitting at least one response in the AI sandbox before the quiz unlocks.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-white/30 mt-2">
+          <Brain className="w-4 h-4 text-fuchsia-400/60" />
+          <span>Open the sandbox panel on the right and practice the lesson exercise</span>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async () => {
     if (!allAnswered) return;
@@ -426,9 +487,11 @@ function QuizSection({
 export default function LessonViewer() {
   const { slug } = useParams<{ slug: string }>();
   const [, navigate] = useLocation();
-  const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"learn" | "apply" | "quiz">("learn");
+  const { isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState<"learn" | "quiz">("learn");
+  const [sandboxOpen, setSandboxOpen] = useState(true);
   const [quizPassed, setQuizPassed] = useState(false);
+  const [appliedCompleted, setAppliedCompleted] = useState(false);
 
   const { data: lesson, isLoading: lessonLoading } = trpc.lessons.bySlug.useQuery({ slug: slug ?? "" });
   const { data: blocks = [], isLoading: blocksLoading } = trpc.content.byLesson.useQuery(
@@ -448,7 +511,10 @@ export default function LessonViewer() {
   const exerciseBlocks = blocks.filter((b) => b.type === "prompt_exercise");
 
   useEffect(() => {
-    if (bestAttempt?.passed) setQuizPassed(true);
+    if (bestAttempt?.passed) {
+      setQuizPassed(true);
+      setAppliedCompleted(true); // already passed means applied was done before
+    }
   }, [bestAttempt]);
 
   if (lessonLoading || blocksLoading) {
@@ -474,15 +540,14 @@ export default function LessonViewer() {
 
   const tabs = [
     { id: "learn" as const, label: "Learn", icon: BookOpen },
-    { id: "apply" as const, label: "Apply", icon: Brain },
     { id: "quiz" as const, label: "Quiz", icon: Star },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-40 border-b border-white/10 bg-background/90 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* ── Sticky Header ── */}
+      <div className="sticky top-0 z-40 border-b border-white/10 bg-background/90 backdrop-blur-xl shrink-0">
+        <div className="px-4 py-3 flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
@@ -495,19 +560,37 @@ export default function LessonViewer() {
           <div className="flex-1 min-w-0">
             <h1 className="font-semibold text-white truncate">{lesson.title}</h1>
           </div>
-          <div className="flex items-center gap-2 text-white/40 text-xs shrink-0">
-            <Clock className="w-3 h-3" />
-            <span>{lesson.estimatedMinutes}m</span>
-            <Zap className="w-3 h-3 text-yellow-400" />
-            <span className="text-yellow-400">{lesson.xpReward} XP</span>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 text-white/40 text-xs">
+              <Clock className="w-3 h-3" />
+              <span>{lesson.estimatedMinutes}m</span>
+              <Zap className="w-3 h-3 text-yellow-400" />
+              <span className="text-yellow-400">{lesson.xpReward} XP</span>
+            </div>
+            {/* Sandbox toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSandboxOpen((v) => !v)}
+              className={`text-xs gap-1.5 ${sandboxOpen ? "text-fuchsia-300" : "text-white/50 hover:text-white"}`}
+              title={sandboxOpen ? "Hide sandbox" : "Show sandbox"}
+            >
+              {sandboxOpen ? (
+                <PanelRightClose className="w-4 h-4" />
+              ) : (
+                <PanelRightOpen className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">Sandbox</span>
+            </Button>
           </div>
         </div>
 
         {/* Tab bar */}
-        <div className="max-w-4xl mx-auto px-4 flex gap-1">
+        <div className="px-4 flex gap-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
+            const isQuizLocked = tab.id === "quiz" && !appliedCompleted && !quizPassed && !bestAttempt?.passed;
             const isQuizDone = tab.id === "quiz" && (quizPassed || bestAttempt?.passed);
             return (
               <button
@@ -521,136 +604,166 @@ export default function LessonViewer() {
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
+                {isQuizLocked && <Lock className="w-3 h-3 text-amber-400" />}
                 {isQuizDone && <CheckCircle2 className="w-3 h-3 text-green-400" />}
               </button>
             );
           })}
+
+          {/* Applied completion indicator in header */}
+          <div className="ml-auto flex items-center gap-1.5 text-xs pb-2 self-end">
+            {appliedCompleted ? (
+              <span className="flex items-center gap-1 text-green-400">
+                <CheckCircle2 className="w-3 h-3" />
+                Applied done
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-amber-400/70">
+                <Brain className="w-3 h-3" />
+                Practice in sandbox to unlock quiz
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* ── Learn Tab ── */}
-        {activeTab === "learn" && (
-          <div className="space-y-6">
-            {lesson.description && (
-              <p className="text-white/60 text-lg leading-relaxed">{lesson.description}</p>
-            )}
-            <div className="flex flex-wrap gap-2 mb-2">
-              <Badge variant="outline" className="capitalize border-white/20 text-white/60">
-                {lesson.type}
-              </Badge>
-              {lesson.isPremium && (
-                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Premium</Badge>
-              )}
-            </div>
+      {/* ── Two-column body ── */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Main content */}
+        <div
+          className={`flex-1 overflow-y-auto transition-all duration-300 ${
+            sandboxOpen ? "w-0" : "w-full"
+          }`}
+        >
+          <div className="max-w-3xl mx-auto px-4 py-8">
+            {/* ── Learn Tab ── */}
+            {activeTab === "learn" && (
+              <div className="space-y-6">
+                {lesson.description && (
+                  <p className="text-white/60 text-lg leading-relaxed">{lesson.description}</p>
+                )}
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <Badge variant="outline" className="capitalize border-white/20 text-white/60">
+                    {lesson.type}
+                  </Badge>
+                  {lesson.isPremium && (
+                    <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Premium</Badge>
+                  )}
+                </div>
 
-            {learningBlocks.length === 0 ? (
-              <div className="text-center py-16 text-white/30">
-                <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Lesson content is being prepared.</p>
-              </div>
-            ) : (
-              learningBlocks.map((block) => (
-                <BlockRenderer key={block.id} block={block as ContentBlock} />
-              ))
-            )}
+                {learningBlocks.length === 0 ? (
+                  <div className="text-center py-16 text-white/30">
+                    <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Lesson content is being prepared.</p>
+                  </div>
+                ) : (
+                  learningBlocks.map((block) => (
+                    <BlockRenderer key={block.id} block={block as ContentBlock} />
+                  ))
+                )}
 
-            <div className="flex justify-end pt-4">
-              <Button
-                onClick={() => setActiveTab("apply")}
-                className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
-              >
-                Continue to Applied Exercise
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Apply Tab ── */}
-        {activeTab === "apply" && (
-          <div className="space-y-6">
-            {!isAuthenticated ? (
-              <Card className="border-white/10 bg-white/5">
-                <CardContent className="pt-6 text-center">
-                  <Lock className="w-10 h-10 text-white/30 mx-auto mb-3" />
-                  <p className="text-white/60 mb-4">Sign in to access the AI sandbox</p>
-                  <Button onClick={() => navigate("/")} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white">
-                    Sign In
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <AppliedSandbox lessonTitle={lesson.title} exercises={exerciseBlocks as ContentBlock[]} />
-            )}
-
-            <div className="flex justify-end pt-4">
-              <Button
-                onClick={() => setActiveTab("quiz")}
-                className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
-              >
-                Take the Quiz
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Quiz Tab ── */}
-        {activeTab === "quiz" && (
-          <div className="space-y-6">
-            {!isAuthenticated ? (
-              <Card className="border-white/10 bg-white/5">
-                <CardContent className="pt-6 text-center">
-                  <Lock className="w-10 h-10 text-white/30 mx-auto mb-3" />
-                  <p className="text-white/60 mb-4">Sign in to take the quiz and unlock the next lesson</p>
-                  <Button onClick={() => navigate("/")} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white">
-                    Sign In
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : quizPassed || bestAttempt?.passed ? (
-              <Card className="border-green-400/30 bg-green-500/10">
-                <CardContent className="pt-6 text-center">
-                  <Trophy className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
-                  <h3 className="text-xl font-bold text-green-300 mb-1">Quiz Completed!</h3>
-                  <p className="text-white/60">
-                    Best score: {bestAttempt?.score ?? 100}% — Next lesson unlocked
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                  <p className="text-sm text-white/40">
+                    {appliedCompleted
+                      ? "Applied exercise complete — take the quiz when ready."
+                      : "Practice in the sandbox panel to unlock the quiz."}
                   </p>
                   <Button
-                    onClick={() => navigate("/courses")}
-                    className="mt-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+                    onClick={() => setActiveTab("quiz")}
+                    className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
                   >
-                    Back to Course Outline
+                    Go to Quiz
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
-                </CardContent>
-              </Card>
-            ) : quizQuestions.length === 0 ? (
-              <div className="text-center py-16 text-white/30">
-                <Star className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Quiz questions are being prepared.</p>
+                </div>
               </div>
-            ) : (
-              <Card className="border-white/10 bg-white/5">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Star className="w-5 h-5 text-yellow-400" />
-                    Lesson Quiz
-                    <Badge variant="outline" className="ml-auto text-white/60 border-white/20">
-                      {quizQuestions.length} questions
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <QuizSection
-                    lessonId={lesson.id}
-                    questions={quizQuestions as QuizQuestion[]}
-                    onPass={() => setQuizPassed(true)}
-                  />
-                </CardContent>
-              </Card>
             )}
+
+            {/* ── Quiz Tab ── */}
+            {activeTab === "quiz" && (
+              <div className="space-y-6">
+                {!isAuthenticated ? (
+                  <Card className="border-white/10 bg-white/5">
+                    <CardContent className="pt-6 text-center">
+                      <Lock className="w-10 h-10 text-white/30 mx-auto mb-3" />
+                      <p className="text-white/60 mb-4">Sign in to take the quiz and unlock the next lesson</p>
+                      <Button onClick={() => navigate("/")} className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white">
+                        Sign In
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : quizPassed || bestAttempt?.passed ? (
+                  <Card className="border-green-400/30 bg-green-500/10">
+                    <CardContent className="pt-6 text-center">
+                      <Trophy className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                      <h3 className="text-xl font-bold text-green-300 mb-1">Quiz Completed!</h3>
+                      <p className="text-white/60">
+                        Best score: {bestAttempt?.score ?? 100}% — Next lesson unlocked
+                      </p>
+                      <Button
+                        onClick={() => navigate("/courses")}
+                        className="mt-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+                      >
+                        Back to Course Outline
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : quizQuestions.length === 0 ? (
+                  <div className="text-center py-16 text-white/30">
+                    <Star className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Quiz questions are being prepared.</p>
+                  </div>
+                ) : (
+                  <Card className="border-white/10 bg-white/5">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Star className="w-5 h-5 text-yellow-400" />
+                        Lesson Quiz
+                        <Badge variant="outline" className="ml-auto text-white/60 border-white/20">
+                          {quizQuestions.length} questions
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <QuizSection
+                        lessonId={lesson.id}
+                        questions={quizQuestions as QuizQuestion[]}
+                        appliedCompleted={appliedCompleted}
+                        onPass={() => setQuizPassed(true)}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Sandbox Side Panel ── */}
+        {sandboxOpen && (
+          <div className="w-80 xl:w-96 shrink-0 border-l border-white/10 bg-black/20 flex flex-col overflow-hidden">
+            {/* Panel header */}
+            <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2 shrink-0">
+              <Brain className="w-4 h-4 text-fuchsia-400" />
+              <span className="text-sm font-semibold text-white">AI Sandbox</span>
+              <Badge
+                variant="outline"
+                className={`ml-auto text-xs ${
+                  appliedCompleted
+                    ? "border-green-400/40 text-green-400"
+                    : "border-amber-400/40 text-amber-400"
+                }`}
+              >
+                {appliedCompleted ? "Complete" : "Required"}
+              </Badge>
+            </div>
+
+            <SandboxPanel
+              lessonTitle={lesson.title}
+              exercises={exerciseBlocks as ContentBlock[]}
+              isAuthenticated={isAuthenticated}
+              onFirstSubmit={() => setAppliedCompleted(true)}
+            />
           </div>
         )}
       </div>
