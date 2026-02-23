@@ -634,7 +634,15 @@ Respond with ONLY valid JSON in this exact format:
       .input(z.object({ courseId: z.number() }))
       .query(async ({ ctx, input }) => {
         const user = await getUserById(ctx.user.id);
-        const isVerified = user?.status === "verified" || user?.role === "admin" || user?.role === "editor";
+        // Active Pro subscription grants the same access as admin-verified status
+        const hasActiveSubscription =
+          user?.subscriptionStatus === "active" ||
+          user?.subscriptionStatus === "trialing";
+        const isVerified =
+          hasActiveSubscription ||
+          user?.status === "verified" ||
+          user?.role === "admin" ||
+          user?.role === "editor";
         const courseModules = await getModulesByCourse(input.courseId, false);
         const passedIds = await getPassedLessonIds(ctx.user.id);
         const passedSet = new Set(passedIds);
@@ -650,11 +658,11 @@ Respond with ONLY valid JSON in this exact format:
           const lessonsWithAccess = modLessons.map((lesson, li) => {
             // Lesson 1 of Module 1 is always free
             const isFreePreview = mi === 0 && li === 0;
-            // All other lessons require verified status and previous quiz passed
+            // All other lessons require verified (or Pro subscriber) and previous quiz passed
             let locked = false;
             if (!isFreePreview) {
               if (!isVerified) {
-                locked = true; // needs admin approval
+                locked = true; // needs admin approval OR active subscription
               } else if (moduleLocked) {
                 locked = true; // previous module not completed
               } else if (li > 0) {
@@ -671,7 +679,7 @@ Respond with ONLY valid JSON in this exact format:
 
           result.push({ ...mod, locked: moduleLocked, lessons: lessonsWithAccess });
         }
-        return { modules: result, isVerified };
+        return { modules: result, isVerified, hasActiveSubscription };
       }),
   }),
 

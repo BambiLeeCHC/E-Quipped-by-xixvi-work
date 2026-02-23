@@ -197,3 +197,12 @@
 - [x] Profile.tsx — Pro subscription badge (Crown), Upgrade to Pro CTA, renewal date
 - [x] CourseCatalog.tsx — modules 2+ gated behind active Pro subscription; Crown icon; click redirects to /pricing
 - [x] 22 vitest tests passing, zero TypeScript errors
+
+## Phase 23: Subscription Grants Full Course Access
+- [x] Backend: gating.courseAccess — active Pro subscription (subscriptionStatus active/trialing) sets isVerified=true; returns hasActiveSubscription flag
+- [x] Backend: courseAccess now returns { modules, isVerified, hasActiveSubscription } — single source of truth
+- [x] Frontend: CourseCatalog — hasProSubscription derived from courseAccess.hasActiveSubscription (no separate query needed)
+- [x] Frontend: CourseCatalog — access banner redesigned: Upgrade to Pro CTA (instant access) + Request Admin Access (secondary)
+- [x] Frontend: CourseCatalog — pending admin request banner now includes inline "upgrade to Pro" link
+- [x] Frontend: CourseCatalog — unauthenticated banner updated to mention subscription
+- [x] 22 vitest tests passing, zero TypeScript errors

@@ -338,18 +338,18 @@ export default function CourseCatalog() {
   );
 
   const isVerified = (accessData as { isVerified?: boolean } | undefined)?.isVerified ?? false;
+  const hasActiveSubscription = (accessData as { hasActiveSubscription?: boolean } | undefined)?.hasActiveSubscription ?? false;
   const hasPendingRequest = myRequest?.status === "pending";
 
-  // Subscription status for Pro gating
-  const { data: subscription } = trpc.stripe.mySubscription.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-  const hasProSubscription = subscription?.isActive ?? false;
+  // hasProSubscription is now derived from the backend courseAccess response
+  // (which already merges subscription + admin-verified status into isVerified)
+  // We keep the separate subscription query only for the profile badge
+  const hasProSubscription = hasActiveSubscription;
 
   // Compute which modules are locked based on quiz completion
   const getModuleLocked = (moduleIndex: number): boolean => {
     if (!isAuthenticated) return moduleIndex > 0;
-    if (!isVerified) return moduleIndex > 0;
+    if (!isVerified) return moduleIndex > 0;  // isVerified now includes Pro subscribers
     if (moduleIndex === 0) return false;
     // Module N is locked if any lesson in module N-1 hasn't been passed
     const prevModule = modules[moduleIndex - 1];
@@ -445,17 +445,37 @@ export default function CourseCatalog() {
         </div>
 
         {/* Access banners */}
+        {/* Pro subscribers and admin-verified users: no banner needed — they have full access */}
         {isAuthenticated && !isVerified && !hasPendingRequest && !accessRequested && (
-          <div className="mb-8">
-            <AccessRequestCard onRequested={() => { setAccessRequested(true); void refetchAccess(); }} />
+          <div className="mb-8 rounded-2xl border border-amber-200/60 bg-amber-50/60 p-5">
+            <div className="flex items-start gap-4">
+              <Crown className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-amber-800 mb-1">Unlock Full Course Access</p>
+                <p className="text-sm text-amber-700/80 mb-3">Module 1, Lesson 1 is free. Subscribe to Pro to unlock all 7 modules and 36 lessons — or request admin approval if you have a voucher.</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" className="gradient-primary text-white border-0 glow-primary" onClick={() => setLocation("/pricing")}>
+                    <Crown className="w-3.5 h-3.5 mr-1.5" />Upgrade to Pro
+                  </Button>
+                  <Button size="sm" variant="outline" className="border-amber-300/60 text-amber-700 hover:bg-amber-100/60" onClick={() => setAccessRequested(true)}>
+                    Request Admin Access
+                  </Button>
+                </div>
+              </div>
+            </div>
+            {accessRequested && (
+              <div className="mt-3 pt-3 border-t border-amber-200/60">
+                <AccessRequestCard onRequested={() => { void refetchAccess(); }} />
+              </div>
+            )}
           </div>
         )}
-        {isAuthenticated && (hasPendingRequest || accessRequested) && !isVerified && (
+        {isAuthenticated && (hasPendingRequest) && !isVerified && (
           <div className="mb-8 rounded-2xl border border-yellow-300/60 bg-yellow-50 p-4 flex items-center gap-3">
             <Star className="w-5 h-5 text-yellow-500 shrink-0" />
-            <div>
-              <p className="font-medium text-yellow-700">Access Request Pending</p>
-              <p className="text-sm text-yellow-600/80">An admin will review your request and grant access shortly.</p>
+            <div className="flex-1">
+              <p className="font-medium text-yellow-700">Admin Access Request Pending</p>
+              <p className="text-sm text-yellow-600/80">An admin will review your request shortly. Or <button onClick={() => setLocation("/pricing")} className="underline font-medium">upgrade to Pro</button> for instant access.</p>
             </div>
           </div>
         )}
@@ -464,7 +484,7 @@ export default function CourseCatalog() {
             <Lock className="w-5 h-5 text-fuchsia-500 shrink-0" />
             <div className="flex-1">
               <p className="font-medium text-fuchsia-700">Sign in to track your progress</p>
-              <p className="text-sm text-foreground/55">Lesson 1 is free — sign in to request full access.</p>
+              <p className="text-sm text-foreground/55">Lesson 1 is free — sign in and subscribe to unlock the full course.</p>
             </div>
             <Button size="sm" className="gradient-primary text-white border-0 glow-primary shrink-0" onClick={() => setLocation("/")}>Sign In</Button>
           </div>
