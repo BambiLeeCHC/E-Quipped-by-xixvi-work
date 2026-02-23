@@ -142,7 +142,7 @@ export default function Home() {
             <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center text-white font-black text-sm glow-primary">
               E
             </div>
-            <span className="text-gradient font-extrabold">E-Quipped</span>
+            <span className="text-gradient font-extrabold">E-Quipped: Work</span>
           </button>
           <div className="flex items-center gap-2">
             {!loading && (
@@ -229,7 +229,7 @@ export default function Home() {
           </h1>
 
           <p className="text-xl text-foreground/60 max-w-2xl mx-auto mb-4 leading-relaxed">
-            E-Quipped teaches you to use AI across every dimension of modern business — from prompt engineering foundations to presentations, transcription, research, writing, and automated workflows.
+            E-Quipped: Work teaches you to use AI across every dimension of modern business — from prompt engineering foundations to presentations, transcription, research, writing, and automated workflows.
           </p>
 
           {/* Skill pill strip */}
@@ -415,7 +415,7 @@ export default function Home() {
                 Ready to become an AI-powered professional?
               </h2>
               <p className="text-foreground/60 mb-3 text-lg">
-                Join E-Quipped and master AI across every skill that matters in modern business — from prompt engineering to presentations, transcription, research, and beyond.
+                Join E-Quipped: Work and master AI across every skill that matters in modern business — from prompt engineering to presentations, transcription, research, and beyond.
               </p>
               <p className="text-foreground/45 mb-8 text-sm">
                 Structured curriculum · Live AI sandbox · Gamified progress · Verified access
@@ -442,9 +442,9 @@ export default function Home() {
             <div className="h-6 w-6 rounded gradient-primary flex items-center justify-center text-white font-black text-xs">
               E
             </div>
-            E-Quipped
+            E-Quipped: Work
           </div>
-          <p>© {new Date().getFullYear()} E-Quipped. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} E-Quipped: Work. All rights reserved.</p>
         </div>
       </footer>
     </div>

@@ -79,3 +79,6 @@
 ## Phase 13: Hero Cleanup
 - [x] Remove stats pills (Modules, Lessons, Skills, AI Models) from hero
 - [x] Replace unauthenticated CTAs (Start Learning Free / Browse Courses) with a single Sign In / Login button
+
+## Phase 14: Rebrand to E-Quipped: Work
+- [x] Update all user-facing "E-Quipped" references to "E-Quipped: Work"
