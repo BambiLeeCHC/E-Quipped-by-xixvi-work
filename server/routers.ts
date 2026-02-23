@@ -13,6 +13,7 @@ import {
   createModule,
   deleteCourse,
   deleteContentBlock,
+  deleteContentBlocksByLesson,
   deleteLesson,
   deleteModule,
   deletePrompt,
@@ -228,11 +229,34 @@ export const appRouter = router({
       .input(z.object({ lessonId: z.number() }))
       .query(({ input }) => getContentBlocksByLesson(input.lessonId)),
 
+    saveBlocks: protectedProcedure
+      .input(z.object({
+        lessonId: z.number(),
+        blocks: z.array(z.object({
+          type: z.enum(["text", "image", "video", "audio", "code", "quiz", "prompt_exercise", "callout", "divider"]),
+          order: z.number(),
+          content: z.any(),
+        })),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        requireEditor(ctx.user.role);
+        // Delete all existing blocks for this lesson then re-insert
+        await deleteContentBlocksByLesson(input.lessonId);
+        for (const block of input.blocks) {
+          await upsertContentBlock({
+            lessonId: input.lessonId,
+            type: block.type as any,
+            order: block.order,
+            content: block.content,
+          });
+        }
+        return { success: true };
+      }),
     upsert: protectedProcedure
       .input(z.object({
         id: z.number().optional(),
         lessonId: z.number(),
-        type: z.enum(["text", "image", "video", "code", "quiz", "prompt_exercise", "callout"]),
+        type: z.enum(["text", "image", "video", "audio", "code", "quiz", "prompt_exercise", "callout", "divider"]),
         order: z.number().optional(),
         content: z.any(),
       }))

@@ -26,6 +26,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit2,
+  FileEdit,
   GraduationCap,
   Layers,
   Plus,
@@ -317,6 +318,14 @@ export default function EditorDashboard() {
                       <p className="text-sm text-muted-foreground">{lesson.estimatedMinutes}m · {lesson.xpReward} XP</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        className="gradient-primary text-white border-0 text-xs"
+                        onClick={() => setLocation(`/editor/lessons/${lesson.id}`)}
+                      >
+                        <FileEdit className="h-3.5 w-3.5 mr-1" />
+                        Edit Content
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"

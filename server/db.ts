@@ -274,6 +274,11 @@ export async function deleteContentBlock(id: number) {
   if (!db) return;
   await db.delete(contentBlocks).where(eq(contentBlocks.id, id));
 }
+export async function deleteContentBlocksByLesson(lessonId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(contentBlocks).where(eq(contentBlocks.lessonId, lessonId));
+}
 
 // ─── Progress ─────────────────────────────────────────────────────────────────
 export async function getUserProgressForLesson(userId: number, lessonId: number) {

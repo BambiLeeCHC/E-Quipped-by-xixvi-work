@@ -58,3 +58,11 @@
 - [x] Vitest unit tests — 14 tests, 2 files, all passing
 - [x] TypeScript — zero errors
 - [ ] Save checkpoint and publish
+
+## Phase 11: Design Refresh & Editor Upgrade
+- [x] Brighter lucite/spectrum color scheme with fuchsia accents and flesh tone hints
+- [x] Layered translucent (lucite) UI elements with color spectrum shimmer
+- [x] Remove course editor CTA from Home landing page
+- [x] Full lesson content block editor (text/HTML, code, callout, image URL, video URL, audio, prompt exercise, quiz, divider)
+- [x] Live HTML preview pane that renders content in real time from the editor
+- [x] Wire LessonEditor into EditorDashboard lessons view

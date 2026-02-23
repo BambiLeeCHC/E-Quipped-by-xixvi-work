@@ -42,45 +42,80 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   E-Quipped Lucite Spectrum Theme
+   Bright near-white base with fuchsia primary, spectrum shimmer accents,
+   and warm flesh-tone undertones layered through translucent surfaces.
+───────────────────────────────────────────────────────────────────────────── */
 :root {
-  --radius: 0.625rem;
-  /* E-Quipped dark theme — deep navy with violet primary */
-  --background: oklch(0.10 0.02 260);
-  --foreground: oklch(0.95 0.01 260);
-  --card: oklch(0.14 0.02 260);
-  --card-foreground: oklch(0.95 0.01 260);
-  --popover: oklch(0.14 0.02 260);
-  --popover-foreground: oklch(0.95 0.01 260);
-  --primary: oklch(0.65 0.22 290);
-  --primary-foreground: oklch(0.98 0.01 290);
-  --secondary: oklch(0.20 0.03 260);
-  --secondary-foreground: oklch(0.90 0.01 260);
-  --muted: oklch(0.18 0.02 260);
-  --muted-foreground: oklch(0.60 0.02 260);
-  --accent: oklch(0.60 0.20 200);
-  --accent-foreground: oklch(0.98 0.01 200);
-  --destructive: oklch(0.60 0.22 25);
-  --destructive-foreground: oklch(0.98 0.01 25);
-  --border: oklch(0.22 0.02 260);
-  --input: oklch(0.18 0.02 260);
-  --ring: oklch(0.65 0.22 290);
-  --chart-1: oklch(0.65 0.22 290);
-  --chart-2: oklch(0.60 0.20 200);
-  --chart-3: oklch(0.70 0.18 150);
-  --chart-4: oklch(0.75 0.18 60);
-  --chart-5: oklch(0.60 0.22 25);
-  --sidebar: oklch(0.12 0.02 260);
-  --sidebar-foreground: oklch(0.90 0.01 260);
-  --sidebar-primary: oklch(0.65 0.22 290);
-  --sidebar-primary-foreground: oklch(0.98 0.01 290);
-  --sidebar-accent: oklch(0.18 0.02 260);
-  --sidebar-accent-foreground: oklch(0.90 0.01 260);
-  --sidebar-border: oklch(0.20 0.02 260);
-  --sidebar-ring: oklch(0.65 0.22 290);
+  --radius: 0.75rem;
+
+  /* Base — bright warm white with a blush undertone */
+  --background: oklch(0.97 0.008 340);
+  --foreground: oklch(0.18 0.02 290);
+
+  /* Cards — lucite: near-white with a very faint warm pink tint */
+  --card: oklch(0.99 0.006 350);
+  --card-foreground: oklch(0.18 0.02 290);
+
+  /* Popovers */
+  --popover: oklch(1.00 0.004 350);
+  --popover-foreground: oklch(0.18 0.02 290);
+
+  /* Primary — vivid fuchsia */
+  --primary: oklch(0.60 0.28 330);
+  --primary-foreground: oklch(0.99 0.005 330);
+
+  /* Secondary — soft blush/flesh */
+  --secondary: oklch(0.93 0.025 20);
+  --secondary-foreground: oklch(0.30 0.04 20);
+
+  /* Muted — warm pearl */
+  --muted: oklch(0.94 0.012 340);
+  --muted-foreground: oklch(0.52 0.03 290);
+
+  /* Accent — spectrum cyan-violet */
+  --accent: oklch(0.88 0.06 270);
+  --accent-foreground: oklch(0.22 0.06 270);
+
+  /* Destructive */
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0.99 0.005 25);
+
+  /* Borders — faint warm pink */
+  --border: oklch(0.88 0.018 340);
+  --input: oklch(0.92 0.012 340);
+  --ring: oklch(0.60 0.28 330);
+
+  /* Charts — spectrum palette */
+  --chart-1: oklch(0.60 0.28 330);   /* fuchsia */
+  --chart-2: oklch(0.62 0.22 270);   /* violet */
+  --chart-3: oklch(0.65 0.20 200);   /* cyan */
+  --chart-4: oklch(0.70 0.18 150);   /* mint */
+  --chart-5: oklch(0.72 0.18 60);    /* gold */
+
+  /* Sidebar */
+  --sidebar: oklch(0.98 0.008 340);
+  --sidebar-foreground: oklch(0.22 0.02 290);
+  --sidebar-primary: oklch(0.60 0.28 330);
+  --sidebar-primary-foreground: oklch(0.99 0.005 330);
+  --sidebar-accent: oklch(0.93 0.025 340);
+  --sidebar-accent-foreground: oklch(0.22 0.02 290);
+  --sidebar-border: oklch(0.88 0.018 340);
+  --sidebar-ring: oklch(0.60 0.28 330);
+
+  /* ── Custom spectrum tokens ── */
+  --flesh-light: oklch(0.92 0.04 30);
+  --flesh-mid:   oklch(0.83 0.07 25);
+  --flesh-warm:  oklch(0.78 0.09 30);
+  --spectrum-a:  oklch(0.72 0.22 330);  /* fuchsia */
+  --spectrum-b:  oklch(0.68 0.22 290);  /* violet */
+  --spectrum-c:  oklch(0.65 0.20 230);  /* indigo */
+  --spectrum-d:  oklch(0.68 0.18 190);  /* cyan */
+  --spectrum-e:  oklch(0.72 0.16 150);  /* mint */
 }
 
-/* Dark theme is the default — :root already uses dark values */
-
+/* ── Base layer ─────────────────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -102,45 +137,161 @@
   }
 }
 
+/* ── Component utilities ─────────────────────────────────────────────────────── */
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
-
   .flex {
     min-height: 0;
     min-width: 0;
   }
-
   @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
-      padding-right: 1.5rem;
-    }
+    .container { padding-left: 1.5rem; padding-right: 1.5rem; }
+  }
+  @media (min-width: 1024px) {
+    .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; }
   }
 
-  @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem; /* 32px - desktop padding */
-      padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
-    }
+  /* ── Gradient utilities ── */
+  .gradient-primary {
+    background: linear-gradient(135deg, oklch(0.60 0.28 330) 0%, oklch(0.62 0.26 300) 50%, oklch(0.65 0.22 270) 100%);
+  }
+
+  .gradient-spectrum {
+    background: linear-gradient(
+      135deg,
+      oklch(0.72 0.22 330) 0%,
+      oklch(0.68 0.22 290) 25%,
+      oklch(0.65 0.20 230) 50%,
+      oklch(0.68 0.18 190) 75%,
+      oklch(0.72 0.16 150) 100%
+    );
+  }
+
+  .gradient-flesh {
+    background: linear-gradient(135deg, oklch(0.95 0.03 30) 0%, oklch(0.88 0.06 20) 50%, oklch(0.92 0.04 340) 100%);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, oklch(0.60 0.28 330), oklch(0.62 0.22 290));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-spectrum {
+    background: linear-gradient(
+      90deg,
+      oklch(0.60 0.28 330),
+      oklch(0.62 0.22 290),
+      oklch(0.65 0.20 230),
+      oklch(0.68 0.18 190)
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Lucite / glassmorphism layers ── */
+  .lucite {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(18px) saturate(1.6);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255, 255, 255, 0.70);
+    box-shadow:
+      0 2px 24px rgba(180, 60, 160, 0.07),
+      0 1px 4px rgba(180, 60, 160, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.80);
+  }
+
+  .lucite-spectrum {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 220, 230, 0.45) 0%,
+      rgba(220, 200, 255, 0.40) 33%,
+      rgba(200, 235, 255, 0.40) 66%,
+      rgba(210, 255, 235, 0.38) 100%
+    );
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow:
+      0 4px 32px rgba(180, 60, 160, 0.10),
+      0 1px 6px rgba(100, 60, 200, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  .lucite-flesh {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 225, 210, 0.55) 0%,
+      rgba(255, 210, 220, 0.50) 50%,
+      rgba(255, 230, 215, 0.52) 100%
+    );
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    border: 1px solid rgba(255, 200, 190, 0.60);
+    box-shadow:
+      0 2px 20px rgba(220, 100, 80, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  /* ── Glow effects ── */
+  .glow-primary {
+    box-shadow: 0 0 20px oklch(0.60 0.28 330 / 0.35), 0 0 40px oklch(0.60 0.28 330 / 0.15);
+  }
+
+  .glow-spectrum {
+    box-shadow:
+      0 0 20px oklch(0.60 0.28 330 / 0.25),
+      0 0 40px oklch(0.62 0.22 290 / 0.15),
+      0 0 60px oklch(0.65 0.20 230 / 0.08);
+  }
+
+  /* ── Spectrum shimmer animation ── */
+  .shimmer-spectrum {
+    background-size: 200% 200%;
+    background-image: linear-gradient(
+      115deg,
+      oklch(0.72 0.22 330) 0%,
+      oklch(0.68 0.22 290) 20%,
+      oklch(0.65 0.20 230) 40%,
+      oklch(0.68 0.18 190) 60%,
+      oklch(0.72 0.16 150) 80%,
+      oklch(0.72 0.22 330) 100%
+    );
+    animation: shimmer 4s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* ── Spectrum border ── */
+  .border-spectrum {
+    border-image: linear-gradient(
+      90deg,
+      oklch(0.60 0.28 330),
+      oklch(0.62 0.22 290),
+      oklch(0.65 0.20 230),
+      oklch(0.68 0.18 190),
+      oklch(0.60 0.28 330)
+    ) 1;
+  }
+
+  /* ── Card hover lift ── */
+  .card-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px oklch(0.60 0.28 330 / 0.12);
   }
 }
