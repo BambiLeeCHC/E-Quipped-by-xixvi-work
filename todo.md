@@ -264,3 +264,12 @@
 - [x] Chevron icon rotates 180° when answer is open; question text turns fuchsia when active
 - [x] Expanded FAQ from 4 to 6 questions (added Sandbox details and future modules)
 - [x] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 30: Homepage SEO Fixes
+- [x] meta description added (148 chars) — covers AI for business, prompt engineering, lifetime access
+- [x] meta keywords added (10 terms: AI for business, prompt engineering, ChatGPT for work, AI productivity, etc.)
+- [x] meta robots: index, follow
+- [x] meta author: E-Quipped: Work
+- [x] Open Graph tags: og:type, og:title, og:description, og:url, og:site_name, og:locale
+- [x] Twitter Card tags: summary_large_image, twitter:title, twitter:description
+- [x] 25 vitest tests passing, zero TypeScript errors
