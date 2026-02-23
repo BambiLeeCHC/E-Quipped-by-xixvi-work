@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getLoginUrl } from "@/const";
+
 import { trpc } from "@/lib/trpc";
 import {
   Brain,
@@ -22,6 +22,7 @@ import {
   Search,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLoginPopup } from "@/hooks/useLoginPopup";
 import { useLocation } from "wouter";
 
 // ─── Rotating skill showcase ─────────────────────────────────────────────────
@@ -112,6 +113,10 @@ export default function Home() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
   const { data: courses } = trpc.courses.list.useQuery();
+  const { openPopup, isOpen: loginPending } = useLoginPopup(() => {
+    // After successful login, navigate to courses
+    setLocation("/courses");
+  });
 
   // Rotating skill index
   const [skillIdx, setSkillIdx] = useState(0);
@@ -181,9 +186,10 @@ export default function Home() {
                     <Button
                       size="sm"
                       className="gradient-primary text-white border-0 glow-primary"
-                      onClick={() => (window.location.href = getLoginUrl())}
+                      onClick={openPopup}
+                      disabled={loginPending}
                     >
-                      Sign In
+                      {loginPending ? "Signing in…" : "Sign In"}
                     </Button>
                   </>
                 )}
@@ -270,9 +276,10 @@ export default function Home() {
               <Button
                 size="lg"
                 className="gradient-primary text-white border-0 glow-spectrum px-8 h-12 text-base font-semibold"
-                onClick={() => (window.location.href = getLoginUrl())}
+                onClick={openPopup}
+                disabled={loginPending}
               >
-                Sign In to Get Started
+                {loginPending ? "Opening sign-in…" : "Sign In to Get Started"}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
             )}
@@ -424,7 +431,7 @@ export default function Home() {
                 size="lg"
                 className="gradient-primary text-white border-0 glow-spectrum px-10 h-12 text-base font-semibold"
                 onClick={() =>
-                  user ? setLocation("/courses") : (window.location.href = getLoginUrl())
+                  user ? setLocation("/courses") : openPopup()
                 }
               >
                 {user ? "Go to Courses" : "Get Started Free"}

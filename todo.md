@@ -82,3 +82,8 @@
 
 ## Phase 14: Rebrand to E-Quipped: Work
 - [x] Update all user-facing "E-Quipped" references to "E-Quipped: Work"
+
+## Phase 15: Inline Login on Landing Page
+- [x] Embed inline login panel on the landing page (no external redirect)
+- [x] Remove all window.location.href = getLoginUrl() calls from the landing page
+- [x] Show login panel as a smooth in-page section when unauthenticated
