@@ -95,3 +95,8 @@
 - [x] Admin Dashboard: Users tab with searchable profile cards
 - [x] Admin Dashboard: Role badge with promote/demote dropdown
 - [x] Admin Dashboard: Profile detail drawer/modal
+
+## Phase 17: Course Content Recovery & Catalogue Rebuild
+- [x] Recover original modules/lessons from GitHub repo source files
+- [x] Seed 1 course, 7 modules, 36 lessons into the database
+- [x] Rebuild CourseCatalog as structured module/lesson outline with bookmark nav

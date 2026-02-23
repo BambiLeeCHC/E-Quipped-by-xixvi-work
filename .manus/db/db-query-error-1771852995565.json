@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, title, slug FROM courses ORDER BY id;\nSELECT id, title, slug, courseId, orderIndex FROM modules ORDER BY courseId, orderIndex;\nSELECT id, title, slug, moduleId, orderIndex FROM lessons ORDER BY moduleId, orderIndex;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UjifvLo5he9aPKL.cb1410cdee09 --database 5Gq9FmtRyMtz6crwcs7oBJ --execute SELECT id, title, slug FROM courses ORDER BY id;\nSELECT id, title, slug, courseId, orderIndex FROM modules ORDER BY courseId, orderIndex;\nSELECT id, title, slug, moduleId, orderIndex FROM lessons ORDER BY moduleId, orderIndex;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'orderindex' in 'field list'"
+  ]
+}

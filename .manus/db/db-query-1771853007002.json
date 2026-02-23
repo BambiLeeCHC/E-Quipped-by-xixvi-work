@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, title, slug, isPublished FROM courses ORDER BY id;\nSELECT id, title, slug, courseId, `order` FROM modules ORDER BY courseId, `order`;\nSELECT id, title, slug, moduleId, `order` FROM lessons ORDER BY moduleId, `order`;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user UjifvLo5he9aPKL.cb1410cdee09 --database 5Gq9FmtRyMtz6crwcs7oBJ --execute SELECT id, title, slug, isPublished FROM courses ORDER BY id;\nSELECT id, title, slug, courseId, `order` FROM modules ORDER BY courseId, `order`;\nSELECT id, title, slug, moduleId, `order` FROM lessons ORDER BY moduleId, `order`;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 64
+}
