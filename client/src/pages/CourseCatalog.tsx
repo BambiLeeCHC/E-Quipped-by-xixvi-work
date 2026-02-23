@@ -1,6 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import MenuPanel from "@/components/MenuPanel";
 import { trpc } from "@/lib/trpc";
 import {
   BookOpen,
@@ -254,6 +255,7 @@ export default function CourseCatalog() {
   const [, setLocation] = useLocation();
   const [activeModule, setActiveModule] = useState<number | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set([0]));
+  const [menuOpen, setMenuOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const isAuthenticated = !loading && !!user;
@@ -339,25 +341,34 @@ export default function CourseCatalog() {
 
   return (
     <div className="min-h-screen bg-background">
+      <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} />
       {/* Top nav */}
       <div className="sticky top-0 z-40 lucite border-b border-border/60">
         <div className="container flex items-center justify-between h-14">
           <button onClick={() => setLocation("/")} className="font-bold text-fuchsia-600 hover:text-fuchsia-700 transition-colors text-sm">
             E-Quipped: Work
           </button>
-          {!isAuthenticated && (
-            <Button size="sm" className="gradient-primary text-white border-0 glow-primary text-xs" onClick={() => setLocation("/")}>
-              Sign In to Start
-            </Button>
-          )}
-          {isAuthenticated && (
-            <div className="flex items-center gap-3">
-              <button onClick={() => setLocation("/sandbox")} className="text-xs text-foreground/50 hover:text-foreground transition-colors">Sandbox</button>
+          <div className="flex items-center gap-2">
+            {!isAuthenticated && (
+              <Button size="sm" className="gradient-primary text-white border-0 glow-primary text-xs" onClick={() => setLocation("/")}>
+                Sign In to Start
+              </Button>
+            )}
+            {isAuthenticated && (
               <button onClick={() => setLocation("/profile")} className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-white font-bold text-xs glow-primary">
                 {(user.name ?? user.email ?? "U")[0]?.toUpperCase()}
               </button>
-            </div>
-          )}
+            )}
+            <button
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              className="h-8 w-8 flex flex-col items-center justify-center gap-1.5 rounded-lg hover:bg-fuchsia-50 transition-colors"
+            >
+              <span className="block w-4.5 h-0.5 bg-fuchsia-600" style={{width:"1.1rem",height:"2px",borderRadius:"1px",background:"oklch(0.58 0.26 330)"}} />
+              <span className="block w-3 h-0.5 bg-fuchsia-600" style={{width:"0.75rem",height:"2px",borderRadius:"1px",background:"oklch(0.58 0.26 330)"}} />
+              <span className="block w-4.5 h-0.5 bg-fuchsia-600" style={{width:"1.1rem",height:"2px",borderRadius:"1px",background:"oklch(0.58 0.26 330)"}} />
+            </button>
+          </div>
         </div>
       </div>
 

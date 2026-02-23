@@ -19,6 +19,7 @@ import {
   Loader2,
   Lock,
   MessageSquare,
+  Menu,
   PanelRightClose,
   PanelRightOpen,
   Quote,
@@ -31,6 +32,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
+import MenuPanel from "@/components/MenuPanel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ContentBlock = {
@@ -831,6 +833,7 @@ export default function LessonViewer() {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<"learn" | "quiz">("learn");
   const [sandboxOpen, setSandboxOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [quizPassed, setQuizPassed] = useState(false);
   const [appliedCompleted, setAppliedCompleted] = useState(false);
 
@@ -920,6 +923,7 @@ export default function LessonViewer() {
 
   return (
     <div className="min-h-screen lesson-canvas flex flex-col">
+      <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} />
       {/* ── Sticky Header ── */}
       <div
         className="sticky top-0 z-40 shrink-0 backdrop-blur-xl"
@@ -961,6 +965,15 @@ export default function LessonViewer() {
             >
               {sandboxOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
               <span className="hidden sm:inline">Sandbox</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              style={{ color: "oklch(0.60 0.02 265)", width: "2rem", height: "2rem" }}
+            >
+              <Menu className="w-4 h-4" />
             </Button>
           </div>
         </div>

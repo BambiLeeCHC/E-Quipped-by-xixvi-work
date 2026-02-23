@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import MenuPanel from "@/components/MenuPanel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -49,6 +50,7 @@ export default function Pricing() {
   const [, navigate] = useLocation();
   const [checkingOut, setCheckingOut] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { data: subscription, refetch: refetchSub } = trpc.stripe.mySubscription.useQuery(undefined, {
     enabled: !!user,
@@ -99,6 +101,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} />
       {/* Nav */}
       <div className="sticky top-0 z-40 lucite border-b border-border/60">
         <div className="container flex items-center justify-between h-14">
@@ -108,17 +111,25 @@ export default function Pricing() {
           >
             E-Quipped: Work
           </button>
-          {user && (
-            <div className="flex items-center gap-3">
-              <button onClick={() => navigate("/courses")} className="text-xs text-foreground/50 hover:text-foreground transition-colors">Courses</button>
+          <div className="flex items-center gap-2">
+            {user && (
               <button
                 onClick={() => navigate("/profile")}
                 className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-white font-bold text-xs glow-primary"
               >
                 {(user.name ?? user.email ?? "U")[0]?.toUpperCase()}
               </button>
-            </div>
-          )}
+            )}
+            <button
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              className="h-8 w-8 flex flex-col items-center justify-center gap-1.5 rounded-lg hover:bg-fuchsia-50 transition-colors"
+            >
+              <span style={{display:"block",width:"1.1rem",height:"2px",borderRadius:"1px",background:"oklch(0.58 0.26 330)"}} />
+              <span style={{display:"block",width:"0.75rem",height:"2px",borderRadius:"1px",background:"oklch(0.58 0.26 330)"}} />
+              <span style={{display:"block",width:"1.1rem",height:"2px",borderRadius:"1px",background:"oklch(0.58 0.26 330)"}} />
+            </button>
+          </div>
         </div>
       </div>
 

@@ -13,20 +13,24 @@ import {
   CreditCard,
   Flame,
   LogOut,
+  Menu,
   Shield,
   Star,
   Trophy,
   Zap,
 } from "lucide-react";
+import MenuPanel from "@/components/MenuPanel";
 import { useLocation } from "wouter";
+import { useState } from "react";
 
 function xpForLevel(level: number) {
   return level * level * 100;
 }
 
 export default function Profile() {
-  const { user, loading, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const [, setLocation] = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
   const { data: stats } = trpc.progress.myStats.useQuery(undefined, { enabled: !!user });
   const { data: prompts } = trpc.prompts.list.useQuery(undefined, { enabled: !!user });
   const { data: subscription } = trpc.stripe.mySubscription.useQuery(undefined, { enabled: !!user });
@@ -70,6 +74,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background">
+      <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} />
       {/* Header */}
       <div className="border-b border-border/50 bg-card/30 backdrop-blur-xl sticky top-0 z-40">
         <div className="container flex items-center gap-4 h-16">
@@ -78,9 +83,12 @@ export default function Profile() {
           </Button>
           <div className="h-4 w-px bg-border" />
           <h1 className="font-semibold">My Profile</h1>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={logout}>
               <LogOut className="h-4 w-4 mr-1" /> Sign Out
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+              <Menu className="h-5 w-5" />
             </Button>
           </div>
         </div>

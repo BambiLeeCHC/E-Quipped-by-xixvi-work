@@ -284,3 +284,28 @@
 - [x] Removed unused Textarea, Send, Star, CheckCircle2 imports
 - [x] Access banner now shows only the single "Get Lifetime Access — $675" CTA
 - [x] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 32: Mobile Menu Fix & Sandbox Side-Drawer
+- [ ] Audit MenuPanel — identify why mobile display is broken (likely full-screen overlay not rendering correctly)
+- [ ] Rebuild MenuPanel as right-side slide-in drawer (works on all screen sizes)
+- [ ] Add MenuPanel to CourseCatalog, Pricing, Profile, and LessonViewer page headers
+- [ ] AI Sandbox: convert to floating side-drawer that overlays the page
+- [ ] Sandbox drawer: main page content reflows/shrinks when drawer is open
+- [ ] Sandbox drawer: prominent labeled toggle button (e.g., "AI Sandbox ⚡" with open/close icon)
+- [ ] Sandbox drawer: closeable with X button and keyboard Escape
+- [ ] Sandbox drawer: expandable (narrow/wide toggle)
+- [ ] 25 vitest tests passing, zero TypeScript errors
+
+## Phase 32: Mobile Menu Fix & AI Sandbox Drawer Redesign
+- [x] Audited MenuPanel — old translateY top-slide caused full-screen takeover on mobile
+- [x] Rebuilt MenuPanel as right-side slide-in drawer (translateX from right, 340px wide, works on all screen sizes)
+- [x] Added hamburger button + MenuPanel to CourseCatalog, Pricing, Profile, and LessonViewer headers
+- [x] AI Sandbox: floating settings side-drawer (position:fixed right, slides in from right, 340px / 88vw)
+- [x] AI Sandbox: chat content reflows (margin-right transitions to match drawer width on desktop)
+- [x] AI Sandbox: prominent labelled toggle button (Settings / Close Settings) with fuchsia active state in header
+- [x] AI Sandbox: drawer has X close button in header and "Collapse Settings" button in footer
+- [x] AI Sandbox: mobile backdrop overlay (blur + dark) when drawer is open; closes on tap
+- [x] AI Sandbox: mobile action bar for Save/Clear when messages exist
+- [x] AI Sandbox: auto-scroll to latest message via useRef
+- [x] AI Sandbox: empty state includes "Open Settings" CTA button
+- [x] 25 vitest tests passing, zero TypeScript errors
