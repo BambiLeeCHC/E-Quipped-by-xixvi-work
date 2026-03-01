@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import "@/App.css";
 import CourseEditorEnhanced from "./CourseEditor";
+import FloatingSandbox from "./components/FloatingSandbox";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
