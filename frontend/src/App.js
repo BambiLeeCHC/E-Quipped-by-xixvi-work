@@ -894,63 +894,6 @@ const LessonView = () => {
 };
 
 // ==================== OTHER VIEWS ====================
-  <>
-    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-[#161b22]">
-      <div className="flex items-center gap-3">
-        <FlaskConical className="w-5 h-5 text-blue-400" />
-        <span className="text-slate-300 text-sm font-medium">Sandbox</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <button onClick={() => setGuidedMode(!guidedMode)} className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${guidedMode ? 'bg-fuchsia-500/20 text-fuchsia-400' : 'bg-slate-700 text-slate-400'}`}>
-          {guidedMode ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-          {guidedMode ? 'Guided' : 'Open'}
-        </button>
-        <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className="bg-slate-800 text-slate-300 text-xs rounded px-2 py-1 border border-slate-700">
-          <option value="gpt-5.2">GPT-5.2</option>
-          <option value="claude-sonnet-4-5">Claude 4.5</option>
-          <option value="gemini-3-flash">Gemini 3</option>
-        </select>
-      </div>
-    </div>
-    <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
-      <AnimatePresence>
-        {messages.map((msg, idx) => (
-          <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={msg.role === "user" ? "flex justify-end" : ""}>
-            {msg.role === "user" ? (
-              <div className="max-w-[85%] rounded-2xl bg-fuchsia-600 px-4 py-3 text-white shadow-lg"><p className="text-sm whitespace-pre-wrap">{msg.content}</p></div>
-            ) : (
-              <div className="rounded-2xl bg-[#161b22] border-l-4 border-green-500 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white flex-shrink-0"><Bot className="w-4 h-4" /></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-300 mb-1">AI</p>
-                    <div className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</div>
-                    {msg.quality_score !== undefined && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="text-xs text-slate-500">Quality:</span>
-                        <div className="flex-1 h-2 bg-slate-700 rounded-full max-w-24"><div className={`h-full rounded-full ${msg.quality_score >= 80 ? 'bg-green-500' : msg.quality_score >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${msg.quality_score}%` }} /></div>
-                        <span className={`text-xs font-bold ${msg.quality_score >= 80 ? 'text-green-400' : msg.quality_score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>{msg.quality_score}</span>
-                      </div>
-                    )}
-                    {msg.tips && <div className="mt-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20"><p className="text-xs text-blue-400"><Sparkles className="w-3 h-3 inline mr-1" />{msg.tips}</p></div>}
-                  </div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        ))}
-      </AnimatePresence>
-      {sending && <div className="rounded-2xl bg-[#161b22] border-l-4 border-green-500 p-4"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white"><Bot className="w-4 h-4" /></div><TypingIndicator /></div></div>}
-    </div>
-    <div className="p-4 bg-[#161b22] border-t border-slate-700">
-      <div className="relative">
-        <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }} placeholder={guidedMode ? "Use Role, Task, Context, Constraints..." : "Ask anything..."} className="w-full rounded-xl bg-[#21262d] border border-slate-700 px-4 py-3 pr-12 text-white placeholder-slate-500 text-sm resize-none focus:outline-none focus:border-fuchsia-500" rows={3} />
-        <button onClick={sendMessage} disabled={sending || !inputValue.trim()} className="absolute bottom-3 right-3 w-8 h-8 rounded-lg bg-fuchsia-500 text-white flex items-center justify-center hover:bg-fuchsia-400 disabled:opacity-50">{sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}</button>
-      </div>
-      {guidedMode && <p className="text-xs text-slate-500 mt-2">Guided Mode: Prompts will be scored for quality</p>}
-    </div>
-  </>
-);
 
 // ==================== STANDALONE SANDBOX ====================
 
