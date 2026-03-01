@@ -700,15 +700,8 @@ const LessonView = () => {
   const { user, updateUser, refreshUser } = useAuth();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState("");
-  const [sending, setSending] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("gpt-5.2");
-  const [sessionId, setSessionId] = useState(null);
-  const [sandboxOpen, setSandboxOpen] = useState(false);
+  const [sandboxOpen, setSandboxOpen] = useState(true); // Start open
   const [completing, setCompleting] = useState(false);
-  const [guidedMode, setGuidedMode] = useState(false);
-  const chatContainerRef = useRef(null);
 
   const handleScreenshotAttempt = useCallback(async (type) => {
     try { await axios.post(`${API}/security/screenshot-attempt`, { type, page: 'lesson', lesson_id: lessonId }); } catch (e) {}
@@ -728,40 +721,10 @@ const LessonView = () => {
           navigate('/dashboard');
           return;
         }
-        
-        setMessages([{
-          role: "assistant",
-          content: `Welcome to **${response.data.title}**!\n\n${response.data.challenge_description || response.data.description || 'Practice your AI skills in this lesson.'}`,
-          timestamp: new Date().toISOString()
-        }]);
       } catch (error) { navigate('/dashboard'); } finally { setLoading(false); }
     };
     fetchLesson();
   }, [lessonId, navigate, user]);
-
-  useEffect(() => { if (chatContainerRef.current) chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight; }, [messages]);
-
-  const sendMessage = async () => {
-    if (!inputValue.trim() || sending) return;
-    setMessages(prev => [...prev, { role: "user", content: inputValue, timestamp: new Date().toISOString() }]);
-    const msg = inputValue;
-    setInputValue("");
-    setSending(true);
-    try {
-      const provider = selectedModel.includes("claude") ? "anthropic" : selectedModel.includes("gemini") ? "gemini" : "openai";
-      const response = await axios.post(`${API}/chat`, { content: msg, model: selectedModel, provider, session_id: sessionId, lesson_id: lessonId, guided_mode: guidedMode });
-      setSessionId(response.data.session_id);
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: response.data.response,
-        quality_score: guidedMode ? response.data.quality_score : undefined,
-        tips: guidedMode ? response.data.tips : undefined,
-        timestamp: new Date().toISOString()
-      }]);
-    } catch (error) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Error occurred. Please try again.", timestamp: new Date().toISOString() }]);
-    } finally { setSending(false); }
-  };
 
   const completeLesson = async () => {
     setCompleting(true);
@@ -780,47 +743,127 @@ const LessonView = () => {
     } catch (error) {} finally { setCompleting(false); }
   };
 
+  const renderLessonContent = () => {
+    // Check if lesson has sections (rich content)
+    if (lesson?.sections && lesson.sections.length > 0) {
+      return (
+        <div className="space-y-8">
+          {lesson.sections.map((section, sIdx) => (
+            <div key={sIdx} className="space-y-4">
+              {section.title && (
+                <h3 className="text-xl font-bold text-white">{section.title}</h3>
+              )}
+              {section.blocks && section.blocks.map((block, bIdx) => (
+                <div key={bIdx}>
+                  {block.type === 'heading' && (
+                    <div className={`font-bold text-white ${block.level === 1 ? 'text-3xl' : block.level === 2 ? 'text-2xl' : block.level === 3 ? 'text-xl' : 'text-lg'}`}>
+                      {block.content}
+                    </div>
+                  )}
+                  {block.type === 'text' && (
+                    <p className="text-slate-300 leading-relaxed">{block.content}</p>
+                  )}
+                  {block.type === 'gif' && block.url && (
+                    <div className="rounded-xl overflow-hidden border border-fuchsia-500/30 bg-slate-900/50 p-4">
+                      <img 
+                        src={block.url} 
+                        alt={block.alt_text || 'Demonstration'}
+                        className="w-full rounded-lg"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                      <div className="hidden flex-col items-center justify-center py-8 text-slate-400">
+                        <Camera className="w-12 h-12 mb-2 opacity-50" />
+                        <p className="text-sm">GIF Placeholder</p>
+                        <p className="text-xs text-slate-500 mt-1">{block.caption}</p>
+                      </div>
+                      {block.caption && (
+                        <p className="text-sm text-slate-400 mt-2 text-center italic">{block.caption}</p>
+                      )}
+                    </div>
+                  )}
+                  {block.type === 'code' && (
+                    <pre className="bg-slate-900/80 border border-slate-700 rounded-lg p-4 overflow-x-auto">
+                      <code className="text-sm text-green-400">{block.content}</code>
+                    </pre>
+                  )}
+                  {block.type === 'callout' && (
+                    <div className={`p-4 rounded-lg border ${
+                      block.callout_type === 'tip' ? 'bg-blue-500/10 border-blue-500/30' :
+                      block.callout_type === 'warning' ? 'bg-amber-500/10 border-amber-500/30' :
+                      block.callout_type === 'note' ? 'bg-purple-500/10 border-purple-500/30' :
+                      'bg-slate-500/10 border-slate-500/30'
+                    }`}>
+                      <p className="text-slate-200 text-sm">{block.content}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    // Fallback to regular content
+    return (
+      <div className="prose prose-invert max-w-none">
+        <div className="text-slate-300 whitespace-pre-wrap">{lesson?.content}</div>
+      </div>
+    );
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-fuchsia-500" /></div>;
 
   return (
-    <div className="min-h-screen bg-void flex flex-col lg:flex-row">
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
+    <div className="min-h-screen bg-void">
+      <div className="max-w-6xl mx-auto">
         <div className="sticky top-0 bg-void/90 backdrop-blur-sm border-b border-white/10 z-10">
           <div className="flex items-center justify-between px-4 sm:px-6 py-4">
             <div className="flex items-center gap-3">
               <button onClick={() => navigate("/dashboard")} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/20 transition"><ArrowLeft className="w-5 h-5" /></button>
               <div>
-                <p className="text-xs sm:text-sm text-slate-400">{lesson?.module_title} • Lesson {lesson?.order_index}/{lesson?.total_lessons_in_module}</p>
-                <h2 className="text-base sm:text-xl font-bold text-white truncate max-w-[200px] sm:max-w-none">{lesson?.title}</h2>
+                <p className="text-xs sm:text-sm text-slate-400">Module {lesson?.module_id?.split('_')[1]} • Lesson {lesson?.order_index}</p>
+                <h2 className="text-base sm:text-xl font-bold text-white">{lesson?.title}</h2>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setSandboxOpen(true)} className="lg:hidden px-3 py-2 rounded-lg bg-fuchsia-500/20 text-fuchsia-400 text-sm font-medium"><FlaskConical className="w-4 h-4 inline mr-1" /> Sandbox</button>
+              <button 
+                onClick={() => setSandboxOpen(!sandboxOpen)} 
+                className="px-3 py-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white text-sm font-medium hover:shadow-lg transition flex items-center gap-2"
+              >
+                <FlaskConical className="w-4 h-4" />
+                <span className="hidden sm:inline">{sandboxOpen ? 'Hide' : 'Show'} Sandbox</span>
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="px-4 sm:px-6 py-6 sm:py-8">
           <GlassCard className="p-4 sm:p-6 mb-6 bg-fuchsia-500/10 border-fuchsia-500/20">
-            <h3 className="font-bold text-white mb-2 flex items-center gap-2"><Target className="w-5 h-5 text-fuchsia-400" /> Learning Objective</h3>
-            <p className="text-slate-300 text-sm sm:text-base">{lesson?.description}</p>
+            <h3 className="font-bold text-white mb-2 flex items-center gap-2"><Target className="w-5 h-5 text-fuchsia-400" /> Learning Objectives</h3>
+            <p className="text-slate-300 text-sm sm:text-base mb-3">{lesson?.description}</p>
+            {lesson?.learning_objectives?.length > 0 && (
+              <ul className="space-y-2 mt-3">
+                {lesson.learning_objectives.map((obj, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-slate-300 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                    <span>{obj}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </GlassCard>
 
-          {lesson?.learning_objectives?.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-white mb-3">What You'll Learn</h3>
-              <ul className="space-y-2">{lesson.learning_objectives.map((obj, idx) => <li key={idx} className="flex items-start gap-3 text-slate-300 text-sm sm:text-base"><CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" /><span>{obj}</span></li>)}</ul>
-            </div>
-          )}
-
-          <div className="prose prose-invert max-w-none mb-8">
-            <h3 className="text-lg font-bold text-white mb-3">The Challenge</h3>
-            <p className="text-slate-300 mb-4">{lesson?.challenge_description || lesson?.content || "Practice your prompt engineering skills in this lesson."}</p>
+          <div className="mb-8">
+            {renderLessonContent()}
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-white/10">
             <NeonButton variant="ghost" onClick={() => lesson?.prev_lesson && navigate(`/lesson/${lesson.prev_lesson.lesson_id}`)} disabled={!lesson?.prev_lesson}>
-              <ArrowLeft className="w-4 h-4" /> {lesson?.prev_lesson?.title?.slice(0, 20) || 'Previous'}...
+              <ArrowLeft className="w-4 h-4" /> Previous
             </NeonButton>
             <NeonButton onClick={completeLesson} loading={completing}>
               {lesson?.next_lesson ? 'Complete & Next' : 'Complete Lesson'} <ArrowRight className="w-4 h-4" />
@@ -829,25 +872,26 @@ const LessonView = () => {
           
           {lesson?.next_lesson && (
             <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-              <p className="text-sm text-blue-300 flex items-center gap-2"><ChevronRight className="w-4 h-4" /><span><strong>Next:</strong> {lesson.next_lesson.title}</span></p>
+              <p className="text-sm text-blue-300 flex items-center gap-2">
+                <ChevronRight className="w-4 h-4" />
+                <span><strong>Next:</strong> {lesson.next_lesson.title}</span>
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Desktop Sandbox */}
-      <div className="hidden lg:flex w-[500px] xl:w-[600px] flex-col bg-[#0d1117] border-l border-slate-700">
-        <SandboxContent messages={messages} inputValue={inputValue} setInputValue={setInputValue} sending={sending} sendMessage={sendMessage} selectedModel={selectedModel} setSelectedModel={setSelectedModel} chatContainerRef={chatContainerRef} guidedMode={guidedMode} setGuidedMode={setGuidedMode} />
-      </div>
-
-      {/* Mobile Sandbox Drawer */}
-      <AnimatePresence>
-        {sandboxOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 lg:hidden">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSandboxOpen(false)} />
-            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25 }} className="absolute inset-x-0 bottom-0 h-[85vh] bg-[#0d1117] rounded-t-3xl border-t border-white/10 flex flex-col">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
-                <span className="text-white font-semibold">AI Sandbox</span>
+      {/* Floating Sandbox */}
+      {sandboxOpen && (
+        <FloatingSandbox
+          lessonId={lessonId}
+          onClose={() => setSandboxOpen(false)}
+          user={user}
+        />
+      )}
+    </div>
+  );
+};
                 <button onClick={() => setSandboxOpen(false)} className="p-2 hover:bg-white/10 rounded-lg"><X className="w-5 h-5 text-slate-400" /></button>
               </div>
               <SandboxContent messages={messages} inputValue={inputValue} setInputValue={setInputValue} sending={sending} sendMessage={sendMessage} selectedModel={selectedModel} setSelectedModel={setSelectedModel} chatContainerRef={chatContainerRef} guidedMode={guidedMode} setGuidedMode={setGuidedMode} />
