@@ -615,9 +615,133 @@ The best prompt engineers spend 80% of their time refining prompts and 20% revie
                 "Generate data-driven insights and recommendations",
                 "Create executive summaries from complex data"
             ],
+            "sections": [
+                {
+                    "title": "Understanding Data with AI",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "heading",
+                            "content": "From Numbers to Insights",
+                            "level": 2,
+                            "order_index": 0
+                        },
+                        {
+                            "id": "block_2",
+                            "type": "gif",
+                            "url": "/api/uploads/image/data_interpretation_demo.gif",
+                            "caption": "Watch AI transform a raw dataset into a clear, actionable insight summary",
+                            "alt_text": "Animated demo of AI analyzing sales data and generating insights",
+                            "order_index": 1
+                        },
+                        {
+                            "id": "block_3",
+                            "type": "text",
+                            "content": "AI excels at finding patterns humans might miss. In this lesson, you'll learn to prompt AI to analyze data and extract meaningful insights quickly.",
+                            "order_index": 2
+                        }
+                    ]
+                }
+            ],
             "content": """# AI-Powered Data Interpretation
 
-[Content for data interpretation lesson]""",
+## The Data Analysis Challenge
+
+As a professional, you're constantly faced with spreadsheets, reports, and datasets. The challenge isn't getting the data—it's understanding what it means and what to do about it.
+
+## How AI Transforms Data Analysis
+
+AI can:
+- **Identify patterns** you might overlook
+- **Summarize complex datasets** in seconds
+- **Generate hypotheses** about what's driving trends
+- **Provide recommendations** based on the data
+
+## The Data Interpretation Framework
+
+### Step 1: Describe Your Data
+```
+I have a dataset with the following columns:
+- Date (MM/DD/YYYY)
+- Product Category
+- Units Sold
+- Revenue
+- Customer Segment
+- Region
+
+Time period: January 2024 - December 2024
+Total rows: 5,247
+```
+
+### Step 2: Ask Specific Questions
+```
+Analyze this data and tell me:
+1. Which product categories are growing vs. declining?
+2. Are there seasonal patterns?
+3. Which customer segments are most valuable?
+4. Any unusual trends or anomalies?
+```
+
+### Step 3: Request Structured Output
+```
+Format your analysis as:
+- Executive Summary (3 sentences)
+- Key Findings (5 bullet points)
+- Trends & Patterns (with specific numbers)
+- Recommendations (3 actionable items)
+```
+
+## Practical Example
+
+**Prompt:**
+```
+You are a business analyst with expertise in retail data.
+
+I have sales data for a clothing retailer with these columns:
+[Date, Product_Type, Units_Sold, Revenue, Store_Location, Customer_Age_Group]
+
+Dataset covers Q1-Q4 2024, 12,450 transactions.
+
+Analyze this data and identify:
+1. Top performing product categories by revenue
+2. Store location performance comparison
+3. Age group preferences by product type
+4. Month-over-month growth trends
+5. Any concerning patterns or opportunities
+
+Provide:
+- Executive summary (2-3 sentences)
+- 5 key insights with specific numbers
+- 3 actionable recommendations
+- One data visualization suggestion
+
+Think step-by-step through the analysis.
+```
+
+## Advanced Techniques
+
+### 1. Comparative Analysis
+Ask AI to compare time periods, segments, or categories
+
+### 2. Root Cause Analysis
+Use Chain of Thought to dig into "why" behind the numbers
+
+### 3. Predictive Questions
+"Based on this data, what might happen if..."
+
+## Common Pitfalls to Avoid
+
+❌ Uploading data without context
+❌ Asking vague questions like "analyze this"
+❌ Not specifying output format
+❌ Ignoring data quality issues
+
+✅ Provide data structure description
+✅ Ask specific, focused questions
+✅ Request structured, actionable output
+✅ Acknowledge data limitations""",
             "created_at": datetime.now(timezone.utc).isoformat()
         },
         {
