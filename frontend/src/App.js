@@ -892,18 +892,8 @@ const LessonView = () => {
     </div>
   );
 };
-                <button onClick={() => setSandboxOpen(false)} className="p-2 hover:bg-white/10 rounded-lg"><X className="w-5 h-5 text-slate-400" /></button>
-              </div>
-              <SandboxContent messages={messages} inputValue={inputValue} setInputValue={setInputValue} sending={sending} sendMessage={sendMessage} selectedModel={selectedModel} setSelectedModel={setSelectedModel} chatContainerRef={chatContainerRef} guidedMode={guidedMode} setGuidedMode={setGuidedMode} />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
 
-const SandboxContent = ({ messages, inputValue, setInputValue, sending, sendMessage, selectedModel, setSelectedModel, chatContainerRef, guidedMode, setGuidedMode }) => (
+// ==================== OTHER VIEWS ====================
   <>
     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-[#161b22]">
       <div className="flex items-center gap-3">
