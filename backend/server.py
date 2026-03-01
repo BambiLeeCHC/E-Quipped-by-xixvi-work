@@ -591,6 +591,45 @@ async def get_lesson(lesson_id: str, request: Request, credentials: Optional[HTT
     
     user = await get_current_user(request, credentials)
     if user:
+        # Check if user can access this lesson
+        is_locked = False
+        
+        # First lesson of first module is always unlocked
+        if lesson.get("order_index") == 1 and lesson.get("module_id") == "mod_001":
+            is_locked = False
+        else:
+            # Check if previous lesson is completed
+            if current_index > 0:
+                prev_lesson_id = all_lessons[current_index - 1]["lesson_id"]
+                prev_progress = await db.user_progress.find_one(
+                    {"user_id": user["user_id"], "lesson_id": prev_lesson_id},
+                    {"_id": 0}
+                )
+                # Lesson is locked if previous lesson is not completed
+                if not prev_progress or not prev_progress.get('completed'):
+                    is_locked = True
+            elif current_index == 0:
+                # First lesson of a module - check if previous module is completed
+                current_module_num = int(lesson.get("module_id", "mod_001").split("_")[1])
+                if current_module_num > 1:
+                    prev_module_id = f"mod_{current_module_num - 1:03d}"
+                    # Get all lessons from previous module
+                    prev_module_lessons = await db.lessons.find({"module_id": prev_module_id}, {"_id": 0}).to_list(50)
+                    # Check if ALL lessons in previous module are completed
+                    all_completed = True
+                    for prev_lesson in prev_module_lessons:
+                        prev_lesson_progress = await db.user_progress.find_one(
+                            {"user_id": user["user_id"], "lesson_id": prev_lesson["lesson_id"]},
+                            {"_id": 0}
+                        )
+                        if not prev_lesson_progress or not prev_lesson_progress.get('completed'):
+                            all_completed = False
+                            break
+                    is_locked = not all_completed
+        
+        lesson["is_locked"] = is_locked
+        
+        # Get current lesson progress
         progress = await db.user_progress.find_one(
             {"user_id": user["user_id"], "lesson_id": lesson_id},
             {"_id": 0}
