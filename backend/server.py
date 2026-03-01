@@ -1305,8 +1305,8 @@ async def seed_initial_data():
     
     logger.info("Database seeding complete!")
     return modules_data
-    
-    modules_data = [
+
+# ==================== FILE UPLOAD ROUTES ====================
         {{
     "module_id": "mod_001",
     "title": "AI Writing Assistant",
