@@ -364,18 +364,33 @@ const FloatingSandbox = ({ lessonId, onClose, user }) => {
         </div>
       )}
       
-      {/* Resize handle */}
-      <div
-        className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
-        onMouseDown={(e) => {
-          e.stopPropagation();
-          setIsResizing(true);
-        }}
-        style={{
-          background: isTransparent ? 'linear-gradient(135deg, transparent 50%, rgba(147, 51, 234, 0.5) 50%)' : 'linear-gradient(135deg, transparent 50%, rgba(217, 70, 239, 0.5) 50%)'
-        }}
-      />
+      {/* Resize handle - Only visible when opaque */}
+      {!isTransparent && (
+        <div
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setIsResizing(true);
+          }}
+          style={{
+            background: 'linear-gradient(135deg, transparent 50%, rgba(217, 70, 239, 0.5) 50%)'
+          }}
+        />
+      )}
     </div>
+    
+    {/* CSS for gradient animation */}
+    <style dangerouslySetInnerHTML={{__html: `
+      @keyframes gradient-rotate {
+        0%, 100% {
+          filter: hue-rotate(0deg);
+        }
+        50% {
+          filter: hue-rotate(360deg);
+        }
+      }
+    `}} />
+  </>
   );
 };
 
