@@ -1220,9 +1220,91 @@ async def mark_alert_read(alert_id: str, user: dict = Depends(require_admin)):
 # ==================== SEED DATA ====================
 
 async def seed_initial_data():
+    """Seed database with comprehensive course data"""
     existing = await db.modules.find_one({})
     if existing:
         return await db.modules.find({}, {"_id": 0}).to_list(100)
+    
+    logger.info("Seeding database with comprehensive course data...")
+    
+    # Get all data from seed files
+    modules_data = get_all_modules()
+    lessons_data = get_all_lessons()
+    exercises_data = get_applied_exercises()
+    quiz_data = get_quiz_questions()
+    
+    # Insert modules
+    if modules_data:
+        await db.modules.insert_many(modules_data)
+        logger.info(f"Inserted {len(modules_data)} modules")
+    
+    # Insert lessons
+    if lessons_data:
+        await db.lessons.insert_many(lessons_data)
+        logger.info(f"Inserted {len(lessons_data)} lessons")
+    
+    # Insert applied exercises
+    if exercises_data:
+        await db.applied_exercises.insert_many(exercises_data)
+        logger.info(f"Inserted {len(exercises_data)} applied exercises")
+    
+    # Insert quiz questions
+    if quiz_data:
+        await db.quiz_questions.insert_many(quiz_data)
+        logger.info(f"Inserted {len(quiz_data)} quiz questions")
+    
+    # Create demo admin user
+    demo_admin = {
+        "user_id": generate_user_id(),
+        "email": "admin@equipped.ai",
+        "username": "admin",
+        "password_hash": hash_password("admin123"),
+        "first_name": "Admin",
+        "last_name": "User",
+        "phone": "",
+        "xp_total": 5000,
+        "current_level": 5,
+        "daily_streak": 15,
+        "is_admin": True,
+        "is_master": False,
+        "is_verified": True,
+        "avatar": "AU",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_login": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Create master editor user
+    master_editor = {
+        "user_id": generate_user_id(),
+        "email": "master@equipped.ai",
+        "username": "master",
+        "password_hash": hash_password("master123"),
+        "first_name": "Master",
+        "last_name": "Editor",
+        "phone": "",
+        "xp_total": 10000,
+        "current_level": 10,
+        "daily_streak": 30,
+        "is_admin": True,
+        "is_master": True,
+        "is_verified": True,
+        "avatar": "ME",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_login": datetime.now(timezone.utc).isoformat()
+    }
+    
+    existing_admin = await db.users.find_one({"email": "admin@equipped.ai"})
+    if not existing_admin:
+        await db.users.insert_one(demo_admin)
+        logger.info("Created admin user")
+    
+    existing_master = await db.users.find_one({"email": "master@equipped.ai"})
+    if not existing_master:
+        await db.users.insert_one(master_editor)
+        logger.info("Created master user")
+    
+    logger.info("Database seeding complete!")
+    return modules_data
     
     modules_data = [
         {{
