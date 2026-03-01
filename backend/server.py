@@ -19,6 +19,17 @@ import shutil
 import base64
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+# Import seed data
+try:
+    from seed_data import get_all_modules, get_all_lessons
+    from quiz_data import get_applied_exercises, get_quiz_questions
+except ImportError:
+    logger.warning("Seed data files not found")
+    get_all_modules = lambda: []
+    get_all_lessons = lambda: []
+    get_applied_exercises = lambda: []
+    get_quiz_questions = lambda: []
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
