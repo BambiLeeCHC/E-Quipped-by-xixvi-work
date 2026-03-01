@@ -930,6 +930,615 @@ Use Chain of Thought to dig into "why" behind the numbers
         }
     ])
     
-    return lessons
+    # MODULE 4: AI for Presentations & Decks (5 lessons)
+    lessons.extend([
+        {
+            "lesson_id": "les_016",
+            "module_id": "mod_004",
+            "title": "Slide Structure & Storytelling",
+            "slug": "slide-structure-storytelling",
+            "description": "Design compelling presentation narratives with AI",
+            "order_index": 1,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 50,
+            "xp_reward": 175,
+            "learning_objectives": [
+                "Structure presentations for maximum impact",
+                "Create compelling story arcs",
+                "Generate slide outlines with AI"
+            ],
+            "sections": [
+                {
+                    "title": "Building Presentation Structure",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "heading",
+                            "content": "From Idea to Compelling Deck",
+                            "level": 2,
+                            "order_index": 0
+                        },
+                        {
+                            "id": "block_2",
+                            "type": "gif",
+                            "url": "/api/uploads/image/presentation_structure_demo.gif",
+                            "caption": "Watch AI transform a basic concept into a full presentation outline with narrative flow",
+                            "alt_text": "Animated demo showing AI creating presentation structure",
+                            "order_index": 1
+                        }
+                    ]
+                }
+            ],
+            "content": """# Slide Structure & Storytelling
 
-# Additional lessons for modules 4-7 will be added in part 2...
+## The Presentation Challenge
+
+Great presentations tell stories. AI can help you structure compelling narratives that engage audiences.
+
+## AI-Powered Presentation Design
+
+Learn to prompt AI to create:
+- Compelling opening hooks
+- Logical flow and transitions
+- Data-driven arguments
+- Memorable closings
+
+[Full content for presentation lesson]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_017",
+            "module_id": "mod_004",
+            "title": "Visual Content Generation",
+            "slug": "visual-content-generation",
+            "description": "Create compelling visuals and graphics with AI",
+            "order_index": 2,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 55,
+            "xp_reward": 200,
+            "learning_objectives": [
+                "Generate visual concepts with AI",
+                "Create image prompts for design tools",
+                "Optimize visuals for presentations"
+            ],
+            "content": """# Visual Content Generation
+
+[Content for visual content lesson]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_018",
+            "module_id": "mod_004",
+            "title": "Data Visualization in Slides",
+            "slug": "data-visualization-slides",
+            "description": "Transform data into clear, impactful slides",
+            "order_index": 3,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 60,
+            "xp_reward": 225,
+            "learning_objectives": [
+                "Choose appropriate chart types",
+                "Generate data visualization descriptions",
+                "Create executive-ready data slides"
+            ],
+            "content": """# Data Visualization in Slides
+
+[Content for data viz lesson]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_019",
+            "module_id": "mod_004",
+            "title": "Pitch Decks & Sales Presentations",
+            "slug": "pitch-decks-sales",
+            "description": "Create persuasive pitch decks that win",
+            "order_index": 4,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 65,
+            "xp_reward": 250,
+            "learning_objectives": [
+                "Structure winning pitch decks",
+                "Craft compelling value propositions",
+                "Address objections proactively"
+            ],
+            "sections": [
+                {
+                    "title": "Pitch Deck Mastery",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "gif",
+                            "url": "/api/uploads/image/pitch_deck_creation.gif",
+                            "caption": "AI-powered pitch deck generation from concept to full narrative",
+                            "alt_text": "Creating a pitch deck with AI assistance",
+                            "order_index": 0
+                        }
+                    ]
+                }
+            ],
+            "content": """# Pitch Decks & Sales Presentations
+
+[Content for pitch deck lesson]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_020",
+            "module_id": "mod_004",
+            "title": "Speaker Notes & Delivery",
+            "slug": "speaker-notes-delivery",
+            "description": "Generate effective speaker notes and practice delivery",
+            "order_index": 5,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 45,
+            "xp_reward": 175,
+            "learning_objectives": [
+                "Create detailed speaker notes",
+                "Practice presentation delivery with AI",
+                "Handle Q&A preparation"
+            ],
+            "content": """# Speaker Notes & Delivery
+
+[Content for speaker notes lesson]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+    ])
+    
+    # MODULE 5: AI for Research & Synthesis (5 lessons)
+    lessons.extend([
+        {
+            "lesson_id": "les_021",
+            "module_id": "mod_005",
+            "title": "Research Strategy with AI",
+            "slug": "research-strategy-ai",
+            "description": "Plan and execute efficient research with AI assistance",
+            "order_index": 1,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 55,
+            "xp_reward": 200,
+            "learning_objectives": [
+                "Design research strategies",
+                "Generate research questions",
+                "Organize research workflows"
+            ],
+            "content": """# Research Strategy with AI
+
+[Content for research strategy]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_022",
+            "module_id": "mod_005",
+            "title": "Information Synthesis & Summarization",
+            "slug": "information-synthesis",
+            "description": "Distill complex information into clear insights",
+            "order_index": 2,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 60,
+            "xp_reward": 200,
+            "learning_objectives": [
+                "Synthesize multiple sources",
+                "Create executive summaries",
+                "Extract key insights"
+            ],
+            "content": """# Information Synthesis & Summarization
+
+[Content for synthesis lesson]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_023",
+            "module_id": "mod_005",
+            "title": "Competitive Analysis",
+            "slug": "competitive-analysis",
+            "description": "Conduct thorough competitive research with AI",
+            "order_index": 3,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 65,
+            "xp_reward": 225,
+            "learning_objectives": [
+                "Analyze competitive landscapes",
+                "Generate SWOT analyses",
+                "Create competitive positioning"
+            ],
+            "content": """# Competitive Analysis
+
+[Content for competitive analysis]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_024",
+            "module_id": "mod_005",
+            "title": "Trend Analysis & Forecasting",
+            "slug": "trend-analysis-forecasting",
+            "description": "Identify and analyze market trends",
+            "order_index": 4,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 60,
+            "xp_reward": 225,
+            "learning_objectives": [
+                "Identify emerging trends",
+                "Analyze trend implications",
+                "Generate forecasts"
+            ],
+            "content": """# Trend Analysis & Forecasting
+
+[Content for trend analysis]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_025",
+            "module_id": "mod_005",
+            "title": "Literature Review & Citation",
+            "slug": "literature-review-citation",
+            "description": "Create comprehensive literature reviews",
+            "order_index": 5,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 70,
+            "xp_reward": 250,
+            "learning_objectives": [
+                "Structure literature reviews",
+                "Generate proper citations",
+                "Synthesize academic sources"
+            ],
+            "content": """# Literature Review & Citation
+
+[Content for literature review]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+    ])
+    
+    # MODULE 6: AI for Email & Client Comms (6 lessons)
+    lessons.extend([
+        {
+            "lesson_id": "les_026",
+            "module_id": "mod_006",
+            "title": "Professional Email Mastery",
+            "slug": "professional-email-mastery",
+            "description": "Write effective business emails at scale",
+            "order_index": 1,
+            "difficulty_level": "beginner",
+            "estimated_minutes": 45,
+            "xp_reward": 150,
+            "learning_objectives": [
+                "Write clear, concise emails",
+                "Match tone to situation",
+                "Handle difficult communications"
+            ],
+            "content": """# Professional Email Mastery
+
+[Content for email mastery]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_027",
+            "module_id": "mod_006",
+            "title": "Cold Outreach & Sales Emails",
+            "slug": "cold-outreach-sales",
+            "description": "Craft emails that get responses",
+            "order_index": 2,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 55,
+            "xp_reward": 200,
+            "learning_objectives": [
+                "Write compelling subject lines",
+                "Personalize at scale",
+                "Create effective CTAs"
+            ],
+            "content": """# Cold Outreach & Sales Emails
+
+[Content for cold outreach]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_028",
+            "module_id": "mod_006",
+            "title": "Client Communication Frameworks",
+            "slug": "client-communication-frameworks",
+            "description": "Master client communication patterns",
+            "order_index": 3,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 50,
+            "xp_reward": 175,
+            "learning_objectives": [
+                "Structure client updates",
+                "Handle difficult conversations",
+                "Manage expectations"
+            ],
+            "content": """# Client Communication Frameworks
+
+[Content for client comms]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_029",
+            "module_id": "mod_006",
+            "title": "Email Sequence Automation",
+            "slug": "email-sequence-automation",
+            "description": "Design automated email campaigns",
+            "order_index": 4,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 60,
+            "xp_reward": 225,
+            "learning_objectives": [
+                "Design email sequences",
+                "Optimize timing and frequency",
+                "A/B test messaging"
+            ],
+            "content": """# Email Sequence Automation
+
+[Content for email sequences]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_030",
+            "module_id": "mod_006",
+            "title": "Crisis Communication",
+            "slug": "crisis-communication",
+            "description": "Handle sensitive situations with AI",
+            "order_index": 5,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 55,
+            "xp_reward": 225,
+            "learning_objectives": [
+                "Draft crisis communications",
+                "Manage negative feedback",
+                "De-escalate conflicts"
+            ],
+            "content": """# Crisis Communication
+
+[Content for crisis comms]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_031",
+            "module_id": "mod_006",
+            "title": "International Communication",
+            "slug": "international-communication",
+            "description": "Communicate effectively across cultures",
+            "order_index": 6,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 50,
+            "xp_reward": 175,
+            "learning_objectives": [
+                "Adapt tone for cultures",
+                "Handle language barriers",
+                "Respect communication norms"
+            ],
+            "content": """# International Communication
+
+[Content for international comms]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+    ])
+    
+    # MODULE 7: AI Workflow Automation (6 lessons) - ALL WITH GIFS
+    lessons.extend([
+        {
+            "lesson_id": "les_032",
+            "module_id": "mod_007",
+            "title": "Introduction to Workflow Automation",
+            "slug": "intro-workflow-automation",
+            "description": "Understand automation fundamentals and AI integration",
+            "order_index": 1,
+            "difficulty_level": "beginner",
+            "estimated_minutes": 50,
+            "xp_reward": 200,
+            "learning_objectives": [
+                "Understand automation concepts",
+                "Identify automation opportunities",
+                "Plan workflow architecture"
+            ],
+            "sections": [
+                {
+                    "title": "Automation Fundamentals",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "gif",
+                            "url": "/api/uploads/image/automation_intro.gif",
+                            "caption": "Introduction to workflow automation concepts and triggers",
+                            "alt_text": "Workflow automation basics demonstration",
+                            "order_index": 0
+                        }
+                    ]
+                }
+            ],
+            "content": """# Introduction to Workflow Automation
+
+[Content for workflow intro]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_033",
+            "module_id": "mod_007",
+            "title": "Triggers & Actions",
+            "slug": "triggers-actions",
+            "description": "Master the building blocks of automation",
+            "order_index": 2,
+            "difficulty_level": "intermediate",
+            "estimated_minutes": 60,
+            "xp_reward": 225,
+            "learning_objectives": [
+                "Set up workflow triggers",
+                "Configure actions and responses",
+                "Handle conditional logic"
+            ],
+            "sections": [
+                {
+                    "title": "Building Automation Blocks",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "gif",
+                            "url": "/api/uploads/image/triggers_actions_demo.gif",
+                            "caption": "Setting up triggers and configuring automated actions",
+                            "alt_text": "Triggers and actions in workflow automation",
+                            "order_index": 0
+                        }
+                    ]
+                }
+            ],
+            "content": """# Triggers & Actions
+
+[Content for triggers and actions]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_034",
+            "module_id": "mod_007",
+            "title": "AI-Powered Decision Making",
+            "slug": "ai-decision-making",
+            "description": "Integrate AI into automated workflows",
+            "order_index": 3,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 70,
+            "xp_reward": 275,
+            "learning_objectives": [
+                "Integrate AI for decisions",
+                "Route workflows intelligently",
+                "Handle complex logic"
+            ],
+            "sections": [
+                {
+                    "title": "AI Integration in Workflows",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "gif",
+                            "url": "/api/uploads/image/ai_decision_making.gif",
+                            "caption": "AI making intelligent routing decisions in automated workflows",
+                            "alt_text": "AI-powered workflow decision making",
+                            "order_index": 0
+                        }
+                    ]
+                }
+            ],
+            "content": """# AI-Powered Decision Making
+
+[Content for AI decisions]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_035",
+            "module_id": "mod_007",
+            "title": "Multi-Step Workflow Design",
+            "slug": "multi-step-workflows",
+            "description": "Create complex, multi-stage automation",
+            "order_index": 4,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 75,
+            "xp_reward": 300,
+            "learning_objectives": [
+                "Design complex workflows",
+                "Handle error cases",
+                "Optimize performance"
+            ],
+            "sections": [
+                {
+                    "title": "Complex Workflow Construction",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "gif",
+                            "url": "/api/uploads/image/multi_step_workflow.gif",
+                            "caption": "Building a complete multi-step automated workflow from start to finish",
+                            "alt_text": "Multi-step workflow creation demonstration",
+                            "order_index": 0
+                        }
+                    ]
+                }
+            ],
+            "content": """# Multi-Step Workflow Design
+
+[Content for multi-step workflows]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_036",
+            "module_id": "mod_007",
+            "title": "Real-World Automation Projects",
+            "slug": "real-world-automation",
+            "description": "Build practical automation solutions",
+            "order_index": 5,
+            "difficulty_level": "expert",
+            "estimated_minutes": 90,
+            "xp_reward": 350,
+            "learning_objectives": [
+                "Build end-to-end automations",
+                "Integrate multiple services",
+                "Deploy production workflows"
+            ],
+            "sections": [
+                {
+                    "title": "Complete Automation Projects",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "gif",
+                            "url": "/api/uploads/image/real_world_automation.gif",
+                            "caption": "Complete walkthrough of building a production-ready automation workflow",
+                            "alt_text": "Real-world automation project from concept to deployment",
+                            "order_index": 0
+                        }
+                    ]
+                }
+            ],
+            "content": """# Real-World Automation Projects
+
+[Content for real projects]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "lesson_id": "les_037",
+            "module_id": "mod_007",
+            "title": "Monitoring & Optimization",
+            "slug": "monitoring-optimization",
+            "description": "Monitor and improve your automations",
+            "order_index": 6,
+            "difficulty_level": "advanced",
+            "estimated_minutes": 60,
+            "xp_reward": 250,
+            "learning_objectives": [
+                "Monitor workflow performance",
+                "Debug automation issues",
+                "Optimize for efficiency"
+            ],
+            "sections": [
+                {
+                    "title": "Workflow Optimization",
+                    "type": "content",
+                    "order_index": 1,
+                    "blocks": [
+                        {
+                            "id": "block_1",
+                            "type": "gif",
+                            "url": "/api/uploads/image/workflow_monitoring.gif",
+                            "caption": "Monitoring workflow performance and optimizing automation efficiency",
+                            "alt_text": "Workflow monitoring and optimization dashboard",
+                            "order_index": 0
+                        }
+                    ]
+                }
+            ],
+            "content": """# Monitoring & Optimization
+
+[Content for monitoring]""",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+    ])
+    
+    return lessons
