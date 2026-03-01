@@ -752,20 +752,20 @@ const LessonView = () => {
           {lesson.sections.map((section, sIdx) => (
             <div key={sIdx} className="space-y-4">
               {section.title && (
-                <h3 className="text-2xl font-bold text-white mb-4">{section.title}</h3>
+                <h3 className="text-2xl font-bold text-slate-900 mb-4">{section.title}</h3>
               )}
               {section.blocks && section.blocks.map((block, bIdx) => (
                 <div key={bIdx}>
                   {block.type === 'heading' && (
-                    <div className={`font-bold text-white ${block.level === 1 ? 'text-4xl mb-6' : block.level === 2 ? 'text-3xl mb-4' : block.level === 3 ? 'text-2xl mb-3' : 'text-xl mb-2'}`}>
+                    <div className={`font-bold text-slate-900 ${block.level === 1 ? 'text-4xl mb-6' : block.level === 2 ? 'text-3xl mb-4' : block.level === 3 ? 'text-2xl mb-3' : 'text-xl mb-2'}`}>
                       {block.content}
                     </div>
                   )}
                   {block.type === 'text' && (
-                    <p className="text-slate-100 leading-relaxed text-base">{block.content}</p>
+                    <p className="text-slate-800 leading-relaxed text-base">{block.content}</p>
                   )}
                   {block.type === 'gif' && block.url && (
-                    <div className="rounded-xl overflow-hidden border-2 border-fuchsia-500/50 bg-slate-800/50 p-4">
+                    <div className="rounded-xl overflow-hidden border-2 border-fuchsia-400 bg-slate-50 p-4 shadow-md">
                       <img 
                         src={block.url} 
                         alt={block.alt_text || 'Demonstration'}
@@ -775,18 +775,18 @@ const LessonView = () => {
                           e.target.nextSibling.style.display = 'flex';
                         }}
                       />
-                      <div className="hidden flex-col items-center justify-center py-8 text-slate-300">
+                      <div className="hidden flex-col items-center justify-center py-8 text-slate-600">
                         <Camera className="w-12 h-12 mb-2 opacity-50" />
                         <p className="text-sm font-medium">GIF Placeholder</p>
-                        <p className="text-xs text-slate-400 mt-1">{block.caption}</p>
+                        <p className="text-xs text-slate-500 mt-1">{block.caption}</p>
                       </div>
                       {block.caption && (
-                        <p className="text-sm text-slate-200 mt-3 text-center italic font-medium">{block.caption}</p>
+                        <p className="text-sm text-slate-700 mt-3 text-center italic font-medium">{block.caption}</p>
                       )}
                     </div>
                   )}
                   {block.type === 'code' && (
-                    <pre className="bg-slate-950 border-2 border-slate-600 rounded-lg p-4 overflow-x-auto">
+                    <pre className="bg-slate-900 border-2 border-slate-700 rounded-lg p-4 overflow-x-auto shadow-md">
                       <code className="text-sm text-green-300 font-mono">{block.content}</code>
                     </pre>
                   )}
@@ -858,26 +858,26 @@ const LessonView = () => {
         <div className="space-y-4">
           {contentLines.map((line, idx) => {
             if (line.startsWith('# ')) {
-              return <h2 key={idx} className="text-3xl font-bold text-white mt-8 mb-4">{line.substring(2)}</h2>;
+              return <h2 key={idx} className="text-3xl font-bold text-slate-900 mt-8 mb-4">{line.substring(2)}</h2>;
             } else if (line.startsWith('## ')) {
-              return <h3 key={idx} className="text-2xl font-bold text-white mt-6 mb-3">{line.substring(3)}</h3>;
+              return <h3 key={idx} className="text-2xl font-bold text-slate-900 mt-6 mb-3">{line.substring(3)}</h3>;
             } else if (line.startsWith('### ')) {
-              return <h4 key={idx} className="text-xl font-bold text-white mt-4 mb-2">{line.substring(4)}</h4>;
+              return <h4 key={idx} className="text-xl font-bold text-slate-900 mt-4 mb-2">{line.substring(4)}</h4>;
             } else if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-              return <li key={idx} className="text-slate-100 ml-6 leading-relaxed text-base">{line.substring(2)}</li>;
+              return <li key={idx} className="text-slate-800 ml-6 leading-relaxed text-base">{line.substring(2)}</li>;
             } else if (line.trim() === '') {
               return <div key={idx} className="h-3" />;
             } else if (line.startsWith('**') && line.endsWith('**')) {
-              return <p key={idx} className="text-white font-bold text-lg mt-4 mb-2">{line.replace(/\*\*/g, '')}</p>;
+              return <p key={idx} className="text-slate-900 font-bold text-lg mt-4 mb-2">{line.replace(/\*\*/g, '')}</p>;
             } else {
-              return <p key={idx} className="text-slate-100 leading-relaxed text-base">{line}</p>;
+              return <p key={idx} className="text-slate-800 leading-relaxed text-base">{line}</p>;
             }
           })}
         </div>
       );
     }
     
-    return <p className="text-slate-300">No content available</p>;
+    return <p className="text-slate-600">No content available</p>;
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-fuchsia-500" /></div>;
