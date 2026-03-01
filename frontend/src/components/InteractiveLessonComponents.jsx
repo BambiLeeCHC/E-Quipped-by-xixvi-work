@@ -8,28 +8,28 @@ export const Accordion = ({ title, children, defaultOpen = false, variant = 'def
   const [isOpen, setIsOpen] = useState(defaultOpen);
   
   const variants = {
-    default: 'bg-slate-800/80 border-slate-600',
-    primary: 'bg-fuchsia-900/30 border-fuchsia-500/50',
-    success: 'bg-green-900/30 border-green-500/50',
-    warning: 'bg-amber-900/30 border-amber-500/50',
-    info: 'bg-blue-900/30 border-blue-500/50'
+    default: 'bg-slate-100 border-slate-400',
+    primary: 'bg-fuchsia-50 border-fuchsia-400',
+    success: 'bg-green-50 border-green-400',
+    warning: 'bg-amber-50 border-amber-400',
+    info: 'bg-blue-50 border-blue-400'
   };
   
   return (
-    <div className={`rounded-xl border-2 ${variants[variant]} overflow-hidden transition-all duration-300`}>
+    <div className={`rounded-xl border-2 ${variants[variant]} overflow-hidden transition-all duration-300 shadow-sm`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-white/10 transition"
+        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-slate-200 transition"
       >
-        <span className="font-semibold text-white text-base">{title}</span>
+        <span className="font-semibold text-slate-900 text-base">{title}</span>
         {isOpen ? (
-          <ChevronDown className="w-5 h-5 text-slate-200 transition-transform" />
+          <ChevronDown className="w-5 h-5 text-slate-700 transition-transform" />
         ) : (
-          <ChevronRight className="w-5 h-5 text-slate-200 transition-transform" />
+          <ChevronRight className="w-5 h-5 text-slate-700 transition-transform" />
         )}
       </button>
       {isOpen && (
-        <div className="px-4 py-3 border-t-2 border-white/20 text-slate-100 text-base space-y-2 leading-relaxed">
+        <div className="px-4 py-3 border-t-2 border-slate-300 text-slate-800 text-base space-y-2 leading-relaxed bg-white">
           {children}
         </div>
       )}
