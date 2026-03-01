@@ -261,11 +261,18 @@ const FloatingSandbox = ({ lessonId, onClose, user }) => {
         onMouseDown={handleMouseDown}
         onClick={handleSandboxClick}
       >
-      {/* Header - Draggable */}
-      <div className="sandbox-handle cursor-move px-4 py-3 border-b border-white/10 flex items-center justify-between">
+      {/* Header - Draggable - Only visible when opaque or as ghost outline */}
+      <div 
+        className={`sandbox-handle cursor-move px-4 py-3 border-b flex items-center justify-between ${
+          isTransparent 
+            ? 'bg-transparent border-transparent' 
+            : 'bg-slate-900/90 border-white/10'
+        }`}
+        style={{ opacity: isTransparent ? 0.3 : 1 }}
+      >
         <div className="flex items-center gap-2">
-          <Sparkles className={`w-5 h-5 ${isTransparent ? 'text-fuchsia-600' : 'text-fuchsia-400'}`} />
-          <span className={`font-bold ${isTransparent ? 'text-slate-900' : 'text-white'}`}>
+          <Sparkles className={`w-5 h-5 ${isTransparent ? 'text-fuchsia-400 opacity-60' : 'text-fuchsia-400'}`} />
+          <span className={`font-bold ${isTransparent ? 'text-white opacity-60' : 'text-white'}`}>
             {mode === 'applied' && 'Applied Learning'}
             {mode === 'quiz' && 'Quiz'}
             {mode === 'sandbox' && 'AI Sandbox'}
@@ -273,74 +280,89 @@ const FloatingSandbox = ({ lessonId, onClose, user }) => {
         </div>
         <div className="flex items-center gap-2">
           {/* Mode switcher (if applicable) */}
-          {lessonStatus?.applied_learning_completed && (
+          {lessonStatus?.applied_learning_completed && !isTransparent && (
             <button
               onClick={() => setMode(mode === 'sandbox' ? 'quiz' : 'sandbox')}
-              className={`p-1.5 rounded-lg ${isTransparent ? 'bg-slate-200 hover:bg-slate-300' : 'bg-white/10 hover:bg-white/20'}`}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20"
             >
-              <Move className={`w-4 h-4 ${isTransparent ? 'text-slate-900' : 'text-slate-300'}`} />
+              <Move className="w-4 h-4 text-slate-300" />
             </button>
           )}
           
           {/* Transparency toggle */}
-          <button
-            onClick={() => setIsTransparent(!isTransparent)}
-            className={`p-1.5 rounded-lg ${isTransparent ? 'bg-slate-200 hover:bg-slate-300' : 'bg-white/10 hover:bg-white/20'}`}
-            title={isTransparent ? 'Make Opaque' : 'Make Transparent'}
-          >
-            <Sparkles className={`w-4 h-4 ${isTransparent ? 'text-purple-600' : 'text-white'}`} />
-          </button>
+          {!isTransparent && (
+            <button
+              onClick={() => setIsTransparent(!isTransparent)}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20"
+              title="Make Transparent (Click outside to auto-hide)"
+            >
+              <Sparkles className="w-4 h-4 text-purple-400" />
+            </button>
+          )}
           
           {/* Close */}
-          <button
-            onClick={onClose}
-            className={`p-1.5 rounded-lg ${isTransparent ? 'bg-slate-200 hover:bg-slate-300' : 'bg-white/10 hover:bg-white/20'}`}
-          >
-            <X className={`w-4 h-4 ${isTransparent ? 'text-slate-900' : 'text-slate-300'}`} />
-          </button>
+          {!isTransparent && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20"
+            >
+              <X className="w-4 h-4 text-slate-300" />
+            </button>
+          )}
         </div>
       </div>
       
-      {/* Content Area */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {mode === 'applied' && (
-          <AppliedLearningContent
-            exercise={exercise}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            submitPrompt={submitPrompt}
-            evaluating={evaluating}
-            evaluation={evaluation}
-            isTransparent={isTransparent}
-          />
-        )}
-        
-        {mode === 'quiz' && (
-          <QuizContent
-            quiz={quiz}
-            quizAnswers={quizAnswers}
-            setQuizAnswers={setQuizAnswers}
-            submitQuiz={submitQuiz}
-            submittingQuiz={submittingQuiz}
-            quizResult={quizResult}
-            isTransparent={isTransparent}
-          />
-        )}
-        
-        {mode === 'sandbox' && (
-          <SandboxContent
-            messages={messages}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            sendMessage={sendMessage}
-            sending={sending}
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            chatContainerRef={chatContainerRef}
-            isTransparent={isTransparent}
-          />
-        )}
-      </div>
+      {/* Content Area - Only visible when opaque */}
+      {!isTransparent && (
+        <div className="flex-1 overflow-hidden flex flex-col bg-slate-900/95">
+          {mode === 'applied' && (
+            <AppliedLearningContent
+              exercise={exercise}
+              inputValue={inputValue}
+              setInputValue={setInputValue}
+              submitPrompt={submitPrompt}
+              evaluating={evaluating}
+              evaluation={evaluation}
+              isTransparent={isTransparent}
+            />
+          )}
+          
+          {mode === 'quiz' && (
+            <QuizContent
+              quiz={quiz}
+              quizAnswers={quizAnswers}
+              setQuizAnswers={setQuizAnswers}
+              submitQuiz={submitQuiz}
+              submittingQuiz={submittingQuiz}
+              quizResult={quizResult}
+              isTransparent={isTransparent}
+            />
+          )}
+          
+          {mode === 'sandbox' && (
+            <SandboxContent
+              messages={messages}
+              inputValue={inputValue}
+              setInputValue={setInputValue}
+              sendMessage={sendMessage}
+              sending={sending}
+              selectedModel={selectedModel}
+              setSelectedModel={setSelectedModel}
+              chatContainerRef={chatContainerRef}
+              isTransparent={isTransparent}
+            />
+          )}
+        </div>
+      )}
+      
+      {/* Ghost mode helper text */}
+      {isTransparent && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-fuchsia-500/50">
+            <p className="text-xs text-fuchsia-400 font-medium">Click to open</p>
+          </div>
+        </div>
+      )}
       
       {/* Resize handle */}
       <div
