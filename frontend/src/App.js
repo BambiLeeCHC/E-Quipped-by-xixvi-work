@@ -883,21 +883,21 @@ const LessonView = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-fuchsia-500" /></div>;
 
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <div className="max-w-6xl mx-auto">
-        <div className="sticky top-0 bg-void/90 backdrop-blur-sm border-b border-white/10 z-10">
+        <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b-2 border-slate-300 shadow-sm z-10">
           <div className="flex items-center justify-between px-4 sm:px-6 py-4">
             <div className="flex items-center gap-3">
-              <button onClick={() => navigate("/dashboard")} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/20 transition"><ArrowLeft className="w-5 h-5" /></button>
+              <button onClick={() => navigate("/dashboard")} className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-300 transition"><ArrowLeft className="w-5 h-5" /></button>
               <div>
-                <p className="text-xs sm:text-sm text-slate-400">Module {lesson?.module_id?.split('_')[1]} • Lesson {lesson?.order_index}</p>
-                <h2 className="text-base sm:text-xl font-bold text-white">{lesson?.title}</h2>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium">Module {lesson?.module_id?.split('_')[1]} • Lesson {lesson?.order_index}</p>
+                <h2 className="text-base sm:text-xl font-bold text-slate-900">{lesson?.title}</h2>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setSandboxOpen(!sandboxOpen)} 
-                className="px-3 py-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white text-sm font-medium hover:shadow-lg transition flex items-center gap-2"
+                className="px-3 py-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white text-sm font-medium hover:shadow-lg transition flex items-center gap-2"
               >
                 <FlaskConical className="w-4 h-4" />
                 <span className="hidden sm:inline">{sandboxOpen ? 'Hide' : 'Show'} Sandbox</span>
@@ -907,14 +907,14 @@ const LessonView = () => {
         </div>
 
         <div className="px-4 sm:px-6 py-6 sm:py-8">
-          <GlassCard className="p-4 sm:p-6 mb-6 bg-fuchsia-500/10 border-fuchsia-500/20">
-            <h3 className="font-bold text-white mb-2 flex items-center gap-2"><Target className="w-5 h-5 text-fuchsia-400" /> Learning Objectives</h3>
-            <p className="text-slate-300 text-sm sm:text-base mb-3">{lesson?.description}</p>
+          <GlassCard className="p-4 sm:p-6 mb-6 bg-fuchsia-50 border-2 border-fuchsia-300 shadow-md">
+            <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2 text-lg"><Target className="w-5 h-5 text-fuchsia-600" /> Learning Objectives</h3>
+            <p className="text-slate-700 text-sm sm:text-base mb-3 leading-relaxed">{lesson?.description}</p>
             {lesson?.learning_objectives?.length > 0 && (
               <ul className="space-y-2 mt-3">
                 {lesson.learning_objectives.map((obj, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-slate-300 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                  <li key={idx} className="flex items-start gap-3 text-slate-700 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                     <span>{obj}</span>
                   </li>
                 ))}
@@ -922,11 +922,11 @@ const LessonView = () => {
             )}
           </GlassCard>
 
-          <div className="mb-8">
+          <div className="mb-8 bg-white rounded-xl p-6 shadow-md border-2 border-slate-200">
             {renderLessonContent()}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-6 border-t-2 border-slate-300">
             <NeonButton variant="ghost" onClick={() => lesson?.prev_lesson && navigate(`/lesson/${lesson.prev_lesson.lesson_id}`)} disabled={!lesson?.prev_lesson}>
               <ArrowLeft className="w-4 h-4" /> Previous
             </NeonButton>
@@ -936,8 +936,8 @@ const LessonView = () => {
           </div>
           
           {lesson?.next_lesson && (
-            <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-              <p className="text-sm text-blue-300 flex items-center gap-2">
+            <div className="mt-4 p-4 rounded-xl bg-blue-50 border-2 border-blue-300 shadow-sm">
+              <p className="text-sm text-blue-900 flex items-center gap-2 font-medium">
                 <ChevronRight className="w-4 h-4" />
                 <span><strong>Next:</strong> {lesson.next_lesson.title}</span>
               </p>
