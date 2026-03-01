@@ -44,23 +44,23 @@ export const Tabs = ({ tabs }) => {
   const [activeTab, setActiveTab] = useState(0);
   
   return (
-    <div className="rounded-xl border-2 border-slate-600 overflow-hidden bg-slate-800/50">
-      <div className="flex border-b-2 border-slate-600 bg-slate-900/80">
+    <div className="rounded-xl border-2 border-slate-400 overflow-hidden bg-slate-100/50">
+      <div className="flex border-b-2 border-slate-400 bg-white/80">
         {tabs.map((tab, idx) => (
           <button
             key={idx}
             onClick={() => setActiveTab(idx)}
             className={`flex-1 px-4 py-3 text-sm font-semibold transition ${
               activeTab === idx
-                ? 'bg-fuchsia-600/90 text-white border-b-4 border-fuchsia-400'
-                : 'text-slate-200 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-fuchsia-600/90 text-slate-900 border-b-4 border-fuchsia-400'
+                : 'text-slate-800 hover:text-slate-900 hover:bg-slate-700/50'
             }`}
           >
             {tab.label}
           </button>
         ))}
       </div>
-      <div className="p-4 text-slate-100 text-base leading-relaxed">
+      <div className="p-4 text-slate-900 text-base leading-relaxed">
         {tabs[activeTab].content}
       </div>
     </div>
@@ -75,39 +75,39 @@ export const Callout = ({ type = 'info', title, children, collapsible = false })
   
   const types = {
     tip: {
-      bg: 'bg-blue-900/40',
+      bg: 'bg-blue-50/40',
       border: 'border-blue-400',
       icon: <Lightbulb className="w-5 h-5 text-blue-300" />,
-      textColor: 'text-blue-100',
-      titleColor: 'text-blue-50'
+      textColor: 'text-blue-900',
+      titleColor: 'text-blue-950'
     },
     warning: {
-      bg: 'bg-amber-900/40',
+      bg: 'bg-amber-50/40',
       border: 'border-amber-400',
       icon: <AlertTriangle className="w-5 h-5 text-amber-300" />,
-      textColor: 'text-amber-100',
-      titleColor: 'text-amber-50'
+      textColor: 'text-amber-900',
+      titleColor: 'text-amber-950'
     },
     info: {
-      bg: 'bg-slate-800/60',
+      bg: 'bg-slate-100/60',
       border: 'border-slate-400',
-      icon: <Info className="w-5 h-5 text-slate-300" />,
-      textColor: 'text-slate-100',
+      icon: <Info className="w-5 h-5 text-slate-700" />,
+      textColor: 'text-slate-900',
       titleColor: 'text-slate-50'
     },
     success: {
-      bg: 'bg-green-900/40',
+      bg: 'bg-green-50/40',
       border: 'border-green-400',
       icon: <Check className="w-5 h-5 text-green-300" />,
-      textColor: 'text-green-100',
-      titleColor: 'text-green-50'
+      textColor: 'text-green-900',
+      titleColor: 'text-green-950'
     },
     error: {
-      bg: 'bg-red-900/40',
+      bg: 'bg-red-50/40',
       border: 'border-red-400',
       icon: <X className="w-5 h-5 text-red-300" />,
-      textColor: 'text-red-100',
-      titleColor: 'text-red-50'
+      textColor: 'text-red-900',
+      titleColor: 'text-red-950'
     }
   };
   
@@ -122,7 +122,7 @@ export const Callout = ({ type = 'info', title, children, collapsible = false })
         {style.icon}
         <span className={`font-semibold ${style.titleColor} flex-1 text-base`}>{title}</span>
         {collapsible && (
-          isOpen ? <ChevronDown className="w-4 h-4 text-slate-200" /> : <ChevronRight className="w-4 h-4 text-slate-200" />
+          isOpen ? <ChevronDown className="w-4 h-4 text-slate-800" /> : <ChevronRight className="w-4 h-4 text-slate-800" />
         )}
       </div>
       {(!collapsible || isOpen) && (
@@ -155,12 +155,12 @@ export const ChallengeBox = ({ title, description, tasks, onComplete }) => {
   
   return (
     <div className="rounded-xl border-2 border-fuchsia-500/50 bg-gradient-to-br from-fuchsia-900/30 to-purple-900/30 overflow-hidden">
-      <div className="px-5 py-4 border-b-2 border-fuchsia-500/50 bg-fuchsia-900/40">
+      <div className="px-5 py-4 border-b-2 border-fuchsia-500/50 bg-fuchsia-50/40">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-5 h-5 text-fuchsia-300" />
-          <span className="font-bold text-fuchsia-100 text-lg">{title}</span>
+          <span className="font-bold text-fuchsia-900 text-lg">{title}</span>
         </div>
-        {description && <p className="text-sm text-slate-100 leading-relaxed">{description}</p>}
+        {description && <p className="text-sm text-slate-900 leading-relaxed">{description}</p>}
       </div>
       
       <div className="p-5 space-y-3">
@@ -175,21 +175,21 @@ export const ChallengeBox = ({ title, description, tasks, onComplete }) => {
               className={`p-4 rounded-lg border-2 cursor-pointer transition ${
                 isCompleted
                   ? 'bg-green-600/30 border-green-400'
-                  : 'bg-slate-800/80 border-slate-600 hover:bg-slate-700/80 hover:border-slate-500'
+                  : 'bg-slate-100/80 border-slate-400 hover:bg-slate-700/80 hover:border-slate-500'
               }`}
             >
               <div className="flex items-start gap-3">
                 <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                   isCompleted ? 'bg-green-500 border-green-400' : 'border-slate-400'
                 }`}>
-                  {isCompleted && <Check className="w-5 h-5 text-white" />}
+                  {isCompleted && <Check className="w-5 h-5 text-slate-900" />}
                 </div>
                 <div className="flex-1">
-                  <p className={`text-base font-semibold ${isCompleted ? 'text-green-50 line-through' : 'text-white'}`}>
+                  <p className={`text-base font-semibold ${isCompleted ? 'text-green-950 line-through' : 'text-slate-900'}`}>
                     {task.title}
                   </p>
                   {task.description && (
-                    <p className={`text-sm mt-1 ${isCompleted ? 'text-green-100' : 'text-slate-200'}`}>{task.description}</p>
+                    <p className={`text-sm mt-1 ${isCompleted ? 'text-green-900' : 'text-slate-800'}`}>{task.description}</p>
                   )}
                 </div>
               </div>
@@ -200,11 +200,11 @@ export const ChallengeBox = ({ title, description, tasks, onComplete }) => {
       
       {/* Progress Bar */}
       <div className="px-5 pb-5">
-        <div className="flex items-center justify-between text-sm text-slate-200 mb-2 font-medium">
+        <div className="flex items-center justify-between text-sm text-slate-800 mb-2 font-medium">
           <span>Progress</span>
           <span>{completedTasks.length}/{tasks.length} completed</span>
         </div>
-        <div className="h-3 bg-slate-900/60 rounded-full overflow-hidden border border-slate-600">
+        <div className="h-3 bg-white/60 rounded-full overflow-hidden border border-slate-400">
           <div
             className="h-full bg-gradient-to-r from-fuchsia-500 to-purple-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
@@ -222,19 +222,19 @@ export const CodeComparison = ({ bad, good, badLabel = "❌ Bad", goodLabel = "�
   return (
     <div className="grid md:grid-cols-2 gap-4">
       <div className="rounded-xl border-2 border-red-500/60 overflow-hidden">
-        <div className="px-4 py-2 bg-red-900/40 border-b-2 border-red-500/60">
-          <span className="text-sm font-bold text-red-100">{badLabel}</span>
+        <div className="px-4 py-2 bg-red-50/40 border-b-2 border-red-500/60">
+          <span className="text-sm font-bold text-red-900">{badLabel}</span>
         </div>
-        <pre className="p-4 bg-slate-950 text-sm text-slate-100 overflow-x-auto leading-relaxed">
+        <pre className="p-4 bg-slate-900 text-sm text-slate-900 overflow-x-auto leading-relaxed">
           <code>{bad}</code>
         </pre>
       </div>
       
       <div className="rounded-xl border-2 border-green-500/60 overflow-hidden">
-        <div className="px-4 py-2 bg-green-900/40 border-b-2 border-green-500/60">
-          <span className="text-sm font-bold text-green-100">{goodLabel}</span>
+        <div className="px-4 py-2 bg-green-50/40 border-b-2 border-green-500/60">
+          <span className="text-sm font-bold text-green-900">{goodLabel}</span>
         </div>
-        <pre className="p-4 bg-slate-950 text-sm text-slate-100 overflow-x-auto leading-relaxed">
+        <pre className="p-4 bg-slate-900 text-sm text-slate-900 overflow-x-auto leading-relaxed">
           <code>{good}</code>
         </pre>
       </div>
@@ -257,8 +257,8 @@ export const QuickQuiz = ({ question, options, correctAnswer, explanation }) => 
   const isCorrect = selectedAnswer === correctAnswer;
   
   return (
-    <div className="rounded-xl border-2 border-purple-500/50 bg-purple-900/30 p-5">
-      <p className="font-semibold text-white mb-4 text-base leading-relaxed">{question}</p>
+    <div className="rounded-xl border-2 border-purple-500/50 bg-purple-50/30 p-5">
+      <p className="font-semibold text-slate-900 mb-4 text-base leading-relaxed">{question}</p>
       
       <div className="space-y-3 mb-4">
         {options.map((option, idx) => (
@@ -269,11 +269,11 @@ export const QuickQuiz = ({ question, options, correctAnswer, explanation }) => 
             className={`w-full text-left p-3 rounded-lg border-2 transition ${
               showExplanation
                 ? idx === correctAnswer
-                  ? 'bg-green-600/40 border-green-400 text-green-50 font-medium'
+                  ? 'bg-green-600/40 border-green-400 text-green-950 font-medium'
                   : idx === selectedAnswer
-                  ? 'bg-red-600/40 border-red-400 text-red-50'
-                  : 'bg-slate-800/50 border-slate-600 text-slate-300'
-                : 'bg-slate-800/80 border-slate-600 text-slate-100 hover:bg-slate-700 hover:border-slate-500 font-medium'
+                  ? 'bg-red-600/40 border-red-400 text-red-950'
+                  : 'bg-slate-100/50 border-slate-400 text-slate-700'
+                : 'bg-slate-100/80 border-slate-400 text-slate-900 hover:bg-slate-700 hover:border-slate-500 font-medium'
             }`}
           >
             {option}
@@ -285,16 +285,16 @@ export const QuickQuiz = ({ question, options, correctAnswer, explanation }) => 
         <div className={`p-4 rounded-lg border-2 ${
           isCorrect ? 'bg-green-600/30 border-green-400' : 'bg-red-600/30 border-red-400'
         }`}>
-          <p className={`text-base font-bold mb-2 ${isCorrect ? 'text-green-50' : 'text-red-50'}`}>
+          <p className={`text-base font-bold mb-2 ${isCorrect ? 'text-green-950' : 'text-red-950'}`}>
             {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
           </p>
-          <p className={`text-sm ${isCorrect ? 'text-green-100' : 'text-red-100'} leading-relaxed`}>{explanation}</p>
+          <p className={`text-sm ${isCorrect ? 'text-green-900' : 'text-red-900'} leading-relaxed`}>{explanation}</p>
           <button
             onClick={() => {
               setSelectedAnswer(null);
               setShowExplanation(false);
             }}
-            className="mt-3 text-sm text-slate-100 hover:text-white font-medium transition underline"
+            className="mt-3 text-sm text-slate-900 hover:text-slate-900 font-medium transition underline"
           >
             Try again
           </button>
@@ -311,20 +311,20 @@ export const StepGuide = ({ steps }) => {
   const [currentStep, setCurrentStep] = useState(0);
   
   return (
-    <div className="rounded-xl border-2 border-blue-500/50 bg-blue-900/30 overflow-hidden">
-      <div className="px-5 py-3 bg-blue-900/50 border-b-2 border-blue-500/50">
-        <span className="font-bold text-blue-100 text-base">Step {currentStep + 1} of {steps.length}</span>
+    <div className="rounded-xl border-2 border-blue-500/50 bg-blue-50/30 overflow-hidden">
+      <div className="px-5 py-3 bg-blue-50/50 border-b-2 border-blue-500/50">
+        <span className="font-bold text-blue-900 text-base">Step {currentStep + 1} of {steps.length}</span>
       </div>
       
       <div className="p-5">
-        <h4 className="font-bold text-white text-lg mb-3">{steps[currentStep].title}</h4>
-        <div className="text-base text-slate-100 mb-5 leading-relaxed">{steps[currentStep].content}</div>
+        <h4 className="font-bold text-slate-900 text-lg mb-3">{steps[currentStep].title}</h4>
+        <div className="text-base text-slate-900 mb-5 leading-relaxed">{steps[currentStep].content}</div>
         
         <div className="flex items-center justify-between">
           <button
             onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
             disabled={currentStep === 0}
-            className="px-5 py-2.5 rounded-lg bg-slate-700 text-white text-sm font-semibold hover:bg-slate-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 rounded-lg bg-slate-700 text-slate-900 text-sm font-semibold hover:bg-slate-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Previous
           </button>
@@ -343,7 +343,7 @@ export const StepGuide = ({ steps }) => {
           <button
             onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
             disabled={currentStep === steps.length - 1}
-            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white text-sm font-semibold hover:shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-fuchsia-600 to-purple-600 text-slate-900 text-sm font-semibold hover:shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {currentStep === steps.length - 1 ? 'Complete' : 'Next'}
           </button>
