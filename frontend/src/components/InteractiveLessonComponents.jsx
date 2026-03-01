@@ -8,28 +8,28 @@ export const Accordion = ({ title, children, defaultOpen = false, variant = 'def
   const [isOpen, setIsOpen] = useState(defaultOpen);
   
   const variants = {
-    default: 'bg-white/5 border-white/10',
-    primary: 'bg-fuchsia-500/10 border-fuchsia-500/30',
-    success: 'bg-green-500/10 border-green-500/30',
-    warning: 'bg-amber-500/10 border-amber-500/30',
-    info: 'bg-blue-500/10 border-blue-500/30'
+    default: 'bg-slate-800/80 border-slate-600',
+    primary: 'bg-fuchsia-900/30 border-fuchsia-500/50',
+    success: 'bg-green-900/30 border-green-500/50',
+    warning: 'bg-amber-900/30 border-amber-500/50',
+    info: 'bg-blue-900/30 border-blue-500/50'
   };
   
   return (
-    <div className={`rounded-xl border ${variants[variant]} overflow-hidden transition-all duration-300`}>
+    <div className={`rounded-xl border-2 ${variants[variant]} overflow-hidden transition-all duration-300`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-white/5 transition"
+        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-white/10 transition"
       >
-        <span className="font-medium text-white">{title}</span>
+        <span className="font-semibold text-white text-base">{title}</span>
         {isOpen ? (
-          <ChevronDown className="w-5 h-5 text-slate-400 transition-transform" />
+          <ChevronDown className="w-5 h-5 text-slate-200 transition-transform" />
         ) : (
-          <ChevronRight className="w-5 h-5 text-slate-400 transition-transform" />
+          <ChevronRight className="w-5 h-5 text-slate-200 transition-transform" />
         )}
       </button>
       {isOpen && (
-        <div className="px-4 py-3 border-t border-white/10 text-slate-300 text-sm space-y-2">
+        <div className="px-4 py-3 border-t-2 border-white/20 text-slate-100 text-base space-y-2 leading-relaxed">
           {children}
         </div>
       )}
