@@ -75,53 +75,58 @@ export const Callout = ({ type = 'info', title, children, collapsible = false })
   
   const types = {
     tip: {
-      bg: 'bg-blue-500/10',
-      border: 'border-blue-500/30',
-      icon: <Lightbulb className="w-5 h-5 text-blue-400" />,
-      textColor: 'text-blue-200'
+      bg: 'bg-blue-900/40',
+      border: 'border-blue-400',
+      icon: <Lightbulb className="w-5 h-5 text-blue-300" />,
+      textColor: 'text-blue-100',
+      titleColor: 'text-blue-50'
     },
     warning: {
-      bg: 'bg-amber-500/10',
-      border: 'border-amber-500/30',
-      icon: <AlertTriangle className="w-5 h-5 text-amber-400" />,
-      textColor: 'text-amber-200'
+      bg: 'bg-amber-900/40',
+      border: 'border-amber-400',
+      icon: <AlertTriangle className="w-5 h-5 text-amber-300" />,
+      textColor: 'text-amber-100',
+      titleColor: 'text-amber-50'
     },
     info: {
-      bg: 'bg-slate-500/10',
-      border: 'border-slate-500/30',
-      icon: <Info className="w-5 h-5 text-slate-400" />,
-      textColor: 'text-slate-200'
+      bg: 'bg-slate-800/60',
+      border: 'border-slate-400',
+      icon: <Info className="w-5 h-5 text-slate-300" />,
+      textColor: 'text-slate-100',
+      titleColor: 'text-slate-50'
     },
     success: {
-      bg: 'bg-green-500/10',
-      border: 'border-green-500/30',
-      icon: <Check className="w-5 h-5 text-green-400" />,
-      textColor: 'text-green-200'
+      bg: 'bg-green-900/40',
+      border: 'border-green-400',
+      icon: <Check className="w-5 h-5 text-green-300" />,
+      textColor: 'text-green-100',
+      titleColor: 'text-green-50'
     },
     error: {
-      bg: 'bg-red-500/10',
-      border: 'border-red-500/30',
-      icon: <X className="w-5 h-5 text-red-400" />,
-      textColor: 'text-red-200'
+      bg: 'bg-red-900/40',
+      border: 'border-red-400',
+      icon: <X className="w-5 h-5 text-red-300" />,
+      textColor: 'text-red-100',
+      titleColor: 'text-red-50'
     }
   };
   
   const style = types[type];
   
   return (
-    <div className={`rounded-xl border ${style.border} ${style.bg} overflow-hidden`}>
+    <div className={`rounded-xl border-2 ${style.border} ${style.bg} overflow-hidden`}>
       <div
-        className={`px-4 py-3 flex items-center gap-3 ${collapsible ? 'cursor-pointer hover:bg-white/5' : ''}`}
+        className={`px-4 py-3 flex items-center gap-3 ${collapsible ? 'cursor-pointer hover:bg-white/10' : ''}`}
         onClick={() => collapsible && setIsOpen(!isOpen)}
       >
         {style.icon}
-        <span className={`font-medium ${style.textColor} flex-1`}>{title}</span>
+        <span className={`font-semibold ${style.titleColor} flex-1 text-base`}>{title}</span>
         {collapsible && (
-          isOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />
+          isOpen ? <ChevronDown className="w-4 h-4 text-slate-200" /> : <ChevronRight className="w-4 h-4 text-slate-200" />
         )}
       </div>
       {(!collapsible || isOpen) && (
-        <div className={`px-4 py-3 ${title ? 'border-t border-white/10' : ''} text-sm ${style.textColor}`}>
+        <div className={`px-4 py-3 ${title ? 'border-t-2 border-white/20' : ''} text-base ${style.textColor} leading-relaxed`}>
           {children}
         </div>
       )}
