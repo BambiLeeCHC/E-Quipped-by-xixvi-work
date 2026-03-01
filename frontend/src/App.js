@@ -791,14 +791,56 @@ const LessonView = () => {
                     </pre>
                   )}
                   {block.type === 'callout' && (
-                    <div className={`p-4 rounded-lg border ${
-                      block.callout_type === 'tip' ? 'bg-blue-500/10 border-blue-500/30' :
-                      block.callout_type === 'warning' ? 'bg-amber-500/10 border-amber-500/30' :
-                      block.callout_type === 'note' ? 'bg-purple-500/10 border-purple-500/30' :
-                      'bg-slate-500/10 border-slate-500/30'
-                    }`}>
-                      <p className="text-slate-200 text-sm">{block.content}</p>
+                    <Callout 
+                      type={block.callout_type || 'info'} 
+                      title={block.title}
+                      collapsible={block.collapsible}
+                    >
+                      {block.content}
+                    </Callout>
+                  )}
+                  {block.type === 'accordion' && block.items && (
+                    <div className="space-y-2">
+                      {block.items.map((item, iIdx) => (
+                        <Accordion 
+                          key={iIdx}
+                          title={item.title}
+                          defaultOpen={item.defaultOpen}
+                          variant={item.variant || 'default'}
+                        >
+                          {item.content}
+                        </Accordion>
+                      ))}
                     </div>
+                  )}
+                  {block.type === 'tabs' && block.tabs && (
+                    <Tabs tabs={block.tabs} />
+                  )}
+                  {block.type === 'challenge' && block.tasks && (
+                    <ChallengeBox
+                      title={block.title}
+                      description={block.description}
+                      tasks={block.tasks}
+                    />
+                  )}
+                  {block.type === 'code_comparison' && (
+                    <CodeComparison
+                      bad={block.bad}
+                      good={block.good}
+                      badLabel={block.badLabel}
+                      goodLabel={block.goodLabel}
+                    />
+                  )}
+                  {block.type === 'quiz' && (
+                    <QuickQuiz
+                      question={block.question}
+                      options={block.options}
+                      correctAnswer={block.correctAnswer}
+                      explanation={block.explanation}
+                    />
+                  )}
+                  {block.type === 'steps' && block.steps && (
+                    <StepGuide steps={block.steps} />
                   )}
                 </div>
               ))}
@@ -808,12 +850,32 @@ const LessonView = () => {
       );
     }
     
-    // Fallback to regular content
-    return (
-      <div className="prose prose-invert max-w-none">
-        <div className="text-slate-300 whitespace-pre-wrap">{lesson?.content}</div>
-      </div>
-    );
+    // Fallback to regular content with basic formatting
+    if (lesson?.content) {
+      // Parse markdown-style content for basic interactivity
+      const contentLines = lesson.content.split('\n');
+      return (
+        <div className="space-y-4">
+          {contentLines.map((line, idx) => {
+            if (line.startsWith('# ')) {
+              return <h2 key={idx} className="text-2xl font-bold text-white mt-6 mb-3">{line.substring(2)}</h2>;
+            } else if (line.startsWith('## ')) {
+              return <h3 key={idx} className="text-xl font-bold text-white mt-4 mb-2">{line.substring(3)}</h3>;
+            } else if (line.startsWith('### ')) {
+              return <h4 key={idx} className="text-lg font-bold text-white mt-3 mb-2">{line.substring(4)}</h4>;
+            } else if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+              return <li key={idx} className="text-slate-300 ml-6">{line.substring(2)}</li>;
+            } else if (line.trim() === '') {
+              return <div key={idx} className="h-2" />;
+            } else {
+              return <p key={idx} className="text-slate-300 leading-relaxed">{line}</p>;
+            }
+          })}
+        </div>
+      );
+    }
+    
+    return <p className="text-slate-400">No content available</p>;
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-fuchsia-500" /></div>;
