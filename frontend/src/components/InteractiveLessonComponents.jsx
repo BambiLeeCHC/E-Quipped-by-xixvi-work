@@ -154,16 +154,16 @@ export const ChallengeBox = ({ title, description, tasks, onComplete }) => {
   const progress = (completedTasks.length / tasks.length) * 100;
   
   return (
-    <div className="rounded-xl border border-fuchsia-500/30 bg-gradient-to-br from-fuchsia-500/10 to-purple-500/10 overflow-hidden">
-      <div className="px-4 py-3 border-b border-fuchsia-500/30 bg-fuchsia-500/10">
+    <div className="rounded-xl border-2 border-fuchsia-500/50 bg-gradient-to-br from-fuchsia-900/30 to-purple-900/30 overflow-hidden">
+      <div className="px-5 py-4 border-b-2 border-fuchsia-500/50 bg-fuchsia-900/40">
         <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="w-5 h-5 text-fuchsia-400" />
-          <span className="font-bold text-fuchsia-400">{title}</span>
+          <Sparkles className="w-5 h-5 text-fuchsia-300" />
+          <span className="font-bold text-fuchsia-100 text-lg">{title}</span>
         </div>
-        {description && <p className="text-sm text-slate-300">{description}</p>}
+        {description && <p className="text-sm text-slate-100 leading-relaxed">{description}</p>}
       </div>
       
-      <div className="p-4 space-y-3">
+      <div className="p-5 space-y-3">
         {tasks.map((task, idx) => {
           const taskId = `task-${idx}`;
           const isCompleted = completedTasks.includes(taskId);
@@ -172,24 +172,24 @@ export const ChallengeBox = ({ title, description, tasks, onComplete }) => {
             <div
               key={taskId}
               onClick={() => toggleTask(taskId)}
-              className={`p-3 rounded-lg border cursor-pointer transition ${
+              className={`p-4 rounded-lg border-2 cursor-pointer transition ${
                 isCompleted
-                  ? 'bg-green-500/20 border-green-500/50'
-                  : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  ? 'bg-green-600/30 border-green-400'
+                  : 'bg-slate-800/80 border-slate-600 hover:bg-slate-700/80 hover:border-slate-500'
               }`}
             >
               <div className="flex items-start gap-3">
-                <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                  isCompleted ? 'bg-green-500 border-green-500' : 'border-white/30'
+                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                  isCompleted ? 'bg-green-500 border-green-400' : 'border-slate-400'
                 }`}>
-                  {isCompleted && <Check className="w-4 h-4 text-white" />}
+                  {isCompleted && <Check className="w-5 h-5 text-white" />}
                 </div>
                 <div className="flex-1">
-                  <p className={`text-sm font-medium ${isCompleted ? 'text-green-200 line-through' : 'text-white'}`}>
+                  <p className={`text-base font-semibold ${isCompleted ? 'text-green-50 line-through' : 'text-white'}`}>
                     {task.title}
                   </p>
                   {task.description && (
-                    <p className="text-xs text-slate-400 mt-1">{task.description}</p>
+                    <p className={`text-sm mt-1 ${isCompleted ? 'text-green-100' : 'text-slate-200'}`}>{task.description}</p>
                   )}
                 </div>
               </div>
@@ -199,12 +199,12 @@ export const ChallengeBox = ({ title, description, tasks, onComplete }) => {
       </div>
       
       {/* Progress Bar */}
-      <div className="px-4 pb-4">
-        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+      <div className="px-5 pb-5">
+        <div className="flex items-center justify-between text-sm text-slate-200 mb-2 font-medium">
           <span>Progress</span>
           <span>{completedTasks.length}/{tasks.length} completed</span>
         </div>
-        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-3 bg-slate-900/60 rounded-full overflow-hidden border border-slate-600">
           <div
             className="h-full bg-gradient-to-r from-fuchsia-500 to-purple-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
