@@ -210,23 +210,57 @@ const FloatingSandbox = ({ lessonId, onClose, user }) => {
     }
   };
   
-  const opacityClass = isTransparent ? 'bg-slate-900/10 backdrop-blur-sm' : 'bg-slate-900/95 backdrop-blur-md';
-  const borderClass = isTransparent 
-    ? 'border-4 border-transparent bg-gradient-to-r from-purple-500 via-pink-500 via-blue-500 via-green-500 to-purple-500 bg-clip-border animate-gradient-x'
-    : 'border border-fuchsia-500/30';
+  // Click handler for transparency toggle
+  const handleSandboxClick = (e) => {
+    // If clicking inside the sandbox, make it opaque
+    if (isTransparent && sandboxRef.current && sandboxRef.current.contains(e.target)) {
+      setIsTransparent(false);
+    }
+  };
+  
+  // Click outside handler
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!isTransparent && sandboxRef.current && !sandboxRef.current.contains(e.target)) {
+        setIsTransparent(true);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isTransparent]);
+  
+  const containerStyle = isTransparent 
+    ? {
+        background: 'transparent',
+        borderWidth: '4px',
+        borderStyle: 'solid',
+        borderImage: 'linear-gradient(90deg, #a855f7, #ec4899, #3b82f6, #10b981, #a855f7) 1',
+        animation: 'gradient-rotate 3s linear infinite'
+      }
+    : {
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(12px)',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: 'rgba(217, 70, 239, 0.3)'
+      };
   
   return (
-    <div
-      ref={sandboxRef}
-      className={`fixed ${opacityClass} ${borderClass} rounded-xl shadow-2xl transition-all duration-300 z-50 flex flex-col overflow-hidden`}
-      style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        width: `${size.width}px`,
-        height: `${size.height}px`,
-      }}
-      onMouseDown={handleMouseDown}
-    >
+    <>
+      <div
+        ref={sandboxRef}
+        className={`fixed rounded-xl shadow-2xl transition-all duration-300 z-50 flex flex-col overflow-hidden ${isTransparent ? 'pointer-events-auto' : ''}`}
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          width: `${size.width}px`,
+          height: `${size.height}px`,
+          ...containerStyle
+        }}
+        onMouseDown={handleMouseDown}
+        onClick={handleSandboxClick}
+      >
       {/* Header - Draggable */}
       <div className="sandbox-handle cursor-move px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
