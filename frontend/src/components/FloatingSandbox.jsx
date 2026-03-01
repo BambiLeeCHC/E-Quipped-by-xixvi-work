@@ -261,52 +261,80 @@ const FloatingSandbox = ({ lessonId, onClose, user }) => {
         onMouseDown={handleMouseDown}
         onClick={handleSandboxClick}
       >
-      {/* Header - Draggable - Only visible when opaque or as ghost outline */}
+      {/* Header - Draggable with visible drag handle */}
       <div 
-        className={`sandbox-handle cursor-move px-4 py-3 border-b flex items-center justify-between ${
+        className={`sandbox-handle px-4 py-3 border-b flex items-center justify-between ${
           isTransparent 
             ? 'bg-transparent border-transparent' 
-            : 'bg-slate-900/90 border-white/10'
+            : 'bg-gradient-to-r from-slate-800 to-slate-900 border-fuchsia-500/30'
         }`}
-        style={{ opacity: isTransparent ? 0.3 : 1 }}
+        style={{ 
+          opacity: isTransparent ? 0.3 : 1,
+          cursor: 'move'
+        }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Drag handle indicator */}
+          {!isTransparent && (
+            <div className="flex flex-col gap-0.5 opacity-50 hover:opacity-100 transition">
+              <div className="w-1 h-1 rounded-full bg-slate-400"></div>
+              <div className="w-1 h-1 rounded-full bg-slate-400"></div>
+              <div className="w-1 h-1 rounded-full bg-slate-400"></div>
+              <div className="w-1 h-1 rounded-full bg-slate-400"></div>
+            </div>
+          )}
           <Sparkles className={`w-5 h-5 ${isTransparent ? 'text-fuchsia-400 opacity-60' : 'text-fuchsia-400'}`} />
-          <span className={`font-bold ${isTransparent ? 'text-white opacity-60' : 'text-white'}`}>
+          <span className={`font-bold text-base ${isTransparent ? 'text-white opacity-60' : 'text-white'}`}>
             {mode === 'applied' && 'Applied Learning'}
             {mode === 'quiz' && 'Quiz'}
             {mode === 'sandbox' && 'AI Sandbox'}
           </span>
+          {!isTransparent && (
+            <span className="text-xs text-slate-400 ml-2 hidden sm:inline">
+              (Drag to move)
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {/* Mode switcher (if applicable) */}
           {lessonStatus?.applied_learning_completed && !isTransparent && (
             <button
-              onClick={() => setMode(mode === 'sandbox' ? 'quiz' : 'sandbox')}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMode(mode === 'sandbox' ? 'quiz' : 'sandbox');
+              }}
+              className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition"
+              title="Switch mode"
             >
-              <Move className="w-4 h-4 text-slate-300" />
+              <Move className="w-4 h-4 text-slate-200" />
             </button>
           )}
           
           {/* Transparency toggle */}
           {!isTransparent && (
             <button
-              onClick={() => setIsTransparent(!isTransparent)}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsTransparent(!isTransparent);
+              }}
+              className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition"
               title="Make Transparent (Click outside to auto-hide)"
             >
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <Sparkles className="w-4 h-4 text-purple-300" />
             </button>
           )}
           
           {/* Close */}
           {!isTransparent && (
             <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="p-2 rounded-lg bg-slate-700 hover:bg-red-600 transition"
+              title="Close sandbox"
             >
-              <X className="w-4 h-4 text-slate-300" />
+              <X className="w-4 h-4 text-slate-200" />
             </button>
           )}
         </div>
