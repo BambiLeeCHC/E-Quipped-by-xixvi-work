@@ -221,20 +221,20 @@ export const ChallengeBox = ({ title, description, tasks, onComplete }) => {
 export const CodeComparison = ({ bad, good, badLabel = "❌ Bad", goodLabel = "✅ Good" }) => {
   return (
     <div className="grid md:grid-cols-2 gap-4">
-      <div className="rounded-xl border border-red-500/30 overflow-hidden">
-        <div className="px-3 py-2 bg-red-500/10 border-b border-red-500/30">
-          <span className="text-sm font-medium text-red-400">{badLabel}</span>
+      <div className="rounded-xl border-2 border-red-500/60 overflow-hidden">
+        <div className="px-4 py-2 bg-red-900/40 border-b-2 border-red-500/60">
+          <span className="text-sm font-bold text-red-100">{badLabel}</span>
         </div>
-        <pre className="p-4 bg-slate-900/50 text-sm text-slate-300 overflow-x-auto">
+        <pre className="p-4 bg-slate-950 text-sm text-slate-100 overflow-x-auto leading-relaxed">
           <code>{bad}</code>
         </pre>
       </div>
       
-      <div className="rounded-xl border border-green-500/30 overflow-hidden">
-        <div className="px-3 py-2 bg-green-500/10 border-b border-green-500/30">
-          <span className="text-sm font-medium text-green-400">{goodLabel}</span>
+      <div className="rounded-xl border-2 border-green-500/60 overflow-hidden">
+        <div className="px-4 py-2 bg-green-900/40 border-b-2 border-green-500/60">
+          <span className="text-sm font-bold text-green-100">{goodLabel}</span>
         </div>
-        <pre className="p-4 bg-slate-900/50 text-sm text-slate-300 overflow-x-auto">
+        <pre className="p-4 bg-slate-950 text-sm text-slate-100 overflow-x-auto leading-relaxed">
           <code>{good}</code>
         </pre>
       </div>
