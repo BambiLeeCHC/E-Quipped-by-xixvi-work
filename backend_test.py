@@ -1,438 +1,440 @@
 #!/usr/bin/env python3
+"""
+E-Quipped Backend API Testing Script
+Tests all the core functionality as requested in the review.
+"""
 
 import requests
-import sys
 import json
+import sys
 from datetime import datetime
 
-class EQuippedAPITester:
-    def __init__(self, base_url="https://gif-guide-modules.preview.emergentagent.com"):
+# Configuration
+BACKEND_URL = "https://gif-guide-modules.preview.emergentagent.com/api"
+ADMIN_EMAIL = "admin@equipped.ai"
+ADMIN_PASSWORD = "admin123"
+
+class APITester:
+    def __init__(self, base_url):
         self.base_url = base_url
-        self.api_url = f"{base_url}/api"
-        self.token = None
-        self.user = None
-        self.tests_run = 0
-        self.tests_passed = 0
-        self.session_id = None
-
-    def log_test(self, name, success=True, message=""):
+        self.session = requests.Session()
+        self.auth_token = None
+        self.test_results = []
+        
+    def log_test(self, test_name, success, details="", response_data=None):
         """Log test results"""
-        self.tests_run += 1
-        if success:
-            self.tests_passed += 1
-            print(f"✅ {name} - PASSED {message}")
-        else:
-            print(f"❌ {name} - FAILED {message}")
-        return success
-
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
-        """Run a single API test"""
-        url = f"{self.api_url}/{endpoint}"
-        req_headers = {'Content-Type': 'application/json'}
-        if self.token:
-            req_headers['Authorization'] = f'Bearer {self.token}'
-        if headers:
-            req_headers.update(headers)
-
-        print(f"\n🔍 Testing {name}...")
-        print(f"   URL: {url}")
+        result = {
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "timestamp": datetime.now().isoformat()
+        }
+        if response_data:
+            result["response"] = response_data
         
+        self.test_results.append(result)
+        
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}: {details}")
+        
+        if not success and response_data:
+            print(f"  Response: {json.dumps(response_data, indent=2)}")
+    
+    def authenticate_admin(self):
+        """Authenticate as admin user"""
         try:
-            if method == 'GET':
-                response = requests.get(url, headers=req_headers, timeout=10)
-            elif method == 'POST':
-                response = requests.post(url, json=data, headers=req_headers, timeout=10)
-            elif method == 'PUT':
-                response = requests.put(url, json=data, headers=req_headers, timeout=10)
-            elif method == 'DELETE':
-                response = requests.delete(url, headers=req_headers, timeout=10)
-
-            success = response.status_code == expected_status
-            
-            if success:
-                return self.log_test(name, True, f"Status: {response.status_code}"), response.json() if response.text else {}
-            else:
-                return self.log_test(name, False, f"Expected {expected_status}, got {response.status_code} - {response.text[:200]}"), {}
-
-        except Exception as e:
-            return self.log_test(name, False, f"Error: {str(e)}"), {}
-
-    def test_health_check(self):
-        """Test basic health endpoints"""
-        print("\n🏥 === HEALTH CHECK TESTS ===")
-        
-        # Test root endpoint
-        success, _ = self.run_test("Root endpoint", "GET", "", 200)
-        
-        # Test health endpoint
-        success, _ = self.run_test("Health endpoint", "GET", "health", 200)
-        
-        return success
-
-    def test_authentication(self):
-        """Test authentication endpoints"""
-        print("\n🔐 === AUTHENTICATION TESTS ===")
-        
-        # Test login with admin credentials
-        login_success, login_response = self.run_test(
-            "Admin Login",
-            "POST", 
-            "auth/login",
-            200,
-            data={"email": "admin@equipped.ai", "password": "admin123"}
-        )
-        
-        if login_success and 'token' in login_response:
-            self.token = login_response['token']
-            self.user = login_response.get('user', {})
-            print(f"   ✅ Token acquired: {self.token[:20]}...")
-            print(f"   ✅ User: {self.user.get('email', 'Unknown')}")
-        
-        # Test /me endpoint
-        if self.token:
-            me_success, me_response = self.run_test(
-                "Get Current User (/me)",
-                "GET",
-                "auth/me", 
-                200
+            response = self.session.post(
+                f"{self.base_url}/auth/login",
+                json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
             )
-            if me_success and me_response.get('email'):
-                print(f"   ✅ User authenticated: {me_response.get('email')}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.auth_token = data.get("token")
+                self.session.headers.update({"Authorization": f"Bearer {self.auth_token}"})
+                self.log_test("Admin Authentication", True, f"Logged in as {ADMIN_EMAIL}")
                 return True
-        
-        return False
-
-    def test_modules_endpoints(self):
-        """Test module-related endpoints"""
-        print("\n📚 === MODULES TESTS ===")
-        
-        # Get all modules
-        modules_success, modules_response = self.run_test(
-            "Get All Modules",
-            "GET",
-            "modules",
-            200
-        )
-        
-        if modules_success and isinstance(modules_response, list) and len(modules_response) > 0:
-            print(f"   ✅ Found {len(modules_response)} modules")
-            
-            # Test individual module
-            first_module = modules_response[0]
-            if 'slug' in first_module:
-                module_success, _ = self.run_test(
-                    f"Get Module by Slug ({first_module['slug']})",
-                    "GET",
-                    f"modules/{first_module['slug']}",
-                    200
-                )
-                
-                # Check for lessons in module
-                if 'lessons' in first_module and len(first_module['lessons']) > 0:
-                    print(f"   ✅ Module has {len(first_module['lessons'])} lessons")
-                    return True
-                else:
-                    print("   ⚠️ No lessons found in module")
-            
-        return modules_success
-
-    def test_lessons_endpoint(self):
-        """Test lesson endpoints"""
-        print("\n📖 === LESSONS TESTS ===")
-        
-        # First get modules to find a lesson
-        modules_success, modules_response = self.run_test(
-            "Get Modules for Lesson Test",
-            "GET",
-            "modules",
-            200
-        )
-        
-        if modules_success and isinstance(modules_response, list):
-            for module in modules_response:
-                if 'lessons' in module and len(module['lessons']) > 0:
-                    lesson_id = module['lessons'][0]['lesson_id']
-                    lesson_success, lesson_response = self.run_test(
-                        f"Get Lesson ({lesson_id})",
-                        "GET",
-                        f"lessons/{lesson_id}",
-                        200
-                    )
-                    return lesson_success
-        
-        return False
-
-    def test_ai_chat_functionality(self):
-        """Test AI chat endpoints"""
-        print("\n🤖 === AI CHAT TESTS ===")
-        
-        # Test chat with simple prompt
-        chat_data = {
-            "content": "Role: You are a helpful AI tutor. Task: Explain what machine learning is in simple terms. Context: For a beginner audience. Constraints: Keep it under 100 words.",
-            "model": "gpt-5.2",
-            "provider": "openai"
-        }
-        
-        chat_success, chat_response = self.run_test(
-            "AI Chat Message",
-            "POST",
-            "chat",
-            200,
-            data=chat_data
-        )
-        
-        if chat_success and 'response' in chat_response:
-            print(f"   ✅ AI Response: {chat_response['response'][:100]}...")
-            if 'session_id' in chat_response:
-                self.session_id = chat_response['session_id']
-                print(f"   ✅ Session ID: {self.session_id}")
-                
-                # Test chat history
-                history_success, _ = self.run_test(
-                    "Get Chat History",
-                    "GET",
-                    f"chat/history/{self.session_id}",
-                    200
-                )
-                return history_success
-        
-        return chat_success
-
-    def test_progress_tracking(self):
-        """Test progress tracking endpoints"""
-        print("\n📊 === PROGRESS TESTS ===")
-        
-        # Get a lesson first
-        modules_success, modules_response = self.run_test(
-            "Get Modules for Progress Test",
-            "GET", 
-            "modules",
-            200
-        )
-        
-        if modules_success and isinstance(modules_response, list):
-            for module in modules_response:
-                if 'lessons' in module and len(module['lessons']) > 0:
-                    lesson_id = module['lessons'][0]['lesson_id']
-                    
-                    # Update progress
-                    progress_data = {
-                        "lesson_id": lesson_id,
-                        "progress": 50,
-                        "score": 85,
-                        "completed": False
-                    }
-                    
-                    progress_success, progress_response = self.run_test(
-                        "Update Lesson Progress",
-                        "POST",
-                        "progress",
-                        200,
-                        data=progress_data
-                    )
-                    return progress_success
-        
-        return False
-
-    def test_admin_functionality(self):
-        """Test admin endpoints"""
-        print("\n👑 === ADMIN TESTS ===")
-        
-        if not self.user or not self.user.get('is_admin'):
-            print("   ⚠️ Skipping admin tests - user is not admin")
-            return True
-        
-        # Test analytics endpoint
-        analytics_success, analytics_response = self.run_test(
-            "Admin Analytics",
-            "GET",
-            "admin/analytics", 
-            200
-        )
-        
-        if analytics_success and isinstance(analytics_response, dict):
-            expected_fields = ['total_users', 'active_users', 'completion_rates', 'sandbox_sessions']
-            for field in expected_fields:
-                if field in analytics_response:
-                    print(f"   ✅ Analytics has {field}: {analytics_response[field]}")
-                else:
-                    print(f"   ⚠️ Missing analytics field: {field}")
-        
-        # Test users endpoint
-        users_success, users_response = self.run_test(
-            "Admin Get All Users",
-            "GET",
-            "admin/users",
-            200
-        )
-        
-        if users_success and isinstance(users_response, list):
-            print(f"   ✅ Found {len(users_response)} total users")
-        
-        return analytics_success and users_success
-
-    def test_master_editor_functionality(self):
-        """Test master editor features"""
-        print("\n👨‍💻 === MASTER EDITOR TESTS ===")
-        
-        # Login as master user
-        master_login_success, master_login_response = self.run_test(
-            "Master User Login",
-            "POST", 
-            "auth/login",
-            200,
-            data={"email": "master@equipped.ai", "password": "master123"}
-        )
-        
-        if not master_login_success:
+            else:
+                self.log_test("Admin Authentication", False, f"Status: {response.status_code}", response.json())
+                return False
+        except Exception as e:
+            self.log_test("Admin Authentication", False, f"Error: {str(e)}")
             return False
+    
+    def test_modules_loading(self):
+        """Test 1: GET /api/modules - Verify all 7 modules are loaded with 37 total lessons"""
+        try:
+            response = self.session.get(f"{self.base_url}/modules")
             
-        # Store master token
-        master_token = self.token
-        self.token = master_login_response.get('token')
-        master_user = master_login_response.get('user', {})
-        
-        if not master_user.get('is_master'):
-            print("   ❌ User does not have master editor privileges")
-            return False
+            if response.status_code == 200:
+                modules = response.json()
+                
+                # Count modules
+                module_count = len(modules)
+                
+                # Count total lessons
+                total_lessons = sum(module.get("total_lessons", 0) for module in modules)
+                
+                if module_count == 7 and total_lessons == 37:
+                    self.log_test("Modules Loading", True, f"Found {module_count} modules with {total_lessons} total lessons")
+                    
+                    # Log module details
+                    for module in modules:
+                        print(f"  📚 {module.get('title', 'Unknown')} - {module.get('total_lessons', 0)} lessons")
+                    
+                    return modules
+                else:
+                    self.log_test("Modules Loading", False, f"Expected 7 modules and 37 lessons, got {module_count} modules and {total_lessons} lessons", modules)
+                    return None
+            else:
+                self.log_test("Modules Loading", False, f"Status: {response.status_code}", response.json())
+                return None
+        except Exception as e:
+            self.log_test("Modules Loading", False, f"Error: {str(e)}")
+            return None
+    
+    def test_lesson_retrieval(self):
+        """Test 2: GET /api/lessons/les_001 - Verify lesson data structure"""
+        try:
+            response = self.session.get(f"{self.base_url}/lessons/les_001")
             
-        print(f"   ✅ Master user authenticated: {master_user.get('email')}")
-        
-        # Test AI content generation endpoint
-        ai_content_data = {
-            "prompt": "Create a lesson about prompt engineering basics",
-            "content_type": "lesson",
-            "context": "This is for beginner AI users"
-        }
-        
-        ai_content_success, ai_content_response = self.run_test(
-            "AI Content Generation",
-            "POST",
-            "ai/generate-content",
-            200,
-            data=ai_content_data
-        )
-        
-        # Test module update (master only)
-        modules_success, modules_response = self.run_test(
-            "Get Modules for Master Test",
-            "GET",
-            "modules",
-            200
-        )
-        
-        module_update_success = False
-        if modules_success and isinstance(modules_response, list) and len(modules_response) > 0:
-            module_id = modules_response[0].get('module_id')
-            update_data = {
-                "description": "Updated by master editor test"
+            if response.status_code == 200:
+                lesson = response.json()
+                
+                # Check required fields
+                required_fields = ["lesson_id", "title", "description", "content"]
+                missing_fields = [field for field in required_fields if not lesson.get(field)]
+                
+                if not missing_fields:
+                    # Check for sections/blocks
+                    has_sections = bool(lesson.get("sections"))
+                    sections_info = f"Has {len(lesson.get('sections', []))} sections" if has_sections else "No sections found"
+                    
+                    self.log_test("Lesson Retrieval", True, f"Lesson les_001 loaded successfully. {sections_info}")
+                    
+                    # Log lesson details
+                    print(f"  📖 Title: {lesson.get('title')}")
+                    print(f"  📝 Description: {lesson.get('description')[:100]}...")
+                    print(f"  ⏱️  Estimated time: {lesson.get('estimated_minutes', 'Unknown')} minutes")
+                    print(f"  🎯 XP reward: {lesson.get('xp_reward', 'Unknown')}")
+                    
+                    return lesson
+                else:
+                    self.log_test("Lesson Retrieval", False, f"Missing required fields: {missing_fields}", lesson)
+                    return None
+            else:
+                self.log_test("Lesson Retrieval", False, f"Status: {response.status_code}", response.json())
+                return None
+        except Exception as e:
+            self.log_test("Lesson Retrieval", False, f"Error: {str(e)}")
+            return None
+    
+    def test_applied_learning_exercise(self):
+        """Test 3: GET /api/lessons/les_001/exercise - Verify exercise data is returned"""
+        try:
+            response = self.session.get(f"{self.base_url}/lessons/les_001/exercise")
+            
+            if response.status_code == 200:
+                exercise = response.json()
+                
+                # Check required fields
+                required_fields = ["exercise_id", "lesson_id", "description"]
+                missing_fields = [field for field in required_fields if not exercise.get(field)]
+                
+                if not missing_fields:
+                    self.log_test("Applied Learning Exercise", True, f"Exercise loaded for les_001")
+                    
+                    # Log exercise details
+                    print(f"  🎯 Exercise ID: {exercise.get('exercise_id')}")
+                    print(f"  📝 Description: {exercise.get('description')}")
+                    print(f"  ✅ Required elements: {len(exercise.get('required_elements', []))}")
+                    print(f"  📊 Passing score: {exercise.get('passing_score', 'Unknown')}%")
+                    
+                    return exercise
+                else:
+                    self.log_test("Applied Learning Exercise", False, f"Missing required fields: {missing_fields}", exercise)
+                    return None
+            else:
+                self.log_test("Applied Learning Exercise", False, f"Status: {response.status_code}", response.json())
+                return None
+        except Exception as e:
+            self.log_test("Applied Learning Exercise", False, f"Error: {str(e)}")
+            return None
+    
+    def test_prompt_evaluation(self):
+        """Test 4: POST /api/lessons/les_001/evaluate-prompt - Check AI evaluation response"""
+        try:
+            # Create a sample prompt that should score well
+            sample_prompt = """You are a senior marketing manager with 10 years of experience in B2B SaaS companies. 
+
+Write a follow-up email to a potential client who attended our product demo yesterday. The client expressed interest in our enterprise features and mentioned they're evaluating solutions for their 500-person company.
+
+Context:
+- Recipient: Sarah Johnson, IT Director at TechCorp
+- Demo went well, she asked specific questions about security and integrations
+- Next step: She wants to discuss pricing and implementation timeline
+- Tone: Professional but warm, building relationship
+
+Constraints:
+- Keep it under 200 words
+- Include a clear call-to-action with 3 specific meeting time options
+- Reference 2 specific points from the demo
+- Suggest a 30-minute follow-up call"""
+
+            payload = {
+                "exercise_id": "ex_001",
+                "lesson_id": "les_001", 
+                "prompt": sample_prompt
             }
             
-            module_update_success, _ = self.run_test(
-                f"Update Module (Master Only)",
-                "PUT",
-                f"modules/{module_id}",
-                200,
-                data=update_data
+            response = self.session.post(
+                f"{self.base_url}/lessons/les_001/evaluate-prompt",
+                json=payload
             )
-        
-        # Test lesson update (master only)
-        lesson_update_success = False
-        if modules_success and isinstance(modules_response, list):
-            for module in modules_response:
-                if 'lessons' in module and len(module['lessons']) > 0:
-                    lesson_id = module['lessons'][0]['lesson_id']
-                    lesson_update_data = {
-                        "title": "Updated by master editor test"
-                    }
+            
+            if response.status_code == 200:
+                evaluation = response.json()
+                
+                # Check required fields
+                required_fields = ["score", "passed", "feedback"]
+                missing_fields = [field for field in required_fields if field not in evaluation]
+                
+                if not missing_fields:
+                    score = evaluation.get("score", 0)
+                    passed = evaluation.get("passed", False)
                     
-                    lesson_update_success, _ = self.run_test(
-                        f"Update Lesson (Master Only)",
-                        "PUT",
-                        f"lessons/{lesson_id}",
-                        200,
-                        data=lesson_update_data
-                    )
-                    break
-        
-        # Restore original token
-        self.token = master_token
-        
-        return ai_content_success and module_update_success and lesson_update_success
-
-    def test_password_recovery(self):
-        """Test password recovery functionality"""
-        print("\n🔓 === PASSWORD RECOVERY TESTS ===")
-        
-        recovery_data = {
-            "email": "test@example.com",
-            "method": "email"
-        }
-        
-        recovery_success, recovery_response = self.run_test(
-            "Password Recovery Request",
-            "POST",
-            "auth/recover",
-            200,
-            data=recovery_data
-        )
-        
-        return recovery_success
-
+                    self.log_test("Prompt Evaluation", True, f"AI evaluation completed - Score: {score}/100, Passed: {passed}")
+                    
+                    # Log evaluation details
+                    print(f"  📊 Score: {score}/100")
+                    print(f"  ✅ Passed: {passed}")
+                    print(f"  📝 Feedback: {evaluation.get('feedback', '')[:100]}...")
+                    
+                    return evaluation
+                else:
+                    self.log_test("Prompt Evaluation", False, f"Missing required fields: {missing_fields}", evaluation)
+                    return None
+            else:
+                self.log_test("Prompt Evaluation", False, f"Status: {response.status_code}", response.json())
+                return None
+        except Exception as e:
+            self.log_test("Prompt Evaluation", False, f"Error: {str(e)}")
+            return None
+    
+    def test_quiz_questions(self):
+        """Test 5a: GET /api/lessons/les_001/quiz - Verify quiz questions are returned (without correct answers)"""
+        try:
+            response = self.session.get(f"{self.base_url}/lessons/les_001/quiz")
+            
+            if response.status_code == 200:
+                questions = response.json()
+                
+                if isinstance(questions, list) and len(questions) > 0:
+                    # Verify questions don't include correct answers
+                    has_correct_answers = any("correct_answer" in q for q in questions)
+                    
+                    if not has_correct_answers:
+                        self.log_test("Quiz Questions", True, f"Found {len(questions)} quiz questions (correct answers properly hidden)")
+                        
+                        # Log question details
+                        for i, q in enumerate(questions, 1):
+                            print(f"  ❓ Question {i}: {q.get('question', 'Unknown')[:50]}...")
+                            print(f"     Options: {len(q.get('options', []))}")
+                        
+                        return questions
+                    else:
+                        self.log_test("Quiz Questions", False, "Quiz questions include correct answers (security issue)", questions)
+                        return None
+                else:
+                    self.log_test("Quiz Questions", False, f"Expected array of questions, got: {type(questions)}", questions)
+                    return None
+            else:
+                self.log_test("Quiz Questions", False, f"Status: {response.status_code}", response.json())
+                return None
+        except Exception as e:
+            self.log_test("Quiz Questions", False, f"Error: {str(e)}")
+            return None
+    
+    def test_quiz_submission(self, questions):
+        """Test 5b: POST /api/lessons/les_001/quiz - Check quiz result (score, feedback, passed)"""
+        if not questions:
+            self.log_test("Quiz Submission", False, "Cannot test quiz submission without questions")
+            return None
+            
+        try:
+            # Create sample answers (choose first option for all questions)
+            answers = {}
+            for q in questions:
+                answers[q["question_id"]] = 0  # Choose first option
+            
+            payload = {
+                "lesson_id": "les_001",
+                "answers": answers
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/lessons/les_001/quiz",
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check required fields
+                required_fields = ["score", "passed", "feedback"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    score = result.get("score", 0)
+                    passed = result.get("passed", False)
+                    total = result.get("total", 0)
+                    
+                    self.log_test("Quiz Submission", True, f"Quiz completed - Score: {score}%, Passed: {passed}")
+                    
+                    # Log quiz result details
+                    print(f"  📊 Score: {score}% ({result.get('correct', 0)}/{total})")
+                    print(f"  ✅ Passed: {passed}")
+                    print(f"  📝 Feedback items: {len(result.get('feedback', []))}")
+                    
+                    return result
+                else:
+                    self.log_test("Quiz Submission", False, f"Missing required fields in response", result)
+                    return None
+            elif response.status_code == 403:
+                # Need to complete applied learning first
+                self.log_test("Quiz Submission", False, "Need to complete applied learning exercise first (expected behavior)", response.json())
+                return None
+            else:
+                self.log_test("Quiz Submission", False, f"Status: {response.status_code}", response.json())
+                return None
+        except Exception as e:
+            self.log_test("Quiz Submission", False, f"Error: {str(e)}")
+            return None
+    
+    def test_lesson_status(self):
+        """Test 6: GET /api/lessons/les_001/status - Verify status tracking works"""
+        try:
+            response = self.session.get(f"{self.base_url}/lessons/les_001/status")
+            
+            if response.status_code == 200:
+                status = response.json()
+                
+                # Check expected fields
+                expected_fields = ["applied_learning_completed", "quiz_completed", "completed"]
+                missing_fields = [field for field in expected_fields if field not in status]
+                
+                if not missing_fields:
+                    al_completed = status.get("applied_learning_completed", False)
+                    quiz_completed = status.get("quiz_completed", False)
+                    lesson_completed = status.get("completed", False)
+                    
+                    self.log_test("Lesson Status", True, f"Status tracking working - AL: {al_completed}, Quiz: {quiz_completed}, Complete: {lesson_completed}")
+                    
+                    # Log status details
+                    print(f"  🎯 Applied Learning: {al_completed}")
+                    print(f"  ❓ Quiz: {quiz_completed}")
+                    print(f"  ✅ Lesson Complete: {lesson_completed}")
+                    if status.get("score"):
+                        print(f"  📊 Score: {status.get('score')}%")
+                    
+                    return status
+                else:
+                    self.log_test("Lesson Status", False, f"Missing expected fields: {missing_fields}", status)
+                    return None
+            else:
+                self.log_test("Lesson Status", False, f"Status: {response.status_code}", response.json())
+                return None
+        except Exception as e:
+            self.log_test("Lesson Status", False, f"Error: {str(e)}")
+            return None
+    
+    def test_api_health(self):
+        """Test API health endpoints"""
+        try:
+            # Test root endpoint
+            response = self.session.get(f"{self.base_url}/")
+            if response.status_code == 200:
+                self.log_test("API Root", True, "Root endpoint accessible")
+            else:
+                self.log_test("API Root", False, f"Status: {response.status_code}")
+            
+            # Test health endpoint
+            response = self.session.get(f"{self.base_url}/health")
+            if response.status_code == 200:
+                health_data = response.json()
+                self.log_test("API Health", True, f"Health check passed: {health_data.get('status')}")
+            else:
+                self.log_test("API Health", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_test("API Health", False, f"Error: {str(e)}")
+    
     def run_all_tests(self):
-        """Run all test suites"""
-        print("🚀 Starting E-Quipped AI Mastery Platform API Tests")
+        """Run all API tests"""
+        print("🚀 Starting E-Quipped Backend API Tests")
+        print(f"🌐 Testing against: {BACKEND_URL}")
         print("=" * 60)
         
-        # Run test suites in order
-        tests = [
-            ("Health Check", self.test_health_check),
-            ("Authentication", self.test_authentication),
-            ("Modules", self.test_modules_endpoints),
-            ("Lessons", self.test_lessons_endpoint),
-            ("AI Chat", self.test_ai_chat_functionality),
-            ("Progress Tracking", self.test_progress_tracking),
-            ("Admin Functionality", self.test_admin_functionality),
-            ("Master Editor Features", self.test_master_editor_functionality),
-            ("Password Recovery", self.test_password_recovery)
-        ]
+        # Test API health first
+        self.test_api_health()
         
-        suite_results = []
-        for test_name, test_func in tests:
-            try:
-                result = test_func()
-                suite_results.append((test_name, result))
-            except Exception as e:
-                print(f"❌ {test_name} suite crashed: {str(e)}")
-                suite_results.append((test_name, False))
+        # Authenticate as admin
+        if not self.authenticate_admin():
+            print("❌ Cannot proceed without authentication")
+            return False
         
-        # Print summary
+        # Test 1: Modules loading
+        modules = self.test_modules_loading()
+        
+        # Test 2: Lesson retrieval  
+        lesson = self.test_lesson_retrieval()
+        
+        # Test 3: Applied learning exercise
+        exercise = self.test_applied_learning_exercise()
+        
+        # Test 4: Prompt evaluation
+        evaluation = self.test_prompt_evaluation()
+        
+        # Test 5a: Quiz questions
+        questions = self.test_quiz_questions()
+        
+        # Test 5b: Quiz submission
+        quiz_result = self.test_quiz_submission(questions)
+        
+        # Test 6: Lesson status
+        status = self.test_lesson_status()
+        
         print("\n" + "=" * 60)
-        print("📊 TEST SUMMARY")
-        print("=" * 60)
+        self.print_summary()
         
-        for test_name, result in suite_results:
-            status = "✅ PASSED" if result else "❌ FAILED"
-            print(f"{test_name:.<30} {status}")
+        return True
+    
+    def print_summary(self):
+        """Print test summary"""
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results if result["success"])
+        failed_tests = total_tests - passed_tests
         
-        print(f"\n🎯 Total Tests: {self.tests_run}")
-        print(f"✅ Passed: {self.tests_passed}")
-        print(f"❌ Failed: {self.tests_run - self.tests_passed}")
-        print(f"📈 Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        print(f"📊 TEST SUMMARY")
+        print(f"Total Tests: {total_tests}")
+        print(f"✅ Passed: {passed_tests}")
+        print(f"❌ Failed: {failed_tests}")
+        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
-        # Return overall success
-        return self.tests_passed == self.tests_run
+        if failed_tests > 0:
+            print(f"\n❌ FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"  - {result['test']}: {result['details']}")
 
 def main():
-    tester = EQuippedAPITester()
-    success = tester.run_all_tests()
+    """Main test runner"""
+    tester = APITester(BACKEND_URL)
+    tester.run_all_tests()
     
-    if success:
-        print("\n🎉 All tests passed! API is working correctly.")
-        return 0
-    else:
-        print(f"\n⚠️ {tester.tests_run - tester.tests_passed} tests failed. Check logs above.")
-        return 1
+    # Return appropriate exit code
+    failed_tests = sum(1 for result in tester.test_results if not result["success"])
+    return 0 if failed_tests == 0 else 1
 
 if __name__ == "__main__":
-    sys.exit(main())
+    exit_code = main()
+    sys.exit(exit_code)
