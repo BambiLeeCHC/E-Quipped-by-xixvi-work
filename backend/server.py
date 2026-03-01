@@ -1307,8 +1307,8 @@ async def seed_initial_data():
     return modules_data
 
 # ==================== FILE UPLOAD ROUTES ====================
-        {{
-    "module_id": "mod_001",
+
+@api_router.post("/upload")
     "title": "AI Writing Assistant",
     "slug": "ai-writing-assistant",
     "description": "Master AI-powered writing tools to draft professional emails, reports, and proposals in seconds with perfect tone matching",
