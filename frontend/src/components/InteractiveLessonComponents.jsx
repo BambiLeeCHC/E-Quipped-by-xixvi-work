@@ -257,23 +257,23 @@ export const QuickQuiz = ({ question, options, correctAnswer, explanation }) => 
   const isCorrect = selectedAnswer === correctAnswer;
   
   return (
-    <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4">
-      <p className="font-medium text-white mb-3">{question}</p>
+    <div className="rounded-xl border-2 border-purple-500/50 bg-purple-900/30 p-5">
+      <p className="font-semibold text-white mb-4 text-base leading-relaxed">{question}</p>
       
-      <div className="space-y-2 mb-3">
+      <div className="space-y-3 mb-4">
         {options.map((option, idx) => (
           <button
             key={idx}
             onClick={() => !showExplanation && handleAnswer(idx)}
             disabled={showExplanation}
-            className={`w-full text-left p-3 rounded-lg border transition ${
+            className={`w-full text-left p-3 rounded-lg border-2 transition ${
               showExplanation
                 ? idx === correctAnswer
-                  ? 'bg-green-500/20 border-green-500/50 text-green-200'
+                  ? 'bg-green-600/40 border-green-400 text-green-50 font-medium'
                   : idx === selectedAnswer
-                  ? 'bg-red-500/20 border-red-500/50 text-red-200'
-                  : 'bg-white/5 border-white/10 text-slate-400'
-                : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                  ? 'bg-red-600/40 border-red-400 text-red-50'
+                  : 'bg-slate-800/50 border-slate-600 text-slate-300'
+                : 'bg-slate-800/80 border-slate-600 text-slate-100 hover:bg-slate-700 hover:border-slate-500 font-medium'
             }`}
           >
             {option}
@@ -282,19 +282,19 @@ export const QuickQuiz = ({ question, options, correctAnswer, explanation }) => 
       </div>
       
       {showExplanation && (
-        <div className={`p-3 rounded-lg ${
-          isCorrect ? 'bg-green-500/20 border border-green-500/50' : 'bg-red-500/20 border border-red-500/50'
+        <div className={`p-4 rounded-lg border-2 ${
+          isCorrect ? 'bg-green-600/30 border-green-400' : 'bg-red-600/30 border-red-400'
         }`}>
-          <p className={`text-sm font-medium mb-1 ${isCorrect ? 'text-green-200' : 'text-red-200'}`}>
+          <p className={`text-base font-bold mb-2 ${isCorrect ? 'text-green-50' : 'text-red-50'}`}>
             {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
           </p>
-          <p className={`text-xs ${isCorrect ? 'text-green-300' : 'text-red-300'}`}>{explanation}</p>
+          <p className={`text-sm ${isCorrect ? 'text-green-100' : 'text-red-100'} leading-relaxed`}>{explanation}</p>
           <button
             onClick={() => {
               setSelectedAnswer(null);
               setShowExplanation(false);
             }}
-            className="mt-2 text-xs text-slate-400 hover:text-white transition"
+            className="mt-3 text-sm text-slate-100 hover:text-white font-medium transition underline"
           >
             Try again
           </button>
