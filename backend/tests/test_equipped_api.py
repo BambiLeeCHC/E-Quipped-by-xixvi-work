@@ -8,7 +8,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cyber-learn-4.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://gif-guide-modules.preview.emergentagent.com').rstrip('/')
 API_URL = f"{BASE_URL}/api"
 
 # Test credentials
