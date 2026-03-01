@@ -44,23 +44,23 @@ export const Tabs = ({ tabs }) => {
   const [activeTab, setActiveTab] = useState(0);
   
   return (
-    <div className="rounded-xl border border-white/10 overflow-hidden">
-      <div className="flex border-b border-white/10 bg-white/5">
+    <div className="rounded-xl border-2 border-slate-600 overflow-hidden bg-slate-800/50">
+      <div className="flex border-b-2 border-slate-600 bg-slate-900/80">
         {tabs.map((tab, idx) => (
           <button
             key={idx}
             onClick={() => setActiveTab(idx)}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition ${
+            className={`flex-1 px-4 py-3 text-sm font-semibold transition ${
               activeTab === idx
-                ? 'bg-fuchsia-500/20 text-fuchsia-400 border-b-2 border-fuchsia-500'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                ? 'bg-fuchsia-600/90 text-white border-b-4 border-fuchsia-400'
+                : 'text-slate-200 hover:text-white hover:bg-slate-700/50'
             }`}
           >
             {tab.label}
           </button>
         ))}
       </div>
-      <div className="p-4 text-slate-300 text-sm">
+      <div className="p-4 text-slate-100 text-base leading-relaxed">
         {tabs[activeTab].content}
       </div>
     </div>
