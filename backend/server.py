@@ -689,6 +689,244 @@ def calculate_level(xp: int) -> int:
             return i
     return len(thresholds)
 
+# ==================== APPLIED LEARNING & QUIZ ROUTES ====================
+
+@api_router.post("/lessons/{lesson_id}/evaluate-prompt")
+async def evaluate_prompt(lesson_id: str, submission: PromptSubmission, user: dict = Depends(require_user)):
+    """AI Judge: Evaluate user's prompt quality and provide feedback"""
+    lesson = await db.lessons.find_one({"lesson_id": lesson_id}, {"_id": 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    # Get the exercise for this lesson
+    exercise = await db.applied_exercises.find_one({"lesson_id": lesson_id}, {"_id": 0})
+    if not exercise:
+        raise HTTPException(status_code=404, detail="Applied exercise not found")
+    
+    # Use AI to evaluate the prompt
+    try:
+        system_message = f"""You are an expert AI prompt evaluator and tutor. Your role is to critically assess user prompts and provide constructive feedback.
+
+The user is working on: {exercise.get('description', 'prompt engineering exercise')}
+
+Required elements for this exercise:
+{chr(10).join('- ' + elem for elem in exercise.get('required_elements', []))}
+
+Evaluate the prompt based on these criteria:
+1. **Role/Persona** (25 points): Does it define who the AI should act as?
+2. **Task Clarity** (25 points): Is the task specific and clear?
+3. **Context** (25 points): Does it provide audience, tone, or situational context?
+4. **Constraints** (25 points): Are there format, length, or style guidelines?
+
+Respond in JSON format:
+{{
+  "score": <0-100>,
+  "passed": <true if score >= {exercise.get('passing_score', 70)}>,
+  "feedback": "<detailed, encouraging feedback>",
+  "missing_elements": ["<element1>", "<element2>"],
+  "suggestions": "<specific, actionable suggestions for improvement>"
+}}
+
+Be strict but encouraging. If the prompt is weak, explain why and how to improve it."""
+
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            system_message=system_message
+        )
+        chat.with_model("openai", "gpt-5.2")
+        
+        user_msg = UserMessage(text=f"Evaluate this prompt:\n\n{submission.prompt}")
+        response_text = await chat.send_message(user_msg)
+        
+        # Parse JSON response
+        import json
+        try:
+            evaluation = json.loads(response_text)
+        except:
+            # Fallback evaluation
+            score, tips = analyze_prompt_quality(submission.prompt)
+            evaluation = {
+                "score": score,
+                "passed": score >= exercise.get('passing_score', 70),
+                "feedback": tips,
+                "missing_elements": [],
+                "suggestions": tips
+            }
+        
+        # Store the submission
+        submission_doc = {
+            "user_id": user["user_id"],
+            "lesson_id": lesson_id,
+            "exercise_id": exercise.get('exercise_id'),
+            "prompt": submission.prompt,
+            "evaluation": evaluation,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        await db.prompt_submissions.insert_one(submission_doc)
+        
+        # Update progress if passed
+        if evaluation.get('passed'):
+            await db.user_progress.update_one(
+                {"user_id": user["user_id"], "lesson_id": lesson_id},
+                {
+                    "$set": {
+                        "applied_learning_completed": True,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }
+                },
+                upsert=True
+            )
+        
+        return evaluation
+        
+    except Exception as e:
+        logger.error(f"Prompt evaluation error: {e}")
+        # Fallback to basic evaluation
+        score, tips = analyze_prompt_quality(submission.prompt)
+        return {
+            "score": score,
+            "passed": score >= exercise.get('passing_score', 70),
+            "feedback": tips,
+            "missing_elements": [],
+            "suggestions": tips
+        }
+
+@api_router.get("/lessons/{lesson_id}/exercise")
+async def get_lesson_exercise(lesson_id: str, user: dict = Depends(require_user)):
+    """Get the applied learning exercise for a lesson"""
+    exercise = await db.applied_exercises.find_one({"lesson_id": lesson_id}, {"_id": 0})
+    if not exercise:
+        raise HTTPException(status_code=404, detail="No exercise found for this lesson")
+    return exercise
+
+@api_router.post("/lessons/{lesson_id}/quiz")
+async def submit_quiz(lesson_id: str, submission: QuizSubmission, user: dict = Depends(require_user)):
+    """Submit quiz answers and get grading"""
+    # Check if applied learning is completed
+    progress = await db.user_progress.find_one(
+        {"user_id": user["user_id"], "lesson_id": lesson_id},
+        {"_id": 0}
+    )
+    
+    if not progress or not progress.get('applied_learning_completed'):
+        raise HTTPException(status_code=403, detail="Complete the applied learning exercise before taking the quiz")
+    
+    # Get quiz questions
+    questions = await db.quiz_questions.find({"lesson_id": lesson_id}, {"_id": 0}).to_list(20)
+    if not questions:
+        raise HTTPException(status_code=404, detail="No quiz found for this lesson")
+    
+    # Grade the quiz
+    correct_count = 0
+    feedback = []
+    
+    for question in questions:
+        user_answer = submission.answers.get(question['question_id'])
+        correct_answer = question['correct_answer']
+        is_correct = user_answer == correct_answer
+        
+        if is_correct:
+            correct_count += 1
+        
+        feedback.append({
+            "question_id": question['question_id'],
+            "question": question['question'],
+            "user_answer": user_answer,
+            "correct_answer": correct_answer,
+            "is_correct": is_correct,
+            "explanation": question['explanation']
+        })
+    
+    total = len(questions)
+    score = int((correct_count / total) * 100) if total > 0 else 0
+    passed = score >= 70  # 70% passing grade
+    
+    # Store quiz result
+    result_doc = {
+        "user_id": user["user_id"],
+        "lesson_id": lesson_id,
+        "score": score,
+        "total": total,
+        "correct": correct_count,
+        "passed": passed,
+        "answers": submission.answers,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await db.quiz_results.insert_one(result_doc)
+    
+    # If passed, mark lesson as completed
+    if passed:
+        lesson = await db.lessons.find_one({"lesson_id": lesson_id}, {"_id": 0})
+        await db.user_progress.update_one(
+            {"user_id": user["user_id"], "lesson_id": lesson_id},
+            {
+                "$set": {
+                    "quiz_completed": True,
+                    "completed": True,
+                    "score": score,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            },
+            upsert=True
+        )
+        
+        # Award XP
+        if lesson:
+            xp_gain = lesson.get('xp_reward', 100)
+            if score >= 90:
+                xp_gain = int(xp_gain * 1.2)  # 20% bonus for high scores
+            
+            new_xp = user.get("xp_total", 0) + xp_gain
+            new_level = calculate_level(new_xp)
+            
+            await db.users.update_one(
+                {"user_id": user["user_id"]},
+                {"$set": {"xp_total": new_xp, "current_level": new_level}}
+            )
+    
+    return QuizResult(
+        lesson_id=lesson_id,
+        score=score,
+        total=total,
+        passed=passed,
+        feedback=feedback
+    )
+
+@api_router.get("/lessons/{lesson_id}/quiz")
+async def get_lesson_quiz(lesson_id: str, user: dict = Depends(require_user)):
+    """Get quiz questions for a lesson"""
+    questions = await db.quiz_questions.find({"lesson_id": lesson_id}, {"_id": 0}).to_list(20)
+    if not questions:
+        raise HTTPException(status_code=404, detail="No quiz found for this lesson")
+    
+    # Remove correct answers before sending to client
+    safe_questions = []
+    for q in questions:
+        safe_q = {
+            "question_id": q['question_id'],
+            "question": q['question'],
+            "options": q['options'],
+            "order_index": q.get('order_index', 0)
+        }
+        safe_questions.append(safe_q)
+    
+    return safe_questions
+
+@api_router.get("/lessons/{lesson_id}/status")
+async def get_lesson_status(lesson_id: str, user: dict = Depends(require_user)):
+    """Get completion status for a lesson"""
+    progress = await db.user_progress.find_one(
+        {"user_id": user["user_id"], "lesson_id": lesson_id},
+        {"_id": 0}
+    )
+    
+    return {
+        "applied_learning_completed": progress.get('applied_learning_completed', False) if progress else False,
+        "quiz_completed": progress.get('quiz_completed', False) if progress else False,
+        "completed": progress.get('completed', False) if progress else False,
+        "score": progress.get('score') if progress else None
+    }
+
 # ==================== AI CONTENT GENERATION ====================
 
 @api_router.post("/ai/generate-content")
