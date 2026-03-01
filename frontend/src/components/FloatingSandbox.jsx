@@ -385,25 +385,28 @@ const FloatingSandbox = ({ lessonId, onClose, user }) => {
       
       {/* Ghost mode helper text */}
       {isTransparent && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-fuchsia-500/50">
-            <p className="text-xs text-fuchsia-400 font-medium">Click to open</p>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+          <div className="bg-slate-900/95 backdrop-blur-md px-6 py-3 rounded-lg border-2 border-fuchsia-500/70 shadow-2xl">
+            <p className="text-sm text-fuchsia-300 font-bold flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Click anywhere to open sandbox
+            </p>
           </div>
         </div>
       )}
       
-      {/* Resize handle - Only visible when opaque */}
+      {/* Resize handle - Only visible when opaque with visual cue */}
       {!isTransparent && (
         <div
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
+          className="absolute bottom-0 right-0 w-6 h-6 cursor-nwse-resize group"
           onMouseDown={(e) => {
             e.stopPropagation();
             setIsResizing(true);
           }}
-          style={{
-            background: 'linear-gradient(135deg, transparent 50%, rgba(217, 70, 239, 0.5) 50%)'
-          }}
-        />
+          title="Drag to resize"
+        >
+          <div className="absolute bottom-1 right-1 w-4 h-4 border-r-2 border-b-2 border-fuchsia-500/70 group-hover:border-fuchsia-400 transition"></div>
+        </div>
       )}
     </div>
     
