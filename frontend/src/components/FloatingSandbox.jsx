@@ -395,14 +395,11 @@ const FloatingSandbox = ({ lessonId, onClose, user }) => {
 };
 
 // Applied Learning Content Component
-const AppliedLearningContent = ({ exercise, inputValue, setInputValue, submitPrompt, evaluating, evaluation, isTransparent }) => {
-  const textColor = isTransparent ? 'text-slate-900' : 'text-white';
-  const mutedColor = isTransparent ? 'text-slate-700' : 'text-slate-400';
-  
+const AppliedLearningContent = ({ exercise, inputValue, setInputValue, submitPrompt, evaluating, evaluation }) => {
   if (!exercise) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className={`w-8 h-8 animate-spin ${isTransparent ? 'text-purple-600' : 'text-fuchsia-500'}`} />
+        <Loader2 className="w-8 h-8 animate-spin text-fuchsia-500" />
       </div>
     );
   }
@@ -410,15 +407,15 @@ const AppliedLearningContent = ({ exercise, inputValue, setInputValue, submitPro
   return (
     <div className="flex-1 flex flex-col p-4 overflow-y-auto">
       <div className="mb-4">
-        <h3 className={`text-lg font-bold ${textColor} mb-2`}>{exercise.description}</h3>
-        <div className={`text-sm ${mutedColor} whitespace-pre-wrap mb-4`}>
+        <h3 className="text-lg font-bold text-white mb-2">{exercise.description}</h3>
+        <div className="text-sm text-slate-400 whitespace-pre-wrap mb-4">
           {exercise.instructions}
         </div>
         
-        <div className={`text-xs ${mutedColor} mb-2`}>Required Elements:</div>
+        <div className="text-xs text-slate-400 mb-2">Required Elements:</div>
         <ul className="space-y-1 mb-4">
           {exercise.required_elements.map((elem, idx) => (
-            <li key={idx} className={`text-xs ${mutedColor} flex items-start`}>
+            <li key={idx} className="text-xs text-slate-400 flex items-start">
               <span className="mr-2">•</span>
               <span>{elem}</span>
             </li>
@@ -427,11 +424,11 @@ const AppliedLearningContent = ({ exercise, inputValue, setInputValue, submitPro
       </div>
       
       <div className="flex-1 flex flex-col">
-        <label className={`text-sm font-medium ${textColor} mb-2`}>Your Prompt:</label>
+        <label className="text-sm font-medium text-white mb-2">Your Prompt:</label>
         <textarea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className={`flex-1 p-3 rounded-lg border ${isTransparent ? 'bg-white/80 border-slate-300 text-slate-900' : 'bg-white/5 border-white/10 text-white'} focus:outline-none focus:ring-2 focus:ring-fuchsia-500 resize-none`}
+          className="flex-1 p-3 rounded-lg border bg-white/5 border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-fuchsia-500 resize-none"
           placeholder="Write your prompt here..."
         />
         
@@ -455,18 +452,18 @@ const AppliedLearningContent = ({ exercise, inputValue, setInputValue, submitPro
       </div>
       
       {evaluation && (
-        <div className={`mt-4 p-4 rounded-lg ${evaluation.passed ? (isTransparent ? 'bg-green-100 border border-green-500' : 'bg-green-500/20 border border-green-500/50') : (isTransparent ? 'bg-amber-100 border border-amber-500' : 'bg-amber-500/20 border border-amber-500/50')}`}>
+        <div className={`mt-4 p-4 rounded-lg ${evaluation.passed ? 'bg-green-500/20 border border-green-500/50' : 'bg-amber-500/20 border border-amber-500/50'}`}>
           <div className="flex items-center justify-between mb-2">
-            <span className={`font-bold ${evaluation.passed ? (isTransparent ? 'text-green-800' : 'text-green-400') : (isTransparent ? 'text-amber-800' : 'text-amber-400')}`}>
+            <span className={`font-bold ${evaluation.passed ? 'text-green-400' : 'text-amber-400'}`}>
               Score: {evaluation.score}/100
             </span>
-            {evaluation.passed && <span className={`text-sm ${isTransparent ? 'text-green-700' : 'text-green-300'}`}>✓ Passed!</span>}
+            {evaluation.passed && <span className="text-sm text-green-300">✓ Passed!</span>}
           </div>
-          <p className={`text-sm ${evaluation.passed ? (isTransparent ? 'text-green-700' : 'text-green-200') : (isTransparent ? 'text-amber-700' : 'text-amber-200')} mb-2`}>
+          <p className={`text-sm ${evaluation.passed ? 'text-green-200' : 'text-amber-200'} mb-2`}>
             {evaluation.feedback}
           </p>
           {evaluation.suggestions && (
-            <p className={`text-xs ${evaluation.passed ? (isTransparent ? 'text-green-600' : 'text-green-300') : (isTransparent ? 'text-amber-600' : 'text-amber-300')}`}>
+            <p className={`text-xs ${evaluation.passed ? 'text-green-300' : 'text-amber-300'}`}>
               💡 {evaluation.suggestions}
             </p>
           )}
