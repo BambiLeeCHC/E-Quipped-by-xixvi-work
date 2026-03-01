@@ -129,15 +129,56 @@ class ModuleUpdate(BaseModel):
 # Content Block Models for Rich Editor
 class ContentBlock(BaseModel):
     id: str = ""
-    type: str  # text, heading, image, video, audio, code, callout, divider
+    type: str  # text, heading, image, video, audio, code, callout, divider, gif
     content: Optional[str] = None  # For text, heading, code
-    url: Optional[str] = None  # For media (image, video, audio)
+    url: Optional[str] = None  # For media (image, video, audio, gif)
     caption: Optional[str] = None  # Media caption
     level: Optional[int] = 1  # For headings (1-6)
     language: Optional[str] = "python"  # For code blocks
     callout_type: Optional[str] = "info"  # info, warning, tip, note
-    alt_text: Optional[str] = None  # For images
+    alt_text: Optional[str] = None  # For images/gifs
     order_index: int = 0
+
+# Quiz Models
+class QuizQuestion(BaseModel):
+    question_id: str
+    question: str
+    options: List[str]
+    correct_answer: int  # Index of correct option (0-based)
+    explanation: str
+    order_index: int = 0
+
+class QuizSubmission(BaseModel):
+    lesson_id: str
+    answers: Dict[str, int]  # question_id -> selected_option_index
+
+class QuizResult(BaseModel):
+    lesson_id: str
+    score: int
+    total: int
+    passed: bool
+    feedback: List[Dict[str, Any]]
+
+# Applied Learning Models
+class AppliedExercise(BaseModel):
+    exercise_id: str
+    lesson_id: str
+    prompt_template: str
+    required_elements: List[str]
+    passing_score: int = 70
+    description: str
+
+class PromptSubmission(BaseModel):
+    exercise_id: str
+    lesson_id: str
+    prompt: str
+
+class PromptEvaluation(BaseModel):
+    score: int
+    passed: bool
+    feedback: str
+    missing_elements: List[str]
+    suggestions: str
 
 class SectionCreate(BaseModel):
     title: str
