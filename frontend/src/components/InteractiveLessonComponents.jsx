@@ -311,30 +311,30 @@ export const StepGuide = ({ steps }) => {
   const [currentStep, setCurrentStep] = useState(0);
   
   return (
-    <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 overflow-hidden">
-      <div className="px-4 py-3 bg-blue-500/10 border-b border-blue-500/30">
-        <span className="font-medium text-blue-400">Step {currentStep + 1} of {steps.length}</span>
+    <div className="rounded-xl border-2 border-blue-500/50 bg-blue-900/30 overflow-hidden">
+      <div className="px-5 py-3 bg-blue-900/50 border-b-2 border-blue-500/50">
+        <span className="font-bold text-blue-100 text-base">Step {currentStep + 1} of {steps.length}</span>
       </div>
       
-      <div className="p-4">
-        <h4 className="font-bold text-white mb-2">{steps[currentStep].title}</h4>
-        <div className="text-sm text-slate-300 mb-4">{steps[currentStep].content}</div>
+      <div className="p-5">
+        <h4 className="font-bold text-white text-lg mb-3">{steps[currentStep].title}</h4>
+        <div className="text-base text-slate-100 mb-5 leading-relaxed">{steps[currentStep].content}</div>
         
         <div className="flex items-center justify-between">
           <button
             onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
             disabled={currentStep === 0}
-            className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 rounded-lg bg-slate-700 text-white text-sm font-semibold hover:bg-slate-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Previous
           </button>
           
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             {steps.map((_, idx) => (
               <div
                 key={idx}
-                className={`w-2 h-2 rounded-full transition ${
-                  idx === currentStep ? 'bg-blue-400' : idx < currentStep ? 'bg-green-400' : 'bg-slate-600'
+                className={`w-2.5 h-2.5 rounded-full transition ${
+                  idx === currentStep ? 'bg-blue-400 scale-125' : idx < currentStep ? 'bg-green-400' : 'bg-slate-600'
                 }`}
               />
             ))}
@@ -343,7 +343,7 @@ export const StepGuide = ({ steps }) => {
           <button
             onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
             disabled={currentStep === steps.length - 1}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white text-sm font-medium hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white text-sm font-semibold hover:shadow-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {currentStep === steps.length - 1 ? 'Complete' : 'Next'}
           </button>
