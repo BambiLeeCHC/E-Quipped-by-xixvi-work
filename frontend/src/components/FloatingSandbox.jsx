@@ -474,29 +474,26 @@ const AppliedLearningContent = ({ exercise, inputValue, setInputValue, submitPro
 };
 
 // Quiz Content Component
-const QuizContent = ({ quiz, quizAnswers, setQuizAnswers, submitQuiz, submittingQuiz, quizResult, isTransparent }) => {
-  const textColor = isTransparent ? 'text-slate-900' : 'text-white';
-  const mutedColor = isTransparent ? 'text-slate-700' : 'text-slate-400';
-  
+const QuizContent = ({ quiz, quizAnswers, setQuizAnswers, submitQuiz, submittingQuiz, quizResult }) => {
   if (quizResult) {
     return (
       <div className="flex-1 p-4 overflow-y-auto">
-        <div className={`mb-4 p-4 rounded-lg ${quizResult.passed ? (isTransparent ? 'bg-green-100' : 'bg-green-500/20') : (isTransparent ? 'bg-red-100' : 'bg-red-500/20')}`}>
-          <h3 className={`text-xl font-bold ${quizResult.passed ? (isTransparent ? 'text-green-800' : 'text-green-400') : (isTransparent ? 'text-red-800' : 'text-red-400')} mb-2`}>
+        <div className={`mb-4 p-4 rounded-lg ${quizResult.passed ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+          <h3 className={`text-xl font-bold ${quizResult.passed ? 'text-green-400' : 'text-red-400'} mb-2`}>
             {quizResult.passed ? '🎉 Quiz Passed!' : '❌ Quiz Failed'}
           </h3>
-          <p className={`${quizResult.passed ? (isTransparent ? 'text-green-700' : 'text-green-200') : (isTransparent ? 'text-red-700' : 'text-red-200')}`}>
+          <p className={`${quizResult.passed ? 'text-green-200' : 'text-red-200'}`}>
             Score: {quizResult.score}% ({quizResult.feedback.filter(f => f.is_correct).length}/{quizResult.total})
           </p>
         </div>
         
         <div className="space-y-4">
           {quizResult.feedback.map((item, idx) => (
-            <div key={idx} className={`p-3 rounded-lg ${item.is_correct ? (isTransparent ? 'bg-green-50 border border-green-300' : 'bg-green-500/10 border border-green-500/30') : (isTransparent ? 'bg-red-50 border border-red-300' : 'bg-red-500/10 border border-red-500/30')}`}>
-              <p className={`text-sm font-medium ${textColor} mb-2`}>
+            <div key={idx} className={`p-3 rounded-lg ${item.is_correct ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
+              <p className="text-sm font-medium text-white mb-2">
                 {item.is_correct ? '✓' : '✗'} {item.question}
               </p>
-              <p className={`text-xs ${mutedColor}`}>{item.explanation}</p>
+              <p className="text-xs text-slate-400">{item.explanation}</p>
             </div>
           ))}
         </div>
@@ -508,13 +505,13 @@ const QuizContent = ({ quiz, quizAnswers, setQuizAnswers, submitQuiz, submitting
     <div className="flex-1 p-4 overflow-y-auto">
       <div className="space-y-4 mb-4">
         {quiz.map((question, idx) => (
-          <div key={question.question_id} className={`p-4 rounded-lg ${isTransparent ? 'bg-white/60 border border-slate-300' : 'bg-white/5 border border-white/10'}`}>
-            <p className={`font-medium ${textColor} mb-3`}>
+          <div key={question.question_id} className="p-4 rounded-lg bg-white/5 border border-white/10">
+            <p className="font-medium text-white mb-3">
               {idx + 1}. {question.question}
             </p>
             <div className="space-y-2">
               {question.options.map((option, optIdx) => (
-                <label key={optIdx} className={`flex items-start p-2 rounded cursor-pointer ${quizAnswers[question.question_id] === optIdx ? (isTransparent ? 'bg-purple-100 border-purple-400' : 'bg-fuchsia-500/20 border-fuchsia-500') : (isTransparent ? 'bg-slate-50 hover:bg-slate-100 border-slate-200' : 'bg-white/5 hover:bg-white/10 border-white/10')} border`}>
+                <label key={optIdx} className={`flex items-start p-2 rounded cursor-pointer ${quizAnswers[question.question_id] === optIdx ? 'bg-fuchsia-500/20 border-fuchsia-500' : 'bg-white/5 hover:bg-white/10 border-white/10'} border`}>
                   <input
                     type="radio"
                     name={question.question_id}
@@ -522,7 +519,7 @@ const QuizContent = ({ quiz, quizAnswers, setQuizAnswers, submitQuiz, submitting
                     onChange={() => setQuizAnswers(prev => ({ ...prev, [question.question_id]: optIdx }))}
                     className="mt-1 mr-3"
                   />
-                  <span className={`text-sm ${isTransparent ? 'text-slate-900' : 'text-slate-200'}`}>{option}</span>
+                  <span className="text-sm text-slate-200">{option}</span>
                 </label>
               ))}
             </div>
@@ -542,23 +539,20 @@ const QuizContent = ({ quiz, quizAnswers, setQuizAnswers, submitQuiz, submitting
 };
 
 // Sandbox Content Component
-const SandboxContent = ({ messages, inputValue, setInputValue, sendMessage, sending, selectedModel, setSelectedModel, chatContainerRef, isTransparent }) => {
-  const textColor = isTransparent ? 'text-slate-900' : 'text-white';
-  const mutedColor = isTransparent ? 'text-slate-700' : 'text-slate-400';
-  
+const SandboxContent = ({ messages, inputValue, setInputValue, sendMessage, sending, selectedModel, setSelectedModel, chatContainerRef }) => {
   return (
     <>
       <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <div key={idx} className={`${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-            <div className={`inline-block max-w-[80%] p-3 rounded-lg ${msg.role === 'user' ? (isTransparent ? 'bg-purple-200 text-slate-900' : 'bg-fuchsia-500/20 text-white') : (isTransparent ? 'bg-slate-100 text-slate-900' : 'bg-white/10 text-slate-200')} text-sm`}>
+            <div className={`inline-block max-w-[80%] p-3 rounded-lg ${msg.role === 'user' ? 'bg-fuchsia-500/20 text-white' : 'bg-white/10 text-slate-200'} text-sm`}>
               {msg.content}
               {msg.quality_score !== undefined && (
-                <div className={`mt-2 pt-2 border-t ${isTransparent ? 'border-slate-300' : 'border-white/20'} text-xs`}>
-                  <div className={`font-bold ${msg.quality_score >= 80 ? (isTransparent ? 'text-green-700' : 'text-green-400') : msg.quality_score >= 50 ? (isTransparent ? 'text-amber-700' : 'text-amber-400') : (isTransparent ? 'text-red-700' : 'text-red-400')}`}>
+                <div className="mt-2 pt-2 border-t border-white/20 text-xs">
+                  <div className={`font-bold ${msg.quality_score >= 80 ? 'text-green-400' : msg.quality_score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
                     Prompt Score: {msg.quality_score}/100
                   </div>
-                  {msg.tips && <div className={mutedColor}>{msg.tips}</div>}
+                  {msg.tips && <div className="text-slate-400">{msg.tips}</div>}
                 </div>
               )}
             </div>
@@ -570,7 +564,7 @@ const SandboxContent = ({ messages, inputValue, setInputValue, sendMessage, send
         <select
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
-          className={`w-full mb-2 p-2 rounded-lg ${isTransparent ? 'bg-white border-slate-300 text-slate-900' : 'bg-white/10 border-white/10 text-white'} border text-sm`}
+          className="w-full mb-2 p-2 rounded-lg bg-white/10 border-white/10 text-white border text-sm"
         >
           <option value="gpt-5.2">GPT-5.2 (OpenAI)</option>
           <option value="claude-sonnet-4-5">Claude Sonnet 4.5 (Anthropic)</option>
@@ -584,7 +578,7 @@ const SandboxContent = ({ messages, inputValue, setInputValue, sendMessage, send
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="Ask AI anything..."
-            className={`flex-1 p-3 rounded-lg ${isTransparent ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-500' : 'bg-white/10 border-white/10 text-white placeholder-slate-400'} border focus:outline-none focus:ring-2 focus:ring-fuchsia-500`}
+            className="flex-1 p-3 rounded-lg bg-white/10 border-white/10 text-white placeholder-slate-400 border focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
           />
           <button
             onClick={sendMessage}
@@ -598,23 +592,5 @@ const SandboxContent = ({ messages, inputValue, setInputValue, sendMessage, send
     </>
   );
 };
-
-// CSS for gradient animation
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes gradient-x {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-  .animate-gradient-x {
-    background-size: 200% 200%;
-    animation: gradient-x 3s ease infinite;
-  }
-`;
-document.head.appendChild(style);
 
 export default FloatingSandbox;
